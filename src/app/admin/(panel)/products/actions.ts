@@ -1,0 +1,120 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+
+interface VariantInput {
+  id?: string;
+  title: string;
+  price?: number | null;
+  inventoryQty?: number;
+  weightGrams?: number;
+}
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/** Parse the shared product form fields into a Prisma-ready object. */
+function parseForm(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  const priceNum = Number(formData.get("price") ?? 0);
+  const compareRaw = formData.get("compareAtPrice");
+  const compareAtPrice = compareRaw ? Number(compareRaw) : null;
+
+  let variants: VariantInput[] = [];
+  try {
+    variants = JSON.parse(String(formData.get("variants") ?? "[]"));
+  } catch {
+    variants = [];
+  }
+
+  return {
+    title,
+    fields: {
+      title,
+      tagline: String(formData.get("tagline") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      status: String(formData.get("status") ?? "active"),
+      emoji: String(formData.get("emoji") ?? "🌿"),
+      gradient: String(formData.get("gradient") ?? "gradient-purple"),
+      imageUrl: String(formData.get("imageUrl") ?? "").trim(),
+      images: String(formData.get("images") ?? "").trim(),
+      badges: String(formData.get("badges") ?? ""),
+      price: Number.isFinite(priceNum) ? Math.round(priceNum) : 0,
+      compareAtPrice:
+        compareAtPrice && Number.isFinite(compareAtPrice)
+          ? Math.round(compareAtPrice)
+          : null,
+      vendor: String(formData.get("vendor") ?? "Eco Global Foods"),
+      isNew: formData.get("isNew") === "on",
+      isBestseller: formData.get("isBestseller") === "on",
+      isFeatured: formData.get("isFeatured") === "on",
+      collectionId: String(formData.get("collectionId") ?? "") || null,
+      seoTitle: String(formData.get("seoTitle") ?? ""),
+      seoDescription: String(formData.get("seoDescription") ?? ""),
+      seoKeywords: String(formData.get("seoKeywords") ?? ""),
+    },
+    variants,
+  };
+}
+
+export async function createProduct(formData: FormData) {
+  const { title, fields, variants } = parseForm(formData);
+  if (!title) return;
+
+  const product = await prisma.product.create({
+    data: {
+      ...fields,
+      slug: slugify(title) || `product-${Date.now()}`,
+      variants: {
+        create: (variants.length ? variants : [{ title: "Default" }]).map(
+          (v, i) => ({
+            title: v.title || "Default",
+            price: v.price ?? null,
+            inventoryQty: v.inventoryQty ?? 0,
+            weightGrams: v.weightGrams ?? 0,
+            sortOrder: i,
+          }),
+        ),
+      },
+    },
+  });
+
+  revalidatePath("/admin/products");
+  redirect(`/admin/products/${product.id}`);
+}
+
+export async function updateProduct(id: string, formData: FormData) {
+  const { fields, variants } = parseForm(formData);
+
+  await prisma.$transaction([
+    prisma.product.update({ where: { id }, data: fields }),
+    // Simplest reliable sync: replace variants for this product.
+    prisma.variant.deleteMany({ where: { productId: id } }),
+    prisma.variant.createMany({
+      data: (variants.length ? variants : [{ title: "Default" }]).map((v, i) => ({
+        productId: id,
+        title: v.title || "Default",
+        price: v.price ?? null,
+        inventoryQty: v.inventoryQty ?? 0,
+        weightGrams: v.weightGrams ?? 0,
+        sortOrder: i,
+      })),
+    }),
+  ]);
+
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${id}`);
+}
+
+export async function deleteProduct(id: string) {
+  await prisma.product.delete({ where: { id } });
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
+}

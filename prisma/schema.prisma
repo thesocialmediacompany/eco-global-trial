@@ -1,0 +1,339 @@
+// Eco Global Foods — data model
+// Dev: SQLite (zero-config). Production: switch `provider` to "postgresql" and
+// set DATABASE_URL. Schema avoids SQLite-only features (uses String for status
+// fields and comma-separated keywords) so it ports cleanly to Postgres.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Local dev historically used SQLite; production/preview uses Postgres (Neon).
+  // The schema is provider-portable (string statuses, no native enums), so the
+  // same models work on both. Set DATABASE_URL to your Postgres connection
+  // string and run `prisma db push` to create the tables.
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Admin/staff accounts for the Shopify-style backend.
+model StaffUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("staff") // owner | staff
+  createdAt    DateTime @default(now())
+}
+
+/// A product category — Shopify "collection" equivalent.
+model Collection {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  tagline     String    @default("")
+  description String    @default("")
+  emoji       String    @default("🌿")
+  gradient    String    @default("gradient-purple") // gradient-purple | gradient-green | gradient-purple-green
+  isNew       Boolean   @default(false)
+  sortOrder   Int       @default(0)
+
+  // SEO
+  seoTitle       String @default("")
+  seoDescription String @default("")
+  seoKeywords    String @default("") // comma-separated
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// A sellable product. Flavours are modelled as Variants (Shopify-style).
+model Product {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  tagline     String  @default("")
+  description String  @default("")
+  status      String  @default("active") // draft | active | archived
+
+  // presentation
+  emoji    String @default("🌿")
+  gradient String @default("gradient-purple")
+  badges   String @default("") // comma-separated
+  imageUrl String @default("") // primary image (falls back to emoji/gradient art)
+  images   String @default("") // comma-separated additional image URLs
+
+  // pricing (in PKR, stored as whole rupees)
+  price          Int
+  compareAtPrice Int?
+
+  // merchandising
+  vendor       String  @default("Eco Global Foods")
+  isNew        Boolean @default(false)
+  isBestseller Boolean @default(false)
+  isFeatured   Boolean @default(false) // shown in the homepage "featured" section
+  rating       Float?
+  reviewCount  Int     @default(0)
+
+  // SEO (per-product, as requested)
+  seoTitle       String @default("")
+  seoDescription String @default("")
+  seoKeywords    String @default("")
+
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId String?
+
+  variants   Variant[]
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  // bundles: when true, this product is a curated bundle of other products
+  isBundle    Boolean      @default(false)
+  bundleItems BundleItem[] @relation("BundleToItems") // contents (when this IS a bundle)
+  inBundles   BundleItem[] @relation("ItemToBundles") // bundles featuring this product
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// A line inside a bundle: links a bundle product to a member product.
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundle    Product @relation("BundleToItems", fields: [bundleId], references: [id], onDelete: Cascade)
+  bundleId  String
+  product   Product @relation("ItemToBundles", fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  quantity  Int     @default(1)
+  sortOrder Int     @default(0)
+
+  @@unique([bundleId, productId])
+}
+
+/// A product variant — e.g. a flavour or size. Holds its own price/inventory.
+model Variant {
+  id             String  @id @default(cuid())
+  title          String // e.g. "Chocolate" or "250g"
+  sku            String  @default("")
+  price          Int? // overrides product price when set
+  compareAtPrice Int?
+  weightGrams    Int     @default(0)
+  available      Boolean @default(true)
+  inventoryQty   Int     @default(0)
+  sortOrder      Int     @default(0)
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+}
+
+/// A storefront customer.
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String   @default("")
+  city         String   @default("")
+  address      String   @default("")
+  passwordHash String   @default("") // set when the customer registers an account
+
+  // password reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
+  orders    Order[]
+  addresses Address[]
+  createdAt DateTime @default(now())
+}
+
+/// A saved delivery address belonging to a customer.
+model Address {
+  id         String   @id @default(cuid())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  label      String   @default("Home")
+  name       String
+  phone      String   @default("")
+  line       String
+  city       String   @default("")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+/// A product review (moderated).
+model Review {
+  id           String   @id @default(cuid())
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  customerName String
+  email        String   @default("")
+  rating       Int      @default(5)
+  title        String   @default("")
+  body         String   @default("")
+  status       String   @default("pending") // pending | approved
+  createdAt    DateTime @default(now())
+}
+
+/// An abandoned checkout — captured when a shopper starts but doesn't finish.
+model AbandonedCheckout {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String   @default("")
+  phone     String   @default("")
+  itemsJson String   @default("[]")
+  subtotal  Int      @default(0)
+  recovered Boolean  @default(false)
+  recoveryEmailSentAt DateTime? // when a recovery nudge was last emailed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Newsletter / marketing email subscribers.
+model NewsletterSubscriber {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  source     String   @default("footer") // where they signed up: footer | home | popup
+  active     Boolean  @default(true) // false = unsubscribed
+  unsubToken String   @default(cuid()) // one-click unsubscribe token
+  createdAt  DateTime @default(now())
+}
+
+/// A newsletter broadcast composed + sent from the admin.
+model Campaign {
+  id        String    @id @default(cuid())
+  subject   String
+  body      String // plain text, one paragraph per blank line
+  ctaLabel  String    @default("")
+  ctaUrl    String    @default("")
+  status    String    @default("draft") // draft | sent
+  sentCount Int       @default(0)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+/// "Subscribe & Save" reorder reminders. COD can't do recurring billing, so we
+/// remind the customer to reorder a staple every N weeks instead.
+model ReorderReminder {
+  id             String    @id @default(cuid())
+  email          String
+  productSlug    String    @default("")
+  productTitle   String    @default("")
+  frequencyWeeks Int       @default(4)
+  active         Boolean   @default(true)
+  lastRemindedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@unique([email, productSlug])
+}
+
+/// Editable store settings (key-value) — powers the customisable backend.
+/// Read via src/lib/settings.ts which layers these over sensible defaults.
+model Setting {
+  key       String   @id
+  value     String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+/// A customer order.
+model Order {
+  id          String @id @default(cuid())
+  orderNumber Int    @unique
+
+  // denormalised customer snapshot (Shopify keeps this on the order)
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerId   String?
+  customerName String
+  email        String    @default("")
+  phone        String    @default("")
+  address      String    @default("")
+  city         String    @default("")
+
+  // money (whole PKR)
+  subtotal     Int
+  shipping     Int    @default(0)
+  discount     Int    @default(0)
+  discountCode String @default("")
+  total        Int
+
+  // status fields
+  isDraft           Boolean @default(false) // draft order created in admin, not yet placed
+  paymentMethod     String @default("cod") // cod | jazzcash | easypaisa | card | bank
+  paymentStatus     String @default("pending") // pending | paid | refunded
+  fulfillmentStatus String @default("unfulfilled") // unfulfilled | fulfilled | cancelled
+
+  // shipping / courier (ZoomCOD)
+  courier        String @default("")
+  trackingNumber String @default("")
+
+  note  String      @default("")
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// A blog/journal post (storefront "Content").
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String    @default("")
+  body        String    @default("") // markdown-ish / plain paragraphs separated by blank lines
+  coverEmoji  String    @default("🌿")
+  gradient    String    @default("gradient-purple")
+  author      String    @default("Eco Global Foods")
+  type        String    @default("blog") // blog | recipe
+  category    String    @default("Wellness")
+  status      String    @default("published") // draft | published
+  readMinutes Int       @default(4)
+
+  // SEO
+  seoTitle       String @default("")
+  seoDescription String @default("")
+  seoKeywords    String @default("")
+
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// A weight-based shipping rate band (e.g. "Up to 1kg = Rs 180").
+model ShippingRate {
+  id        String   @id @default(cuid())
+  label     String
+  minGrams  Int      @default(0)
+  maxGrams  Int? // null = no upper limit (everything above minGrams)
+  rate      Int // PKR
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+/// A discount code (storefront promo).
+model Discount {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   @default("percentage") // percentage | fixed | free_shipping
+  value       Int      @default(0) // percent (0-100) or fixed PKR amount
+  minSubtotal Int      @default(0)
+  active      Boolean  @default(true)
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  startsAt    DateTime @default(now())
+  endsAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+/// A line item within an order.
+model OrderItem {
+  id           String  @id @default(cuid())
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  product      Product? @relation(fields: [productId], references: [id])
+  productId    String?
+  title        String
+  variantTitle String  @default("")
+  quantity     Int
+  price        Int
+  total        Int
+}

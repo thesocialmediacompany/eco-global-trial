@@ -1,0 +1,62 @@
+/**
+ * Default store settings. These power the customisable backend: the admin can
+ * override any of these (persisted to the Setting table) and the storefront
+ * reads the merged result via src/lib/settings.ts. Plain module so it can be
+ * imported by both the app and the seed/import scripts.
+ */
+export const defaultSettings = {
+  storeName: "Eco Global Foods",
+  storeLegalName: "Eco Global Foods (SMC-PVT) Ltd.",
+  storeTagline: "Taste The Goodness",
+  storeEmail: "support@ecoglobalfoods.com",
+  storePhone: "(+92) 304 395 0505",
+  storePhoneRaw: "+923043950505",
+  // optional backup / secondary contact number (leave blank to hide)
+  storePhoneSecondary: "",
+  storePhoneSecondaryRaw: "",
+  storeAddress: "14 KM Multan Rd, behind Uni Foam, near Thokar Niaz Baig, Lahore",
+  instagramUrl: "https://instagram.com/ecoglobalfoods",
+  facebookUrl: "https://facebook.com/ecoglobalfoods",
+  linkedinUrl: "https://www.linkedin.com/company/ecoglobalfoods",
+  youtubeUrl: "https://www.youtube.com/@ecoglobalfoods",
+  tiktokUrl: "https://www.tiktok.com/@ecoglobalfoods",
+  googleUrl: "https://maps.google.com/?q=Eco+Global+Foods+Lahore",
+  whatsappNumber: "+923043950505",
+  // money (PKR)
+  freeShippingThreshold: "7000",
+  flatShippingRate: "250",
+  currency: "PKR",
+  // marketing - announcement bar messages, separated by "|"
+  announcements:
+    "🌿 Free shipping on orders over Rs 7,000|✨ 20% off our newly launched range|🚚 Cash on Delivery across Pakistan|🏆 Natural, pure ingredients since 1999",
+  // payment method toggles
+  payCod: "true",
+  payJazzcash: "true",
+  payEasypaisa: "true",
+  payCard: "true",
+  payBank: "true",
+  // footer credit
+  footerCredit: "Designed by tsmc.pk",
+  footerCreditUrl: "https://tsmc.pk",
+  // analytics / marketing pixels (leave blank to disable)
+  ga4MeasurementId: "", // e.g. G-XXXXXXXXXX
+  metaPixelId: "", // e.g. 1234567890
+  // occasion / opening sticker shown across the top of the site
+  occasionBannerEnabled: "false",
+  occasionBannerText: "Eid Mubarak from all of us at Eco Global Foods 🌙",
+  occasionBannerEmoji: "🎉",
+  // editable storefront copy (the team can change these without code)
+  heroBadge: "New range now in stock",
+  heroTitle: "Taste The Goodness",
+  heroSubtitle:
+    "Granola, oats, malted drinks and protein bars made with natural, pure ingredients. Real food for real life, packed in Pakistan since 1999.",
+  newsletterHeading: "Get 20% off your first order",
+  newsletterSubtext:
+    "Join our list for new products, recipes and offers. We will send your discount code straight away.",
+  stockistHeading: "Also available at leading stores",
+  stockistSubtext:
+    "Find Eco Global Foods on the shelves of Pakistan's most trusted supermarkets and pharmacies.",
+} as const;
+
+export type SettingKey = keyof typeof defaultSettings;
+export type StoreSettings = Record<SettingKey, string>;

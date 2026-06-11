@@ -1,0 +1,20 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eco Global Foods">
+  <defs>
+    <linearGradient id="egfLeafLight" x1="14" y1="20" x2="74" y2="78" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9ccc5a"/>
+      <stop offset="1" stop-color="#6fb13a"/>
+    </linearGradient>
+    <linearGradient id="egfLeafDark" x1="26" y1="18" x2="86" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3f9b3f"/>
+      <stop offset="1" stop-color="#1f6b2e"/>
+    </linearGradient>
+  </defs>
+  <!-- back leaf (lighter) -->
+  <path d="M20 64C16 40 34 18 64 16C66 44 50 66 24 70C22 70 20.5 67.5 20 64Z" fill="url(#egfLeafLight)"/>
+  <!-- front leaf (darker) -->
+  <path d="M30 76C24 50 44 26 80 26C82 56 62 80 34 80C32 80 30.5 78.5 30 76Z" fill="url(#egfLeafDark)"/>
+  <!-- central vein -->
+  <path d="M40 72C50 56 64 44 78 38" stroke="#eaf7e0" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <!-- side veins -->
+  <path d="M48 64L58 60M52 56L62 51M56 49L66 44" stroke="#eaf7e0" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+</svg>

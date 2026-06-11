@@ -1,0 +1,261 @@
+import Link from "next/link";
+import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
+import { paymentMethods } from "@/lib/payments";
+import { updateSettings } from "./actions";
+
+export default async function SettingsPage() {
+  const [s, staff] = await Promise.all([
+    getSettings(),
+    prisma.staffUser.findMany({ orderBy: { createdAt: "asc" } }),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-4xl pb-20">
+      <form action={updateSettings}>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="font-display text-2xl font-semibold text-purple-900">Settings</h1>
+          <button className="rounded-lg gradient-purple-green px-5 py-2 text-sm font-semibold text-cream">
+            Save changes
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <Section icon={Store} title="Store details">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Store name" name="storeName" value={s.storeName} />
+              <Field label="Legal name" name="storeLegalName" value={s.storeLegalName} />
+              <Field label="Tagline" name="storeTagline" value={s.storeTagline} />
+              <Field label="Email" name="storeEmail" value={s.storeEmail} />
+              <Field label="Phone (display)" name="storePhone" value={s.storePhone} />
+              <Field label="Phone (tel: raw)" name="storePhoneRaw" value={s.storePhoneRaw} />
+              <Field label="Backup phone (display)" name="storePhoneSecondary" value={s.storePhoneSecondary} />
+              <Field label="Backup phone (tel: raw)" name="storePhoneSecondaryRaw" value={s.storePhoneSecondaryRaw} />
+              <Field label="Address" name="storeAddress" value={s.storeAddress} full />
+            </div>
+          </Section>
+
+          <Section icon={Share2} title="Social & contact">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Instagram URL" name="instagramUrl" value={s.instagramUrl} />
+              <Field label="Facebook URL" name="facebookUrl" value={s.facebookUrl} />
+              <Field label="LinkedIn URL" name="linkedinUrl" value={s.linkedinUrl} />
+              <Field label="YouTube URL" name="youtubeUrl" value={s.youtubeUrl} />
+              <Field label="TikTok URL" name="tiktokUrl" value={s.tiktokUrl} />
+              <Field label="Google (Maps/Business) URL" name="googleUrl" value={s.googleUrl} />
+              <Field label="WhatsApp number" name="whatsappNumber" value={s.whatsappNumber} />
+            </div>
+          </Section>
+
+          <Section icon={Truck} title="Shipping & delivery">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Free shipping threshold (PKR)" name="freeShippingThreshold" value={s.freeShippingThreshold} type="number" />
+              <Field label="Flat shipping rate (PKR)" name="flatShippingRate" value={s.flatShippingRate} type="number" />
+            </div>
+          </Section>
+
+          <Section icon={Megaphone} title="Announcement bar">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                Messages (separate with &ldquo;|&rdquo;)
+              </span>
+              <textarea
+                name="announcements"
+                rows={3}
+                defaultValue={s.announcements}
+                className={input}
+              />
+            </label>
+          </Section>
+
+          <Section icon={Megaphone} title="Occasion / opening sticker">
+            <label className="mb-3 flex items-center justify-between rounded-lg border border-purple-100 px-4 py-3">
+              <span className="text-sm font-medium text-purple-900">
+                Show occasion sticker at top of site
+              </span>
+              <input
+                type="checkbox"
+                name="occasionBannerEnabled"
+                defaultChecked={s.occasionBannerEnabled === "true"}
+                className="h-4 w-4 accent-green-600"
+              />
+            </label>
+            <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+              <Field label="Sticker text" name="occasionBannerText" value={s.occasionBannerText} />
+              <Field label="Emoji" name="occasionBannerEmoji" value={s.occasionBannerEmoji} />
+            </div>
+            <p className="mt-2 text-xs text-purple-900/50">
+              Use this for occasions like Eid Mubarak, a grand opening message, or a
+              holiday notice. Toggle it off to hide. Changing the text re-shows it to
+              everyone who dismissed the previous message.
+            </p>
+          </Section>
+
+          <Section icon={Type} title="Homepage text">
+            <p className="-mt-1 mb-3 text-xs text-purple-900/50">
+              Edit the main words customers see on the homepage. No code needed.
+            </p>
+            <div className="space-y-4">
+              <Field label="Hero badge (small pill)" name="heroBadge" value={s.heroBadge} full />
+              <Field label="Hero title (last word is highlighted)" name="heroTitle" value={s.heroTitle} full />
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Hero subtitle
+                </span>
+                <textarea name="heroSubtitle" rows={2} defaultValue={s.heroSubtitle} className={input} />
+              </label>
+              <Field label="Newsletter heading" name="newsletterHeading" value={s.newsletterHeading} full />
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Newsletter subtext
+                </span>
+                <textarea name="newsletterSubtext" rows={2} defaultValue={s.newsletterSubtext} className={input} />
+              </label>
+              <Field label="Stockists heading" name="stockistHeading" value={s.stockistHeading} full />
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Stockists subtext
+                </span>
+                <textarea name="stockistSubtext" rows={2} defaultValue={s.stockistSubtext} className={input} />
+              </label>
+            </div>
+          </Section>
+
+          <Section icon={CreditCard} title="Payment methods">
+            <div className="space-y-2.5">
+              {paymentMethods.map((m) => {
+                const key = ("pay" + m.id.charAt(0).toUpperCase() + m.id.slice(1)) as
+                  | "payCod" | "payJazzcash" | "payEasypaisa" | "payCard" | "payBank";
+                return (
+                  <label
+                    key={m.id}
+                    className="flex items-center justify-between rounded-lg border border-purple-100 px-4 py-3"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="text-xl">{m.icon}</span>
+                      <span className="text-sm font-medium text-purple-900">{m.label}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      name={key}
+                      defaultChecked={s[key] === "true"}
+                      className="h-4 w-4 accent-green-600"
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </Section>
+
+          <Section icon={LineChart} title="Analytics & tracking">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Google Analytics 4 ID"
+                name="ga4MeasurementId"
+                value={s.ga4MeasurementId}
+              />
+              <Field label="Meta Pixel ID" name="metaPixelId" value={s.metaPixelId} />
+            </div>
+            <p className="mt-2 text-xs text-purple-900/50">
+              Leave blank to disable. GA4 looks like <code>G-XXXXXXXXXX</code>; the Meta
+              Pixel ID is a number. Once set, page views, add-to-cart and purchase events
+              are tracked automatically.
+            </p>
+          </Section>
+
+          <Section icon={Code} title="Footer credit">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Credit text" name="footerCredit" value={s.footerCredit} />
+              <Field label="Credit URL" name="footerCreditUrl" value={s.footerCreditUrl} />
+            </div>
+          </Section>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button className="rounded-lg gradient-purple-green px-6 py-2.5 text-sm font-semibold text-cream">
+            Save changes
+          </button>
+        </div>
+      </form>
+
+      {/* staff */}
+      <div className="mt-6">
+        <Section icon={Users} title="Staff accounts">
+          <div className="mb-4 flex justify-end">
+            <Link
+              href="/admin/staff"
+              className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream"
+            >
+              Manage staff
+            </Link>
+          </div>
+          <div className="space-y-2.5">
+            {staff.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center justify-between rounded-lg border border-purple-100 px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-full gradient-purple-green text-xs font-bold text-cream">
+                    {u.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-purple-900">{u.name}</p>
+                    <p className="text-xs text-purple-900/50">{u.email}</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-semibold capitalize text-purple-700">
+                  {u.role}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+const input =
+  "w-full rounded-lg border border-purple-100 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-100";
+
+function Section({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
+      <h2 className="mb-5 flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
+        <Icon className="h-5 w-5 text-green-600" /> {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function Field({
+  label,
+  name,
+  value,
+  type = "text",
+  full = false,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  type?: string;
+  full?: boolean;
+}) {
+  return (
+    <label className={`block ${full ? "sm:col-span-2" : ""}`}>
+      <span className="mb-1.5 block text-xs font-medium text-purple-900/70">{label}</span>
+      <input name={name} type={type} defaultValue={value} className={input} />
+    </label>
+  );
+}
