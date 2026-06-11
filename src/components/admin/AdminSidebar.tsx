@@ -2,45 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  ShoppingCart,
-  Package,
-  Boxes,
-  FolderTree,
-  Users,
-  Star,
-  Tag,
-  BarChart3,
-  Settings,
-  Truck,
-  FileText,
-  ShoppingBag,
-  Gift,
-  Mail,
-  Send,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/site/BrandMark";
-
-const nav = [
-  { label: "Home", href: "/admin", icon: Home },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { label: "Abandoned carts", href: "/admin/abandoned", icon: ShoppingBag },
-  { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Inventory", href: "/admin/inventory", icon: Boxes },
-  { label: "Bundles", href: "/admin/bundles", icon: Gift },
-  { label: "Collections", href: "/admin/collections", icon: FolderTree },
-  { label: "Customers", href: "/admin/customers", icon: Users },
-  { label: "Reviews", href: "/admin/reviews", icon: Star },
-  { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
-  { label: "Campaigns", href: "/admin/campaigns", icon: Send },
-  { label: "Content", href: "/admin/content", icon: FileText },
-  { label: "Discounts", href: "/admin/discounts", icon: Tag },
-  { label: "Shipping", href: "/admin/shipping", icon: Truck },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-];
+import { adminNav, isActiveAdminRoute } from "@/components/admin/admin-nav";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -65,11 +29,8 @@ export function AdminSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-        {nav.map((item) => {
-          const active =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
+        {adminNav.map((item) => {
+          const active = isActiveAdminRoute(pathname, item.href);
           return (
             <Link
               key={item.href}
