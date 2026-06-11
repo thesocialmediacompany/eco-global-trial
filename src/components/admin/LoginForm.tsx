@@ -35,7 +35,7 @@ export function LoginForm({ from }: { from: string }) {
               type="email"
               required
               autoComplete="email"
-              defaultValue="admin@ecoglobalfoods.com"
+              placeholder="you@ecoglobalfoods.com"
               className={input}
             />
           </label>
@@ -60,10 +60,6 @@ export function LoginForm({ from }: { from: string }) {
           )}
 
           <SubmitButton />
-
-          <p className="text-center text-xs text-purple-900/40">
-            Demo: admin@ecoglobalfoods.com / ecoadmin123
-          </p>
         </form>
       </div>
     </div>
