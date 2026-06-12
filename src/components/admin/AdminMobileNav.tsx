@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,21 +14,19 @@ import { logout } from "@/app/admin/login/actions";
 /** Hamburger + slide-out admin navigation for small screens (sidebar is desktop-only). */
 export function AdminMobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  return (
-    <div className="lg:hidden">
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Open menu"
-        className="grid h-9 w-9 place-items-center rounded-lg text-purple-900/70 transition-colors hover:bg-purple-50"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+  // Portal target only exists on the client.
+  useEffect(() => setMounted(true), []);
 
-      <AnimatePresence>
-        {open && (
-          <>
+  // The drawer is rendered into <body> (not inside the backdrop-blurred top bar),
+  // otherwise the header becomes the containing block for the `fixed` drawer and
+  // its full-height sizing collapses.
+  const drawer = (
+    <AnimatePresence>
+      {open && (
+        <>
             <motion.div
               className="fixed inset-0 z-50 bg-purple-950/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -110,6 +109,18 @@ export function AdminMobileNav() {
           </>
         )}
       </AnimatePresence>
-    </div>
+  );
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        className="grid h-9 w-9 place-items-center rounded-lg text-purple-900/70 transition-colors hover:bg-purple-50 lg:hidden"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      {mounted && createPortal(drawer, document.body)}
+    </>
   );
 }
