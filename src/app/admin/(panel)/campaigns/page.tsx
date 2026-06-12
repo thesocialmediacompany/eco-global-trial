@@ -1,5 +1,8 @@
-import { Send, Mail, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
+import { getFeaturedProducts } from "@/lib/products";
+import { CampaignComposer } from "@/components/admin/CampaignComposer";
 import { sendCampaign, sendTestCampaign } from "./actions";
 
 function formatDate(d: Date) {
@@ -12,17 +15,25 @@ function formatDate(d: Date) {
   }).format(d);
 }
 
-const input =
-  "w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ecoglobalfoods.com";
 
 export default async function CampaignsPage() {
-  const [activeCount, past] = await Promise.all([
+  const [activeCount, past, settings, featured] = await Promise.all([
     prisma.newsletterSubscriber.count({ where: { active: true } }),
     prisma.campaign.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+    getSettings(),
+    getFeaturedProducts(4),
   ]);
 
+  const featuredProducts = featured.map((p) => ({
+    title: p.name,
+    price: p.price,
+    imageUrl: p.imageUrl ?? null,
+    url: `${siteUrl}/product/${p.slug}`,
+  }));
+
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-5xl">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-semibold text-purple-900">
           Newsletter campaigns
@@ -33,76 +44,18 @@ export default async function CampaignsPage() {
         </p>
       </div>
 
-      {/* Compose */}
-      <form className="space-y-4 rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Subject</span>
-          <input name="subject" required placeholder="e.g. New flavours just landed 🌿" className={input} />
-        </label>
-
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
-            Message
-          </span>
-          <textarea
-            name="body"
-            required
-            rows={8}
-            placeholder={"Write your newsletter here.\n\nLeave a blank line between paragraphs."}
-            className={input}
-          />
-          <span className="mt-1 block text-[0.7rem] text-purple-900/40">
-            Plain text. A blank line starts a new paragraph. An unsubscribe link is
-            added automatically.
-          </span>
-        </label>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
-              Button label (optional)
-            </span>
-            <input name="ctaLabel" placeholder="Shop now" className={input} />
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
-              Button link (optional)
-            </span>
-            <input name="ctaUrl" placeholder="https://www.ecoglobalfoods.com/shop" className={input} />
-          </label>
-        </div>
-
-        {/* Test + send */}
-        <div className="flex flex-col gap-3 border-t border-purple-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-2">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
-                Send a test to
-              </span>
-              <input
-                name="testTo"
-                type="email"
-                placeholder="you@example.com"
-                className={`${input} sm:w-56`}
-              />
-            </label>
-            <button
-              formAction={sendTestCampaign}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
-            >
-              <Mail className="h-4 w-4" /> Send test
-            </button>
-          </div>
-
-          <button
-            formAction={sendCampaign}
-            className="inline-flex items-center justify-center gap-2 rounded-lg gradient-purple-green px-5 py-2.5 text-sm font-semibold text-cream shadow-sm"
-          >
-            <Send className="h-4 w-4" /> Send to {activeCount} subscriber
-            {activeCount === 1 ? "" : "s"}
-          </button>
-        </div>
-      </form>
+      <CampaignComposer
+        store={{
+          storeName: settings.storeName,
+          storeLegalName: settings.storeLegalName,
+          storePhone: settings.storePhone,
+          storeEmail: settings.storeEmail,
+        }}
+        featuredProducts={featuredProducts}
+        activeCount={activeCount}
+        sendCampaign={sendCampaign}
+        sendTestCampaign={sendTestCampaign}
+      />
 
       {/* Past campaigns */}
       <div className="mt-8">

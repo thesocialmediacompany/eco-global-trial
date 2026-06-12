@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type } from "lucide-react";
+import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type, Mail } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { paymentMethods } from "@/lib/payments";
-import { updateSettings } from "./actions";
+import { updateSettings, sendSettingsTestEmail } from "./actions";
 
 export default async function SettingsPage() {
   const [s, staff] = await Promise.all([
@@ -162,6 +162,46 @@ export default async function SettingsPage() {
               Pixel ID is a number. Once set, page views, add-to-cart and purchase events
               are tracked automatically.
             </p>
+          </Section>
+
+          <Section icon={Mail} title="Email sending">
+            <p className="-mt-1 mb-3 text-xs text-purple-900/50">
+              Connect a mailbox so order, newsletter and campaign emails actually
+              send. Use your provider&apos;s SMTP details. For Gmail/Google Workspace
+              use <code>smtp.gmail.com</code> port <code>587</code> and an{" "}
+              <strong>App Password</strong> (not your normal password). Zoho:{" "}
+              <code>smtp.zoho.com</code>. Leave blank to keep emails in test mode.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="SMTP host" name="smtpHost" value={s.smtpHost} />
+              <Field label="SMTP port" name="smtpPort" value={s.smtpPort} type="number" />
+              <Field label="Username (email)" name="smtpUser" value={s.smtpUser} />
+              <Field label="Password / App password" name="smtpPass" value={s.smtpPass} type="password" />
+              <Field label="From name" name="smtpFromName" value={s.smtpFromName} />
+              <Field label="From email" name="smtpFromEmail" value={s.smtpFromEmail} />
+            </div>
+            <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-purple-100 pt-4">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Send a test to
+                </span>
+                <input
+                  name="testEmailTo"
+                  type="email"
+                  placeholder="you@example.com"
+                  className={`${input} sm:w-64`}
+                />
+              </label>
+              <button
+                formAction={sendSettingsTestEmail}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
+              >
+                <Mail className="h-4 w-4" /> Save &amp; send test
+              </button>
+              <p className="w-full text-[0.7rem] text-purple-900/40">
+                &ldquo;Save &amp; send test&rdquo; saves these email settings and sends one test message to the address above.
+              </p>
+            </div>
           </Section>
 
           <Section icon={Code} title="Footer credit">

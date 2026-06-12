@@ -56,6 +56,14 @@ export const defaultSettings = {
   stockistHeading: "Also available at leading stores",
   stockistSubtext:
     "Find Eco Global Foods on the shelves of Pakistan's most trusted supermarkets and pharmacies.",
+  // Email sending (SMTP). Fill these to connect a real mailbox; falls back to
+  // SMTP_* env vars if blank. Used for order, newsletter and campaign emails.
+  smtpHost: "", // e.g. smtp.gmail.com / smtp.zoho.com
+  smtpPort: "587",
+  smtpUser: "", // the email address / username
+  smtpPass: "", // app password
+  smtpFromName: "Eco Global Foods",
+  smtpFromEmail: "", // the "from" address shown to recipients
 } as const;
 
 export type SettingKey = keyof typeof defaultSettings;

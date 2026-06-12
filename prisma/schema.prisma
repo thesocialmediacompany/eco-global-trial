@@ -200,15 +200,19 @@ model NewsletterSubscriber {
 
 /// A newsletter broadcast composed + sent from the admin.
 model Campaign {
-  id        String    @id @default(cuid())
-  subject   String
-  body      String // plain text, one paragraph per blank line
-  ctaLabel  String    @default("")
-  ctaUrl    String    @default("")
-  status    String    @default("draft") // draft | sent
-  sentCount Int       @default(0)
-  sentAt    DateTime?
-  createdAt DateTime  @default(now())
+  id              String    @id @default(cuid())
+  subject         String
+  preheader       String    @default("") // inbox preview line
+  bannerImage     String    @default("") // optional hero image URL
+  headline        String    @default("") // big heading inside the email
+  body            String // plain text, one paragraph per blank line
+  ctaLabel        String    @default("")
+  ctaUrl          String    @default("")
+  includeProducts Boolean   @default(false) // append featured-product cards
+  status          String    @default("draft") // draft | sent
+  sentCount       Int       @default(0)
+  sentAt          DateTime?
+  createdAt       DateTime  @default(now())
 }
 
 /// "Subscribe & Save" reorder reminders. COD can't do recurring billing, so we

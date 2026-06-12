@@ -3,23 +3,36 @@ import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
 import { getSettings } from "@/lib/settings";
+import type { StoreSettings } from "@/lib/settings-defaults";
 import { getPaymentMethod } from "@/lib/payments";
+import { renderCampaignEmail, type CampaignProduct } from "@/lib/campaign-template";
 
 /**
- * Transactional email. When SMTP_* env vars are set it sends via nodemailer;
- * otherwise it logs the message to the server console (dev fallback) so the
- * pipeline is fully wired and testable without credentials.
+ * Transactional + marketing email. Reads SMTP config from store Settings (so
+ * the team can connect a mailbox from the admin) and falls back to SMTP_* env
+ * vars. When nothing is configured it logs to the server console (dev fallback)
+ * so the pipeline stays testable without credentials.
  */
 
-function getTransport() {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+function buildTransport(s: StoreSettings) {
+  const host = s.smtpHost || process.env.SMTP_HOST;
+  const user = s.smtpUser || process.env.SMTP_USER;
+  const pass = s.smtpPass || process.env.SMTP_PASS;
+  const port = Number(s.smtpPort || process.env.SMTP_PORT) || 587;
+  if (!host || !user || !pass) return null;
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT) || 587,
-    secure: Number(SMTP_PORT) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
   });
+}
+
+function fromAddress(s: StoreSettings) {
+  const email = s.smtpFromEmail || s.smtpUser || process.env.SMTP_USER;
+  const name = s.smtpFromName || s.storeName || "Eco Global Foods";
+  if (process.env.SMTP_FROM && !s.smtpFromEmail) return process.env.SMTP_FROM;
+  return email ? `${name} <${email}>` : "Eco Global Foods <support@ecoglobalfoods.com>";
 }
 
 export interface SendResult {
@@ -34,8 +47,8 @@ async function deliver(opts: {
   html: string;
   text: string;
 }): Promise<SendResult> {
-  const transport = getTransport();
-  const from = process.env.SMTP_FROM || "Eco Global Foods <support@ecoglobalfoods.com>";
+  const s = await getSettings();
+  const transport = buildTransport(s);
 
   if (!transport) {
     console.log(
@@ -47,7 +60,7 @@ async function deliver(opts: {
   }
 
   await transport.sendMail({
-    from,
+    from: fromAddress(s),
     to: opts.to,
     bcc: opts.bcc,
     subject: opts.subject,
@@ -55,6 +68,31 @@ async function deliver(opts: {
     html: opts.html,
   });
   return { sent: true };
+}
+
+/** Send a simple test email to verify the SMTP connection from admin Settings. */
+export async function sendTestEmail(to: string): Promise<SendResult> {
+  const s = await getSettings();
+  const body = `
+    <p style="color:#2a0f28;font-size:15px;margin:0 0 12px;">
+      This is a test email from your Eco Global Foods admin. 🎉
+    </p>
+    <p style="color:#5e3052;font-size:14px;margin:0;">
+      If you're reading this, your email sending is connected and working.
+    </p>`;
+  return deliver({
+    to,
+    subject: "Test email from Eco Global Foods",
+    html: shell({
+      storeName: s.storeName,
+      storeLegalName: s.storeLegalName,
+      storePhone: s.storePhone,
+      storeEmail: s.storeEmail,
+      heading: "Email connected ✅",
+      body,
+    }),
+    text: "Test email from Eco Global Foods admin. Your email sending is working.",
+  });
 }
 
 /**
@@ -229,50 +267,33 @@ export async function sendCampaignEmail(opts: {
   to: string;
   subject: string;
   body: string;
+  preheader?: string;
+  bannerImage?: string;
+  headline?: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  products?: CampaignProduct[];
   unsubscribeUrl: string;
 }): Promise<SendResult> {
   const settings = await getSettings();
 
-  // Plain-text body → HTML paragraphs (blank line separates paragraphs).
-  const paragraphs = opts.body
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map(
-      (p) =>
-        `<p style="color:#2a0f28;font-size:15px;line-height:1.6;margin:0 0 14px;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`,
-    )
-    .join("");
-
-  const cta =
-    opts.ctaLabel && opts.ctaUrl ? ctaButton(opts.ctaUrl, opts.ctaLabel) : "";
-
-  const body = `
-    ${paragraphs}
-    ${cta}
-    <p style="margin:24px 0 0;border-top:1px solid #ece0f7;padding-top:14px;text-align:center;color:#99628d;font-size:12px;">
-      You're receiving this because you subscribed to Eco Global Foods.<br/>
-      <a href="${opts.unsubscribeUrl}" style="color:#99628d;text-decoration:underline;">Unsubscribe</a>
-    </p>`;
-
-  return deliver({
-    to: opts.to,
+  const { html, text } = renderCampaignEmail({
+    storeName: settings.storeName,
+    storeLegalName: settings.storeLegalName,
+    storePhone: settings.storePhone,
+    storeEmail: settings.storeEmail,
     subject: opts.subject,
-    html: shell({
-      storeName: settings.storeName,
-      storeLegalName: settings.storeLegalName,
-      storePhone: settings.storePhone,
-      storeEmail: settings.storeEmail,
-      heading: settings.storeName,
-      body,
-    }),
-    text:
-      `${opts.body}\n\n` +
-      (opts.ctaLabel && opts.ctaUrl ? `${opts.ctaLabel}: ${opts.ctaUrl}\n\n` : "") +
-      `Unsubscribe: ${opts.unsubscribeUrl}`,
+    preheader: opts.preheader,
+    bannerImage: opts.bannerImage,
+    headline: opts.headline,
+    body: opts.body,
+    ctaLabel: opts.ctaLabel,
+    ctaUrl: opts.ctaUrl,
+    products: opts.products,
+    unsubscribeUrl: opts.unsubscribeUrl,
   });
+
+  return deliver({ to: opts.to, subject: opts.subject, html, text });
 }
 
 /** Nudge a shopper who left items in their cart to come back and finish. */
