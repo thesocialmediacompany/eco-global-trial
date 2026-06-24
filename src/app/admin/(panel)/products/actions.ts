@@ -59,6 +59,9 @@ function parseForm(formData: FormData) {
       seoTitle: String(formData.get("seoTitle") ?? ""),
       seoDescription: String(formData.get("seoDescription") ?? ""),
       seoKeywords: String(formData.get("seoKeywords") ?? ""),
+      ingredients: String(formData.get("ingredients") ?? ""),
+      allergens: String(formData.get("allergens") ?? ""),
+      nutritionJson: String(formData.get("nutritionJson") ?? ""),
     },
     variants,
   };

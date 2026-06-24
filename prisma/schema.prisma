@@ -77,6 +77,11 @@ model Product {
   rating       Float?
   reviewCount  Int     @default(0)
 
+  // nutrition + ingredients (food labelling)
+  ingredients   String @default("") // free text
+  allergens     String @default("") // comma-separated (e.g. "Nuts, Gluten")
+  nutritionJson String @default("") // JSON array of { label, value } rows, per serving/100g
+
   // SEO (per-product, as requested)
   seoTitle       String @default("")
   seoDescription String @default("")

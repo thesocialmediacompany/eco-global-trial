@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/site/BrandMark";
-import { adminNav, isActiveAdminRoute } from "@/components/admin/admin-nav";
+import { navForRole, isActiveAdminRoute } from "@/components/admin/admin-nav";
 
-export function AdminSidebar() {
+export function AdminSidebar({ role }: { role?: string }) {
   const pathname = usePathname();
+  const adminNav = navForRole(role);
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col gradient-purple text-cream/90 lg:flex">

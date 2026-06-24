@@ -239,6 +239,9 @@ export default async function ProductPage({
             </h2>
             <ProductDetailsTabs
               description={product.description}
+              ingredients={product.ingredients}
+              allergens={product.allergens}
+              nutrition={product.nutrition}
               delivery={`We deliver across Pakistan in 2-5 working days. Free delivery on orders over ${formatPKR(freeShippingThreshold)}, with Cash on Delivery available. Not happy with your order? Our 30-day satisfaction promise has you covered.`}
             />
           </div>

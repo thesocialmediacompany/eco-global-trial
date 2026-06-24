@@ -6,7 +6,13 @@ import { Search, Bell, ChevronDown, LogOut, ExternalLink } from "lucide-react";
 import { logout } from "@/app/admin/login/actions";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 
-export function AdminTopbar({ userName = "EGF Admin" }: { userName?: string }) {
+export function AdminTopbar({
+  userName = "EGF Admin",
+  role,
+}: {
+  userName?: string;
+  role?: string;
+}) {
   const [open, setOpen] = useState(false);
   const initials = userName
     .split(" ")
@@ -17,7 +23,7 @@ export function AdminTopbar({ userName = "EGF Admin" }: { userName?: string }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-purple-100 bg-white/90 px-4 backdrop-blur lg:px-6">
-      <AdminMobileNav />
+      <AdminMobileNav role={role} />
       <div className="relative flex-1 max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-900/40" />
         <input

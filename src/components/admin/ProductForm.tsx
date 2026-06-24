@@ -37,6 +37,9 @@ type ProductData = {
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
+  ingredients: string;
+  allergens: string;
+  nutrition: { label: string; value: string }[];
   variants: Variant[];
 };
 
@@ -66,6 +69,9 @@ export function ProductForm({
   const [seoDescription, setSeoDescription] = useState(product?.seoDescription ?? "");
   const [emoji, setEmoji] = useState(product?.emoji ?? "🌿");
   const [gradient, setGradient] = useState(product?.gradient ?? "gradient-purple");
+  const [nutrition, setNutrition] = useState<{ label: string; value: string }[]>(
+    product?.nutrition?.length ? product.nutrition : [],
+  );
 
   function updateVariant(i: number, patch: Partial<Variant>) {
     setVariants((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
@@ -76,6 +82,15 @@ export function ProductForm({
   function removeVariant(i: number) {
     setVariants((vs) => vs.filter((_, idx) => idx !== i));
   }
+  function updateNutrition(i: number, patch: Partial<{ label: string; value: string }>) {
+    setNutrition((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  }
+  function addNutrition() {
+    setNutrition((rows) => [...rows, { label: "", value: "" }]);
+  }
+  function removeNutrition(i: number) {
+    setNutrition((rows) => rows.filter((_, idx) => idx !== i));
+  }
 
   return (
     <form action={action} className="mx-auto max-w-5xl pb-24">
@@ -83,6 +98,11 @@ export function ProductForm({
       <input type="hidden" name="variants" value={JSON.stringify(variants)} />
       <input type="hidden" name="emoji" value={emoji} />
       <input type="hidden" name="gradient" value={gradient} />
+      <input
+        type="hidden"
+        name="nutritionJson"
+        value={JSON.stringify(nutrition.filter((r) => r.label.trim() || r.value.trim()))}
+      />
 
       {/* Top bar */}
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -238,6 +258,66 @@ export function ProductForm({
             >
               <Plus className="h-4 w-4" /> Add variant
             </button>
+          </Card>
+
+          {/* Nutrition & ingredients */}
+          <Card title="Nutrition & ingredients">
+            <Field label="Ingredients">
+              <textarea
+                name="ingredients"
+                defaultValue={product?.ingredients}
+                rows={3}
+                placeholder="Whole grain oats, honey, almonds, sunflower oil…"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Allergens (comma-separated)">
+              <input
+                name="allergens"
+                defaultValue={product?.allergens}
+                placeholder="Nuts, Gluten, Milk"
+                className={inputCls}
+              />
+            </Field>
+
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                Nutrition facts (per serving / 100g)
+              </span>
+              <div className="space-y-2">
+                {nutrition.map((row, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+                    <input
+                      value={row.label}
+                      onChange={(e) => updateNutrition(i, { label: e.target.value })}
+                      placeholder="Energy"
+                      className={inputCls}
+                    />
+                    <input
+                      value={row.value}
+                      onChange={(e) => updateNutrition(i, { value: e.target.value })}
+                      placeholder="380 kcal"
+                      className={inputCls}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNutrition(i)}
+                      className="grid h-9 w-9 place-items-center rounded-lg text-purple-900/40 hover:bg-rose-50 hover:text-rose-600"
+                      aria-label="Remove row"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addNutrition}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800"
+              >
+                <Plus className="h-4 w-4" /> Add nutrition row
+              </button>
+            </div>
           </Card>
 
           {/* SEO */}

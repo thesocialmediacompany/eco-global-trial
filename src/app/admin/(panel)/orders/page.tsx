@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { Download, Plus, Search } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { formatPKR } from "@/lib/utils";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { OrdersTable } from "@/components/admin/OrdersTable";
+import { bulkFulfillOrders } from "./actions";
 
 function formatDate(d: Date) {
   return new Intl.DateTimeFormat("en-PK", {
@@ -126,72 +126,20 @@ export default async function OrdersPage({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-sm">
-            <thead>
-              <tr className="border-b border-purple-100 text-left text-xs uppercase tracking-wide text-purple-900/50">
-                <th className="px-4 py-3 font-medium">Order</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Channel</th>
-                <th className="px-4 py-3 text-right font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Payment</th>
-                <th className="px-4 py-3 font-medium">Fulfillment</th>
-                <th className="px-4 py-3 font-medium">Items</th>
-                <th className="px-4 py-3 font-medium">Delivery</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-purple-900/50">
-                    No orders in this view.
-                  </td>
-                </tr>
-              ) : (
-                orders.map((o) => (
-                  <tr
-                    key={o.id}
-                    className="border-b border-purple-50 last:border-0 hover:bg-cream/40"
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/orders/${o.id}`}
-                        className="font-semibold text-purple-900 hover:text-purple-700"
-                      >
-                        #{o.orderNumber}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-purple-900/70">{formatDate(o.createdAt)}</td>
-                    <td className="px-4 py-3 text-purple-900/80">{o.customerName}</td>
-                    <td className="px-4 py-3 text-purple-900/60">Online Store</td>
-                    <td className="px-4 py-3 text-right font-medium text-purple-900">
-                      {formatPKR(o.total)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={o.paymentStatus} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={o.fulfillmentStatus} />
-                    </td>
-                    <td className="px-4 py-3 text-purple-900/70">
-                      {o._count.items} item{o._count.items === 1 ? "" : "s"}
-                    </td>
-                    <td className="px-4 py-3 text-purple-900/60">
-                      {o.courier ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
-                          Tracking added
-                        </span>
-                      ) : (
-                        " - "
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <OrdersTable
+          orders={orders.map((o) => ({
+            id: o.id,
+            orderNumber: o.orderNumber,
+            customerName: o.customerName,
+            date: formatDate(o.createdAt),
+            total: o.total,
+            paymentStatus: o.paymentStatus,
+            fulfillmentStatus: o.fulfillmentStatus,
+            itemCount: o._count.items,
+            hasCourier: Boolean(o.courier),
+          }))}
+          bulkFulfill={bulkFulfillOrders}
+        />
 
         <div className="flex items-center justify-between border-t border-purple-100 px-4 py-3 text-sm text-purple-900/50">
           <span>

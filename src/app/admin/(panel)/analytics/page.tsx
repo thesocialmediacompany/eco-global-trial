@@ -1,9 +1,11 @@
 import { TrendingUp, ShoppingCart, Package, Receipt } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/admin-guard";
 import { formatPKR } from "@/lib/utils";
 import { getPaymentMethod } from "@/lib/payments";
 
 export default async function AnalyticsPage() {
+  await requireOwner();
   const [orders, revenueAgg, itemsAgg, topProducts, byMethod] = await Promise.all([
     prisma.order.count(),
     prisma.order.aggregate({ _sum: { total: true }, where: { paymentStatus: "paid" } }),

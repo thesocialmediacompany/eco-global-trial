@@ -6,6 +6,9 @@ import { Plus, Minus } from "lucide-react";
 
 interface Props {
   description: string;
+  ingredients?: string;
+  allergens?: string[];
+  nutrition?: { label: string; value: string }[];
   /** generic copy shown alongside the product's own description */
   storage?: string;
   delivery?: string;
@@ -13,11 +16,16 @@ interface Props {
 
 export function ProductDetailsTabs({
   description,
+  ingredients,
+  allergens = [],
+  nutrition = [],
   storage = "Store in a cool, dry place away from direct sunlight. Reseal the pack after opening to keep it fresh.",
   delivery = "We deliver across Pakistan in 2-5 working days. Free delivery on orders over Rs 7,000, with Cash on Delivery available. Not happy with your order? Our 30-day satisfaction promise has you covered.",
 }: Props) {
+  const hasNutrition = Boolean(ingredients || allergens.length || nutrition.length);
   const sections = [
     { key: "desc", title: "Description", body: description || "No description available." },
+    ...(hasNutrition ? [{ key: "nutrition", title: "Nutrition & ingredients", body: "" }] : []),
     { key: "storage", title: "Storage", body: storage },
     { key: "delivery", title: "Delivery & Returns", body: delivery },
   ];
@@ -50,11 +58,59 @@ export function ProductDetailsTabs({
                   transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="space-y-3 px-5 pb-5 text-sm leading-relaxed text-purple-900/70">
-                    {paras.map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
-                  </div>
+                  {s.key === "nutrition" ? (
+                    <div className="space-y-4 px-5 pb-5 text-sm text-purple-900/70">
+                      {ingredients && (
+                        <div>
+                          <p className="mb-1 font-semibold text-purple-900">Ingredients</p>
+                          <p className="leading-relaxed">{ingredients}</p>
+                        </div>
+                      )}
+                      {allergens.length > 0 && (
+                        <div>
+                          <p className="mb-1.5 font-semibold text-purple-900">Allergens</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {allergens.map((a) => (
+                              <span
+                                key={a}
+                                className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
+                              >
+                                Contains {a}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {nutrition.length > 0 && (
+                        <div>
+                          <p className="mb-1.5 font-semibold text-purple-900">
+                            Nutrition facts
+                          </p>
+                          <table className="w-full overflow-hidden rounded-lg border border-purple-100 text-sm">
+                            <tbody>
+                              {nutrition.map((row, i) => (
+                                <tr
+                                  key={i}
+                                  className={i % 2 ? "bg-cream/40" : "bg-white"}
+                                >
+                                  <td className="px-4 py-2 text-purple-900/70">{row.label}</td>
+                                  <td className="px-4 py-2 text-right font-medium text-purple-900">
+                                    {row.value}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 px-5 pb-5 text-sm leading-relaxed text-purple-900/70">
+                      {paras.map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

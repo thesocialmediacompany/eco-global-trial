@@ -8,14 +8,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ExternalLink, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/site/BrandMark";
-import { adminNav, isActiveAdminRoute } from "@/components/admin/admin-nav";
+import { navForRole, isActiveAdminRoute } from "@/components/admin/admin-nav";
 import { logout } from "@/app/admin/login/actions";
 
 /** Hamburger + slide-out admin navigation for small screens (sidebar is desktop-only). */
-export function AdminMobileNav() {
+export function AdminMobileNav({ role }: { role?: string }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const adminNav = navForRole(role);
 
   // Portal target only exists on the client.
   useEffect(() => setMounted(true), []);

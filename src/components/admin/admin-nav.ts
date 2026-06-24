@@ -22,6 +22,8 @@ export interface AdminNavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** only visible to owner-role staff */
+  ownerOnly?: boolean;
 }
 
 /** Single source of truth for the admin navigation (desktop sidebar + mobile drawer). */
@@ -38,11 +40,16 @@ export const adminNav: AdminNavItem[] = [
   { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
   { label: "Campaigns", href: "/admin/campaigns", icon: Send },
   { label: "Content", href: "/admin/content", icon: FileText },
-  { label: "Discounts", href: "/admin/discounts", icon: Tag },
+  { label: "Discounts", href: "/admin/discounts", icon: Tag, ownerOnly: true },
   { label: "Shipping", href: "/admin/shipping", icon: Truck },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3, ownerOnly: true },
+  { label: "Settings", href: "/admin/settings", icon: Settings, ownerOnly: true },
 ];
+
+/** Nav items visible for a given role. */
+export function navForRole(role?: string): AdminNavItem[] {
+  return role === "owner" ? adminNav : adminNav.filter((i) => !i.ownerOnly);
+}
 
 /** Whether a nav item is the active route. */
 export function isActiveAdminRoute(pathname: string, href: string) {

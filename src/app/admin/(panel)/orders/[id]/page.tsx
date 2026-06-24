@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, MapPin, Phone, Mail, Truck, Send, Star } from "lucide-react";
+import { ChevronLeft, MapPin, Phone, Mail, Truck, Send, Star, MessageCircle, Printer } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -75,6 +75,12 @@ export default async function OrderDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
+          <Link
+            href={`/admin/orders/${order.id}/packing-slip`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
+          >
+            <Printer className="h-4 w-4" /> Packing slip
+          </Link>
           <form action={resendAction}>
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
               <Send className="h-4 w-4" /> Resend email
@@ -243,6 +249,37 @@ export default async function OrderDetailPage({
             </div>
           </div>
 
+          {order.phone && (
+            <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+              <h2 className="mb-1 flex items-center gap-2 font-display text-base font-semibold text-purple-900">
+                <MessageCircle className="h-4 w-4 text-green-600" /> WhatsApp customer
+              </h2>
+              <p className="mb-3 text-xs text-purple-900/50">
+                Opens WhatsApp with a ready-to-send message.
+              </p>
+              <div className="space-y-2">
+                {(
+                  [
+                    { kind: "confirmed", label: "Order confirmed" },
+                    { kind: "shipped", label: "Out for delivery" },
+                    { kind: "delivered", label: "Delivered + review" },
+                  ] as const
+                ).map((t) => (
+                  <a
+                    key={t.kind}
+                    href={waOrderLink(order, t.kind)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-medium text-green-800 hover:bg-green-100"
+                  >
+                    {t.label}
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-purple-900">
               Payment
@@ -267,4 +304,39 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-purple-900">{value}</span>
     </div>
   );
+}
+
+/** Pakistan phone → wa.me digits (international, no + or leading 0). */
+function waNumber(phone: string) {
+  let d = phone.replace(/\D/g, "");
+  if (d.startsWith("0")) d = "92" + d.slice(1);
+  else if (!d.startsWith("92") && d.length <= 10) d = "92" + d;
+  return d;
+}
+
+/** Build a wa.me link with a prefilled order-update message for the customer. */
+function waOrderLink(
+  order: {
+    phone: string;
+    customerName: string;
+    orderNumber: number;
+    courier: string;
+    trackingNumber: string;
+  },
+  kind: "confirmed" | "shipped" | "delivered",
+) {
+  const first = order.customerName.split(" ")[0] || "there";
+  const n = order.orderNumber;
+  let msg = "";
+  if (kind === "confirmed") {
+    msg = `Assalam o Alaikum ${first}, thank you for your order #${n} with Eco Global Foods! 🌿 We've received it and will dispatch it shortly. We'll share tracking once it ships.`;
+  } else if (kind === "shipped") {
+    const track = order.trackingNumber
+      ? ` It's on the way via ${order.courier || "our courier"}, tracking ${order.trackingNumber}.`
+      : " It's on the way and should arrive in 2-5 working days.";
+    msg = `Good news ${first}! Your Eco Global Foods order #${n} has been dispatched. 🚚${track}`;
+  } else {
+    msg = `Hi ${first}, we hope your order #${n} arrived safely and you're enjoying it! 🌿 If you have a moment, a quick review would mean a lot. Thank you for shopping with Eco Global Foods.`;
+  }
+  return `https://wa.me/${waNumber(order.phone)}?text=${encodeURIComponent(msg)}`;
 }

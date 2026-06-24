@@ -7,6 +7,20 @@ type DbProductWithRels = Prisma.ProductGetPayload<{
   include: { variants: true; collection: true };
 }>;
 
+/** Safely parse the stored nutrition JSON into label/value rows. */
+function parseNutrition(json: string): { label: string; value: string }[] {
+  if (!json) return [];
+  try {
+    const rows = JSON.parse(json);
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .filter((r) => r && typeof r.label === "string" && typeof r.value === "string")
+      .map((r) => ({ label: r.label, value: r.value }));
+  } catch {
+    return [];
+  }
+}
+
 /** Map a Prisma product row to the storefront card/detail `Product` shape. */
 export function toCardProduct(p: DbProductWithRels): Product & {
   variants: { title: string; price: number | null; inventoryQty: number; weightGrams: number }[];
@@ -32,6 +46,11 @@ export function toCardProduct(p: DbProductWithRels): Product & {
     isBestseller: p.isBestseller,
     isFeatured: p.isFeatured,
     weightGrams: p.variants[0]?.weightGrams ?? 0,
+    ingredients: p.ingredients || undefined,
+    allergens: p.allergens
+      ? p.allergens.split(",").map((a) => a.trim()).filter(Boolean)
+      : [],
+    nutrition: parseNutrition(p.nutritionJson),
     seo: {
       title: p.seoTitle || p.title,
       description: p.seoDescription || p.tagline,

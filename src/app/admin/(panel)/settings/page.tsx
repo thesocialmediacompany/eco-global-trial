@@ -3,9 +3,11 @@ import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Ty
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { paymentMethods } from "@/lib/payments";
+import { requireOwner } from "@/lib/admin-guard";
 import { updateSettings, sendSettingsTestEmail } from "./actions";
 
 export default async function SettingsPage() {
+  await requireOwner();
   const [s, staff] = await Promise.all([
     getSettings(),
     prisma.staffUser.findMany({ orderBy: { createdAt: "asc" } }),

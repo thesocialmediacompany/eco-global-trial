@@ -54,6 +54,10 @@ export interface Product {
   isFeatured?: boolean;
   /** representative net weight in grams (first variant) for shipping estimates */
   weightGrams?: number;
+  /** food labelling */
+  ingredients?: string;
+  allergens?: string[];
+  nutrition?: { label: string; value: string }[];
   /** when this product is a bundle: the products inside it */
   bundleContents?: BundleContent[];
   seo: SeoMeta;

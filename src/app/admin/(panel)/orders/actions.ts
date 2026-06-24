@@ -128,6 +128,17 @@ export async function markFulfilled(orderId: string) {
   revalidatePath("/admin/orders");
 }
 
+/** Mark several orders fulfilled at once (bulk action from the orders list). */
+export async function bulkFulfillOrders(ids: string[]) {
+  const clean = ids.filter(Boolean);
+  if (!clean.length) return;
+  await prisma.order.updateMany({
+    where: { id: { in: clean }, fulfillmentStatus: { not: "cancelled" } },
+    data: { fulfillmentStatus: "fulfilled" },
+  });
+  revalidatePath("/admin/orders");
+}
+
 /** Mark an order's payment as refunded. */
 export async function refundOrder(orderId: string) {
   await prisma.order.update({

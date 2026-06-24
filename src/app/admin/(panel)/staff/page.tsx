@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, Trash2, KeyRound, UserPlus } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/admin-guard";
 import { addStaff, updateStaffRole, resetStaffPassword, deleteStaff } from "./actions";
 
 function formatDate(d: Date) {
@@ -8,6 +9,7 @@ function formatDate(d: Date) {
 }
 
 export default async function StaffPage() {
+  await requireOwner();
   const staff = await prisma.staffUser.findMany({ orderBy: { createdAt: "asc" } });
 
   return (

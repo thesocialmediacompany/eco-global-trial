@@ -47,6 +47,16 @@ export default async function EditProductPage({
         seoTitle: product.seoTitle,
         seoDescription: product.seoDescription,
         seoKeywords: product.seoKeywords,
+        ingredients: product.ingredients,
+        allergens: product.allergens,
+        nutrition: (() => {
+          try {
+            const r = JSON.parse(product.nutritionJson || "[]");
+            return Array.isArray(r) ? r : [];
+          } catch {
+            return [];
+          }
+        })(),
         variants: product.variants.map((v) => ({
           id: v.id,
           title: v.title,

@@ -1,5 +1,6 @@
 import { Tag, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/admin-guard";
 import { formatPKR } from "@/lib/utils";
 import { createDiscount, toggleDiscount, deleteDiscount } from "./actions";
 
@@ -14,6 +15,7 @@ function describe(d: { type: string; value: number; minSubtotal: number }) {
 }
 
 export default async function DiscountsPage() {
+  await requireOwner();
   const discounts = await prisma.discount.findMany({ orderBy: { createdAt: "desc" } });
 
   return (
