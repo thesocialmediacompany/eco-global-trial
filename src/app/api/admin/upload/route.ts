@@ -4,6 +4,8 @@ import {
   getStorage,
   ALLOWED_IMAGE_TYPES,
   MAX_UPLOAD_BYTES,
+  ALLOWED_DOC_TYPES,
+  MAX_DOC_BYTES,
 } from "@/lib/storage";
 
 /**
@@ -29,18 +31,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
+  // `kind=pdf` accepts catalog/brochure PDFs; default accepts images only.
+  const isPdf = String(form.get("kind") ?? "") === "pdf";
+  const allowed = isPdf ? ALLOWED_DOC_TYPES : ALLOWED_IMAGE_TYPES;
+  const maxBytes = isPdf ? MAX_DOC_BYTES : MAX_UPLOAD_BYTES;
+  const maxLabel = isPdf ? "25 MB" : "8 MB";
+
   const storage = getStorage();
   const urls: string[] = [];
 
   for (const file of files) {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    if (!allowed.includes(file.type)) {
       return NextResponse.json(
         { error: `Unsupported file type: ${file.type}` },
         { status: 415 },
       );
     }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      return NextResponse.json({ error: "File too large (max 8 MB)" }, { status: 413 });
+    if (file.size > maxBytes) {
+      return NextResponse.json({ error: `File too large (max ${maxLabel})` }, { status: 413 });
     }
     const buffer = Buffer.from(await file.arrayBuffer());
     const { url } = await storage.save({

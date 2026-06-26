@@ -333,6 +333,30 @@ model Discount {
   createdAt   DateTime @default(now())
 }
 
+/// A photo for the Our Story gallery and the homepage "from our kitchen" band.
+/// If `url` is empty it renders as a styled gradient + emoji placeholder.
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String   @default("")
+  caption   String   @default("")
+  emoji     String   @default("📸")
+  gradient  String   @default("gradient-green") // gradient-purple | gradient-green | gradient-purple-green
+  featured  Boolean  @default(false) // also show in the homepage food band
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+/// A downloadable catalog / brochure PDF shown on the About page.
+model CatalogFile {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  fileUrl     String   @default("")
+  sizeLabel   String   @default("") // e.g. "2.4 MB"
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
 /// A line item within an order.
 model OrderItem {
   id           String  @id @default(cuid())

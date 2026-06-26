@@ -22,10 +22,13 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { getSettings } from "@/lib/settings";
+import { getGalleryImages, getCatalogFiles } from "@/lib/media";
 import { PageBanner } from "@/components/store/PageBanner";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { GetQuote } from "@/components/store/GetQuote";
+import { Gallery } from "@/components/store/Gallery";
+import { CatalogDownloads } from "@/components/store/CatalogDownloads";
 
 export const metadata: Metadata = {
   title: "Our Story | Eco Global Foods",
@@ -72,7 +75,11 @@ const timeline = [
 ];
 
 export default async function AboutPage() {
-  const settings = await getSettings();
+  const [settings, gallery, catalogs] = await Promise.all([
+    getSettings(),
+    getGalleryImages(),
+    getCatalogFiles(),
+  ]);
 
   return (
     <>
@@ -305,6 +312,38 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Gallery */}
+      {gallery.length > 0 && (
+        <section className="bg-cream/40 py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
+            <SectionHeading
+              eyebrow="Gallery"
+              title="A look inside Eco Global Foods"
+              description="From our fields and mills to the finished range and the dishes you make with it."
+            />
+            <div className="mt-14">
+              <Gallery items={gallery} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Catalogs / downloads */}
+      {catalogs.length > 0 && (
+        <section className="py-20 sm:py-24">
+          <div className="mx-auto max-w-5xl px-5 lg:px-8">
+            <SectionHeading
+              eyebrow="Downloads"
+              title="Product catalogs"
+              description="Browse our full range and private-label capabilities. Download the catalogs below."
+            />
+            <div className="mt-14">
+              <CatalogDownloads items={catalogs} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="px-5 pb-24 lg:px-8">

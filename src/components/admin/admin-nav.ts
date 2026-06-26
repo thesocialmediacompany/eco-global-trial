@@ -15,6 +15,7 @@ import {
   Gift,
   Mail,
   Send,
+  Images,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
   { label: "Campaigns", href: "/admin/campaigns", icon: Send },
   { label: "Content", href: "/admin/content", icon: FileText },
+  { label: "Media & gallery", href: "/admin/media", icon: Images, ownerOnly: true },
   { label: "Discounts", href: "/admin/discounts", icon: Tag, ownerOnly: true },
   { label: "Shipping", href: "/admin/shipping", icon: Truck },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3, ownerOnly: true },

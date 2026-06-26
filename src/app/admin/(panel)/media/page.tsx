@@ -1,0 +1,162 @@
+import { Trash2, Plus, Star, FileText, Images } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/admin-guard";
+import { UploadField } from "@/components/admin/UploadField";
+import {
+  addGalleryImage,
+  deleteGalleryImage,
+  addCatalog,
+  deleteCatalog,
+} from "./actions";
+
+export default async function MediaPage() {
+  await requireOwner();
+  const [gallery, catalogs] = await Promise.all([
+    prisma.galleryImage.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+    prisma.catalogFile.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8 pb-20">
+      <div>
+        <h1 className="font-display text-2xl font-semibold text-purple-900">Media &amp; gallery</h1>
+        <p className="mt-1 text-sm text-purple-900/60">
+          Manage the Our Story gallery, the homepage &ldquo;From our kitchen&rdquo; band and
+          downloadable catalog PDFs. Leave a photo&apos;s image blank to use a styled placeholder.
+        </p>
+      </div>
+
+      {/* ---- Gallery ---- */}
+      <section className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
+          <Images className="h-5 w-5 text-green-600" /> Gallery photos
+          <span className="ml-1 text-sm font-normal text-purple-900/50">({gallery.length})</span>
+        </h2>
+
+        {gallery.length > 0 && (
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {gallery.map((g) => (
+              <div key={g.id} className="overflow-hidden rounded-xl border border-purple-100">
+                <div className="relative aspect-square">
+                  {g.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={g.url} alt={g.caption} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className={`flex h-full w-full items-center justify-center ${g.gradient}`}>
+                      <span className="text-4xl">{g.emoji}</span>
+                    </div>
+                  )}
+                  {g.featured && (
+                    <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-gold-400 px-2 py-0.5 text-[0.6rem] font-bold text-purple-900">
+                      <Star className="h-3 w-3 fill-purple-900" /> Home
+                    </span>
+                  )}
+                  <form action={deleteGalleryImage.bind(null, g.id)} className="absolute right-1.5 top-1.5">
+                    <button className="grid h-7 w-7 place-items-center rounded-full bg-black/50 text-white hover:bg-rose-600" aria-label="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </form>
+                </div>
+                {g.caption && (
+                  <p className="truncate px-2 py-1.5 text-xs text-purple-900/70">{g.caption}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form action={addGalleryImage} className="rounded-xl border border-dashed border-purple-200 bg-cream/30 p-4">
+          <p className="mb-3 text-sm font-semibold text-purple-900">Add a photo</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <UploadField name="url" kind="image" label="Photo (optional — blank = placeholder)" />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Caption</span>
+              <input name="caption" className={input} placeholder="e.g. Golden granola, fresh from the oven" />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Placeholder emoji</span>
+              <input name="emoji" defaultValue="🥣" className={input} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Placeholder colour</span>
+              <select name="gradient" className={input} defaultValue="gradient-green">
+                <option value="gradient-green">Green</option>
+                <option value="gradient-purple">Purple</option>
+                <option value="gradient-purple-green">Purple → Green</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-purple-900">
+              <input type="checkbox" name="featured" className="h-4 w-4 accent-green-600" />
+              Also show on homepage &ldquo;From our kitchen&rdquo; band
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Sort order</span>
+              <input name="sortOrder" type="number" defaultValue={0} className={input} />
+            </label>
+          </div>
+          <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+            <Plus className="h-4 w-4" /> Add photo
+          </button>
+        </form>
+      </section>
+
+      {/* ---- Catalogs ---- */}
+      <section className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
+          <FileText className="h-5 w-5 text-green-600" /> Catalog PDFs
+          <span className="ml-1 text-sm font-normal text-purple-900/50">({catalogs.length})</span>
+        </h2>
+
+        {catalogs.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {catalogs.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 rounded-lg border border-purple-100 px-4 py-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-rose-50 text-rose-600">
+                  <FileText className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-purple-900">{c.title}</p>
+                  <p className="truncate text-xs text-purple-900/50">
+                    {c.fileUrl ? c.fileUrl.split("/").pop() : "No file yet"} {c.sizeLabel && `· ${c.sizeLabel}`}
+                  </p>
+                </div>
+                <form action={deleteCatalog.bind(null, c.id)}>
+                  <button className="grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50" aria-label="Delete">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form action={addCatalog} className="rounded-xl border border-dashed border-purple-200 bg-cream/30 p-4">
+          <p className="mb-3 text-sm font-semibold text-purple-900">Add a catalog</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Title</span>
+              <input name="title" required className={input} placeholder="e.g. Retail Range 2026" />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Short description</span>
+              <input name="description" className={input} placeholder="e.g. Our full retail catalogue" />
+            </label>
+            <div className="sm:col-span-2">
+              <UploadField name="fileUrl" kind="pdf" label="PDF file" sizeName="sizeLabel" />
+            </div>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Sort order</span>
+              <input name="sortOrder" type="number" defaultValue={0} className={input} />
+            </label>
+          </div>
+          <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+            <Plus className="h-4 w-4" /> Add catalog
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+const input =
+  "w-full rounded-lg border border-purple-100 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-100";

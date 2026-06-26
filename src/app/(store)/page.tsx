@@ -4,6 +4,7 @@ import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { SpecialOffers } from "@/components/home/SpecialOffers";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { BrandStory } from "@/components/home/BrandStory";
+import { KitchenBand } from "@/components/home/KitchenBand";
 import { WhyUs } from "@/components/home/WhyUs";
 import { StockedAt } from "@/components/home/StockedAt";
 import { WhyOrderOnline } from "@/components/home/WhyOrderOnline";
@@ -50,6 +51,7 @@ export default async function Home() {
       <SpecialOffers />
       <CategoryGrid />
       <BrandStory />
+      <KitchenBand />
       <WhyUs />
       <StockedAt />
       <WhyOrderOnline />

@@ -53,6 +53,7 @@ export async function Footer() {
               </FooterLink>
             ))}
             <FooterLink href="/category/granola-cereals">Cereals</FooterLink>
+            <FooterLink href="/category/horeca">Bulk &amp; HORECA</FooterLink>
             <FooterLink href="/sale">Special offers</FooterLink>
             <FooterLink href="/shop">All products</FooterLink>
           </FooterCol>
