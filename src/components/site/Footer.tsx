@@ -52,12 +52,15 @@ export async function Footer() {
                 {c.name}
               </FooterLink>
             ))}
+            <FooterLink href="/category/granola-cereals">Cereals</FooterLink>
+            <FooterLink href="/sale">Special offers</FooterLink>
             <FooterLink href="/shop">All products</FooterLink>
           </FooterCol>
 
           {/* Company */}
           <FooterCol title="Company">
             <FooterLink href="/about">Our Story</FooterLink>
+            <FooterLink href="/stores">Stores available at</FooterLink>
             <FooterLink href="/blog">Blog</FooterLink>
             <FooterLink href="/faq">FAQ</FooterLink>
             <FooterLink href="/contact">Contact</FooterLink>

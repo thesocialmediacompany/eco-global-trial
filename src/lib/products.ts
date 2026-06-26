@@ -154,6 +154,28 @@ export async function getFeaturedProducts(take = 8) {
   return fallback.map(toCardProduct);
 }
 
+/**
+ * Products with a genuine discount (a compare-at price above the current price).
+ * Prisma can't compare two columns in `where`, so we filter in memory.
+ */
+export async function getSaleProducts(take?: number) {
+  const rows = await prisma.product.findMany({
+    where: { status: "active", compareAtPrice: { not: null } },
+    include,
+    orderBy: { createdAt: "desc" },
+  });
+  const onSale = rows
+    .map(toCardProduct)
+    .filter((p) => p.compareAtPrice != null && p.compareAtPrice > p.price)
+    .sort((a, b) => {
+      // biggest percentage saving first
+      const da = (a.compareAtPrice! - a.price) / a.compareAtPrice!;
+      const db = (b.compareAtPrice! - b.price) / b.compareAtPrice!;
+      return db - da;
+    });
+  return typeof take === "number" ? onSale.slice(0, take) : onSale;
+}
+
 export async function getProductBySlug(slug: string) {
   const row = await prisma.product.findUnique({
     where: { slug },

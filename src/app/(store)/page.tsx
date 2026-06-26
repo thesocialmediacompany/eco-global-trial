@@ -1,6 +1,7 @@
 import { Hero } from "@/components/home/Hero";
 import { ValueTicker } from "@/components/home/ValueTicker";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
+import { SpecialOffers } from "@/components/home/SpecialOffers";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { BrandStory } from "@/components/home/BrandStory";
 import { WhyUs } from "@/components/home/WhyUs";
@@ -46,6 +47,7 @@ export default async function Home() {
       <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} />
       <ValueTicker />
       <FeaturedProducts />
+      <SpecialOffers />
       <CategoryGrid />
       <BrandStory />
       <WhyUs />

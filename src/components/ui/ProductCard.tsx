@@ -157,7 +157,7 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
 
-        <div className="mt-4 flex items-end justify-between">
+        <div className="mt-auto flex items-end justify-between pt-4">
           <div className="flex items-baseline gap-2">
             <span className="font-display text-xl font-semibold text-purple-900">
               {formatPKR(product.price)}
