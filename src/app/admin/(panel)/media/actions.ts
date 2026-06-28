@@ -47,6 +47,26 @@ export async function addCatalog(formData: FormData) {
   revalidateAll();
 }
 
+export async function updateCatalog(id: string, formData: FormData) {
+  await requireOwner();
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return;
+  // Only replace the file when a new one was uploaded (the upload field is
+  // blank unless the user picked a file); otherwise keep the existing PDF.
+  const newFileUrl = String(formData.get("fileUrl") ?? "").trim();
+  const newSize = String(formData.get("sizeLabel") ?? "").trim();
+  await prisma.catalogFile.update({
+    where: { id },
+    data: {
+      title,
+      description: String(formData.get("description") ?? "").trim(),
+      sortOrder: Number(formData.get("sortOrder") ?? 0) || 0,
+      ...(newFileUrl ? { fileUrl: newFileUrl, sizeLabel: newSize } : {}),
+    },
+  });
+  revalidateAll();
+}
+
 export async function deleteCatalog(id: string) {
   await requireOwner();
   await prisma.catalogFile.delete({ where: { id } });

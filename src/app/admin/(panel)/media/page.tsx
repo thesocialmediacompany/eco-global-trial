@@ -6,6 +6,7 @@ import {
   addGalleryImage,
   deleteGalleryImage,
   addCatalog,
+  updateCatalog,
   deleteCatalog,
 } from "./actions";
 
@@ -108,22 +109,54 @@ export default async function MediaPage() {
         </h2>
 
         {catalogs.length > 0 && (
-          <div className="mb-6 space-y-2">
+          <div className="mb-6 space-y-3">
             {catalogs.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 rounded-lg border border-purple-100 px-4 py-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-rose-50 text-rose-600">
-                  <FileText className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-purple-900">{c.title}</p>
-                  <p className="truncate text-xs text-purple-900/50">
-                    {c.fileUrl ? c.fileUrl.split("/").pop() : "No file yet"} {c.sizeLabel && `· ${c.sizeLabel}`}
-                  </p>
+              <div key={c.id} className="rounded-xl border border-purple-100 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-rose-50 text-rose-600">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                    <p className="truncate text-xs text-purple-900/55">
+                      Current file:{" "}
+                      {c.fileUrl ? (
+                        <a href={c.fileUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-green-700 hover:underline">
+                          {c.fileUrl.split("/").pop()}
+                        </a>
+                      ) : (
+                        "none yet"
+                      )}
+                      {c.sizeLabel && ` · ${c.sizeLabel}`}
+                    </p>
+                  </div>
+                  <form action={deleteCatalog.bind(null, c.id)}>
+                    <button className="grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50" aria-label="Delete catalog">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </form>
                 </div>
-                <form action={deleteCatalog.bind(null, c.id)}>
-                  <button className="grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50" aria-label="Delete">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+
+                <form action={updateCatalog.bind(null, c.id)} className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Title</span>
+                    <input name="title" required defaultValue={c.title} className={input} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Short description</span>
+                    <input name="description" defaultValue={c.description} className={input} />
+                  </label>
+                  <div className="sm:col-span-2">
+                    <UploadField name="fileUrl" kind="pdf" label="Replace PDF (leave blank to keep current)" sizeName="sizeLabel" />
+                  </div>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Sort order</span>
+                    <input name="sortOrder" type="number" defaultValue={c.sortOrder} className={input} />
+                  </label>
+                  <div className="flex items-end">
+                    <button className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+                      Save changes
+                    </button>
+                  </div>
                 </form>
               </div>
             ))}
