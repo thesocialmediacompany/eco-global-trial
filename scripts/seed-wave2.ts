@@ -111,14 +111,14 @@ const CATEGORY_COPY: Record<string, { tagline: string; description: string }> = 
   },
 };
 
-const GALLERY: { caption: string; emoji: string; gradient: string; featured: boolean }[] = [
-  { caption: "Golden granola, fresh from the oven", emoji: "🥣", gradient: "gradient-purple", featured: true },
-  { caption: "Stone-milled wholewheat flour", emoji: "🌾", gradient: "gradient-green", featured: true },
-  { caption: "Rolled oats, ready in minutes", emoji: "🥡", gradient: "gradient-purple-green", featured: true },
-  { caption: "Hand-picked seeds & grains", emoji: "🌱", gradient: "gradient-green", featured: true },
-  { caption: "A warm bowl, made from our range", emoji: "🍲", gradient: "gradient-purple", featured: true },
-  { caption: "Premium dry fruits & nuts", emoji: "🥜", gradient: "gradient-purple-green", featured: true },
-  { caption: "Freshly baked with our flours", emoji: "🍞", gradient: "gradient-green", featured: false },
+const GALLERY: { caption: string; emoji: string; gradient: string; featured: boolean; productSlug?: string }[] = [
+  { caption: "Golden granola, fresh from the oven", emoji: "🥣", gradient: "gradient-purple", featured: true, productSlug: "granola-chocolate-cereals" },
+  { caption: "Naturally milled flour", emoji: "🌾", gradient: "gradient-green", featured: true, productSlug: "eco-purpose-flour" },
+  { caption: "Rolled oats, ready in minutes", emoji: "🥡", gradient: "gradient-purple-green", featured: true, productSlug: "rolled-oats" },
+  { caption: "Hand-picked seeds & grains", emoji: "🌱", gradient: "gradient-green", featured: true, productSlug: "eco-chia-seed-imported" },
+  { caption: "A warm bowl, made from our range", emoji: "🍲", gradient: "gradient-purple", featured: true, productSlug: "muesli-swiss-style" },
+  { caption: "Premium dry fruits & nuts", emoji: "🥜", gradient: "gradient-purple-green", featured: true, productSlug: "eco-raisins" },
+  { caption: "Freshly baked with our flours", emoji: "🍞", gradient: "gradient-green", featured: false, productSlug: "eco-purpose-flour" },
   { caption: "Natural spices, ground fresh", emoji: "🌶️", gradient: "gradient-purple", featured: false },
 ];
 

@@ -4,6 +4,7 @@ import { requireOwner } from "@/lib/admin-guard";
 import { UploadField } from "@/components/admin/UploadField";
 import {
   addGalleryImage,
+  updateGalleryImage,
   deleteGalleryImage,
   addCatalog,
   updateCatalog,
@@ -12,10 +13,27 @@ import {
 
 export default async function MediaPage() {
   await requireOwner();
-  const [gallery, catalogs] = await Promise.all([
+  const [gallery, catalogs, products] = await Promise.all([
     prisma.galleryImage.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     prisma.catalogFile.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+    prisma.product.findMany({
+      where: { status: "active" },
+      orderBy: { title: "asc" },
+      select: { slug: true, title: true },
+    }),
   ]);
+
+  // reusable <option> list for the "link to product" pickers
+  const productOptions = (
+    <>
+      <option value="">No link (decorative)</option>
+      {products.map((p) => (
+        <option key={p.slug} value={p.slug}>
+          {p.title}
+        </option>
+      ))}
+    </>
+  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-20">
@@ -35,32 +53,76 @@ export default async function MediaPage() {
         </h2>
 
         {gallery.length > 0 && (
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mb-6 space-y-3">
             {gallery.map((g) => (
-              <div key={g.id} className="overflow-hidden rounded-xl border border-purple-100">
-                <div className="relative aspect-square">
-                  {g.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={g.url} alt={g.caption} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className={`flex h-full w-full items-center justify-center ${g.gradient}`}>
-                      <span className="text-4xl">{g.emoji}</span>
+              <div key={g.id} className="rounded-xl border border-purple-100 p-3">
+                <div className="flex gap-3">
+                  {/* thumbnail */}
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
+                    {g.url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.url} alt={g.caption} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className={`flex h-full w-full items-center justify-center ${g.gradient}`}>
+                        <span className="text-3xl">{g.emoji}</span>
+                      </div>
+                    )}
+                    {g.featured && (
+                      <span className="absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-gold-400 text-purple-900" title="On homepage band">
+                        <Star className="h-3 w-3 fill-purple-900" />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* edit form */}
+                  <form action={updateGalleryImage.bind(null, g.id)} className="grid flex-1 gap-2 sm:grid-cols-2">
+                    <label className="block sm:col-span-2">
+                      <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Caption</span>
+                      <input name="caption" defaultValue={g.caption} className={input} />
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Links to product (click opens this)</span>
+                      <select name="productSlug" defaultValue={g.productSlug} className={input}>
+                        {productOptions}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Placeholder emoji</span>
+                      <input name="emoji" defaultValue={g.emoji} className={input} />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Placeholder colour</span>
+                      <select name="gradient" defaultValue={g.gradient} className={input}>
+                        <option value="gradient-green">Green</option>
+                        <option value="gradient-purple">Purple</option>
+                        <option value="gradient-purple-green">Purple → Green</option>
+                      </select>
+                    </label>
+                    <div className="sm:col-span-2">
+                      <UploadField name="url" kind="image" label="Replace photo (leave blank to keep)" />
                     </div>
-                  )}
-                  {g.featured && (
-                    <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-gold-400 px-2 py-0.5 text-[0.6rem] font-bold text-purple-900">
-                      <Star className="h-3 w-3 fill-purple-900" /> Home
-                    </span>
-                  )}
-                  <form action={deleteGalleryImage.bind(null, g.id)} className="absolute right-1.5 top-1.5">
-                    <button className="grid h-7 w-7 place-items-center rounded-full bg-black/50 text-white hover:bg-rose-600" aria-label="Delete">
-                      <Trash2 className="h-3.5 w-3.5" />
+                    <label className="flex items-center gap-2 text-xs text-purple-900">
+                      <input type="checkbox" name="featured" defaultChecked={g.featured} className="h-4 w-4 accent-green-600" />
+                      Show on homepage band
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Sort order</span>
+                      <input name="sortOrder" type="number" defaultValue={g.sortOrder} className={input} />
+                    </label>
+                    <div className="flex items-center gap-2 sm:col-span-2">
+                      <button className="rounded-lg gradient-purple-green px-4 py-1.5 text-sm font-semibold text-cream">
+                        Save
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* delete */}
+                  <form action={deleteGalleryImage.bind(null, g.id)} className="shrink-0">
+                    <button className="grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50" aria-label="Delete photo">
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </form>
                 </div>
-                {g.caption && (
-                  <p className="truncate px-2 py-1.5 text-xs text-purple-900/70">{g.caption}</p>
-                )}
               </div>
             ))}
           </div>
@@ -73,6 +135,12 @@ export default async function MediaPage() {
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Caption</span>
               <input name="caption" className={input} placeholder="e.g. Golden granola, fresh from the oven" />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Links to product (optional — click opens this)</span>
+              <select name="productSlug" defaultValue="" className={input}>
+                {productOptions}
+              </select>
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Placeholder emoji</span>

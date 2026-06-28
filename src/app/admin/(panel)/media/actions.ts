@@ -19,7 +19,27 @@ export async function addGalleryImage(formData: FormData) {
       emoji: String(formData.get("emoji") ?? "📸").trim() || "📸",
       gradient: String(formData.get("gradient") ?? "gradient-green"),
       featured: formData.get("featured") === "on",
+      productSlug: String(formData.get("productSlug") ?? "").trim(),
       sortOrder: Number(formData.get("sortOrder") ?? 0) || 0,
+    },
+  });
+  revalidateAll();
+}
+
+export async function updateGalleryImage(id: string, formData: FormData) {
+  await requireOwner();
+  const newUrl = String(formData.get("url") ?? "").trim();
+  await prisma.galleryImage.update({
+    where: { id },
+    data: {
+      caption: String(formData.get("caption") ?? "").trim(),
+      emoji: String(formData.get("emoji") ?? "📸").trim() || "📸",
+      gradient: String(formData.get("gradient") ?? "gradient-green"),
+      featured: formData.get("featured") === "on",
+      productSlug: String(formData.get("productSlug") ?? "").trim(),
+      sortOrder: Number(formData.get("sortOrder") ?? 0) || 0,
+      // only replace the photo when a new one was uploaded
+      ...(newUrl ? { url: newUrl } : {}),
     },
   });
   revalidateAll();

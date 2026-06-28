@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getFeaturedGalleryImages } from "@/lib/media";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
@@ -53,6 +54,13 @@ export async function KitchenBand() {
                     {g.caption}
                   </p>
                 </div>
+              )}
+              {g.productSlug && (
+                <Link
+                  href={`/product/${g.productSlug}`}
+                  className="absolute inset-0 z-20"
+                  aria-label={g.caption || "View product"}
+                />
               )}
             </RevealItem>
           ))}

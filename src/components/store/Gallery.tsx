@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 export interface GalleryItem {
@@ -7,6 +8,7 @@ export interface GalleryItem {
   caption: string;
   emoji: string;
   gradient: string;
+  productSlug: string;
 }
 
 /**
@@ -46,6 +48,13 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
             <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-purple-950/70 to-transparent p-3">
               <p className="text-xs font-medium text-cream sm:text-sm">{g.caption}</p>
             </div>
+          )}
+          {g.productSlug && (
+            <Link
+              href={`/product/${g.productSlug}`}
+              className="absolute inset-0 z-20"
+              aria-label={g.caption || "View product"}
+            />
           )}
         </RevealItem>
       ))}
