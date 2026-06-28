@@ -19,7 +19,7 @@ export function BrandMark({
       } ${className}`}
     >
       <Image
-        src="/brand/logo-mark.svg"
+        src="/brand/logo-mark.png"
         alt="Eco Global Foods"
         fill
         sizes="48px"

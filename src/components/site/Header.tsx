@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Search, ShoppingBag, User, ChevronDown, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { categories } from "@/data/categories";
-import { BrandMark } from "@/components/site/BrandMark";
 
 const nav = [
   { label: "Shop", href: "/shop", mega: true },
@@ -47,16 +47,19 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <BrandMark className="h-10 w-10 shadow-lg shadow-purple-900/10 transition-transform group-hover:scale-105" />
-          <span className="flex flex-col leading-none">
-            <span className="font-display text-lg font-semibold text-purple-900">
-              Eco Global
-            </span>
-            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-green-600">
-              Foods
-            </span>
-          </span>
+        <Link href="/" className="group flex items-center" aria-label="Eco Global Foods home">
+          <Image
+            src="/brand/logo-full.png"
+            alt="Eco Global Foods"
+            width={634}
+            height={394}
+            priority
+            className={cn(
+              "h-11 w-auto transition-transform group-hover:scale-105 sm:h-12",
+              // subtle shadow so the transparent logo stays legible over the hero
+              !scrolled && "drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]",
+            )}
+          />
         </Link>
 
         {/* Desktop nav */}
