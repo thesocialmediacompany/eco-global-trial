@@ -5,6 +5,10 @@ import { ArrowUpRight } from "lucide-react";
 import { categories } from "@/data/categories";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
+// HORECA is a B2B/wholesale category — keep it in the nav + footer, but out of
+// the consumer "shop by category" grid on the homepage.
+const gridCategories = categories.filter((c) => c.slug !== "horeca");
+
 export function CategoryGrid() {
   return (
     <section id="categories" className="relative bg-cream-dark/50 py-12 sm:py-16">
@@ -16,7 +20,7 @@ export function CategoryGrid() {
         />
 
         <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.map((cat, i) => (
+          {gridCategories.map((cat, i) => (
             <motion.a
               key={cat.id}
               href={`/category/${cat.slug}`}
