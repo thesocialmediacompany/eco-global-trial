@@ -136,13 +136,13 @@ async function main() {
     update: {},
     create: {
       slug: "horeca",
-      name: "Bulk & HORECA",
+      name: "HORECA",
       tagline: horecaCopy.tagline,
       description: horecaCopy.description,
       emoji: "🏢",
       gradient: "gradient-purple-green",
       sortOrder: 99,
-      seoTitle: "Bulk & HORECA",
+      seoTitle: "HORECA",
       seoDescription: horecaCopy.description.slice(0, 155),
     },
   });

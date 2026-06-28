@@ -167,12 +167,12 @@ export const categories: Category[] = [
   {
     id: "cat-horeca",
     slug: "horeca",
-    name: "Bulk & HORECA",
+    name: "HORECA",
     tagline: "Wholesale packs for business",
     gradient: "gradient-purple-green",
     emoji: "🏢",
     seo: {
-      title: "Bulk & HORECA",
+      title: "HORECA",
       description:
         "Bulk and foodservice packs for hotels, restaurants, caterers and retailers. Wholesale and private-label options from Eco Global Foods.",
       keywords: ["horeca", "bulk", "wholesale", "foodservice", "private label"],

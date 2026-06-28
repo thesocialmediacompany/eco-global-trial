@@ -12,6 +12,7 @@ import { categories } from "@/data/categories";
 
 const nav = [
   { label: "Shop", href: "/shop", mega: true },
+  { label: "HORECA", href: "/category/horeca" },
   { label: "Bundles", href: "/bundles" },
   { label: "Recipes", href: "/recipes" },
   { label: "Our Story", href: "/about" },
