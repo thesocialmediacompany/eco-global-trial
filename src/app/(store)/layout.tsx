@@ -2,6 +2,7 @@ import { CartProvider } from "@/lib/cart";
 import { WishlistProvider } from "@/lib/wishlist";
 import { getSettings } from "@/lib/settings";
 import { getShippingConfig } from "@/lib/shipping-config";
+import { getNavLinks } from "@/lib/navigation";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { OccasionBanner } from "@/components/site/OccasionBanner";
 import { Header } from "@/components/site/Header";
@@ -15,9 +16,10 @@ export default async function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [settings, shippingConfig] = await Promise.all([
+  const [settings, shippingConfig, headerNav] = await Promise.all([
     getSettings(),
     getShippingConfig(),
+    getNavLinks("header"),
   ]);
   return (
     <WishlistProvider>
@@ -28,7 +30,7 @@ export default async function StoreLayout({
           emoji={settings.occasionBannerEmoji}
         />
         <AnnouncementBar />
-        <Header />
+        <Header navLinks={headerNav.map((l) => ({ label: l.label, href: l.href, mega: l.mega }))} />
         <main className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />

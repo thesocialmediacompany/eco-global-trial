@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
-import { categories } from "@/data/categories";
 import { getSettings } from "@/lib/settings";
+import { getNavLinks } from "@/lib/navigation";
 import { SocialLinks } from "@/components/site/SocialLinks";
 import { BrandMark } from "@/components/site/BrandMark";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 
-const shopLinks = categories.slice(0, 6);
-
 export async function Footer() {
-  const s = await getSettings();
+  const [s, shopLinks, companyLinks] = await Promise.all([
+    getSettings(),
+    getNavLinks("footer_shop"),
+    getNavLinks("footer_company"),
+  ]);
   return (
     <footer id="contact" className="bg-purple-950 text-cream/80">
       <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
@@ -47,27 +49,20 @@ export async function Footer() {
 
           {/* Shop */}
           <FooterCol title="Shop">
-            {shopLinks.map((c) => (
-              <FooterLink key={c.id} href={`/category/${c.slug}`}>
-                {c.name}
+            {shopLinks.map((l) => (
+              <FooterLink key={l.id} href={l.href}>
+                {l.label}
               </FooterLink>
             ))}
-            <FooterLink href="/category/granola-cereals">Cereals</FooterLink>
-            <FooterLink href="/category/horeca">HORECA</FooterLink>
-            <FooterLink href="/sale">Special offers</FooterLink>
-            <FooterLink href="/shop">All products</FooterLink>
           </FooterCol>
 
           {/* Company */}
           <FooterCol title="Company">
-            <FooterLink href="/about">Our Story</FooterLink>
-            <FooterLink href="/stores">Stores available at</FooterLink>
-            <FooterLink href="/blog">Blog</FooterLink>
-            <FooterLink href="/faq">FAQ</FooterLink>
-            <FooterLink href="/contact">Contact</FooterLink>
-            <FooterLink href="/track">Track order</FooterLink>
-            <FooterLink href="/policies/shipping">Shipping</FooterLink>
-            <FooterLink href="/policies/refund">Returns</FooterLink>
+            {companyLinks.map((l) => (
+              <FooterLink key={l.id} href={l.href}>
+                {l.label}
+              </FooterLink>
+            ))}
           </FooterCol>
 
           {/* Contact */}

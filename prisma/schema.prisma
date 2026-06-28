@@ -347,6 +347,18 @@ model GalleryImage {
   createdAt   DateTime @default(now())
 }
 
+/// An editable navigation link for the header menu or footer link columns.
+model NavLink {
+  id        String   @id @default(cuid())
+  location  String   @default("header") // header | footer_shop | footer_company
+  label     String
+  href      String
+  mega      Boolean  @default(false) // header only: opens the categories mega-menu
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 /// A downloadable catalog / brochure PDF shown on the About page.
 model CatalogFile {
   id          String   @id @default(cuid())

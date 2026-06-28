@@ -10,17 +10,20 @@ import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { categories } from "@/data/categories";
 
-const nav = [
+export interface HeaderNavItem {
+  label: string;
+  href: string;
+  mega?: boolean;
+}
+
+const fallbackNav: HeaderNavItem[] = [
   { label: "Shop", href: "/shop", mega: true },
-  { label: "HORECA", href: "/category/horeca" },
-  { label: "Bundles", href: "/bundles" },
-  { label: "Recipes", href: "/recipes" },
   { label: "Our Story", href: "/about" },
-  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
 
-export function Header() {
+export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
+  const nav = navLinks && navLinks.length > 0 ? navLinks : fallbackNav;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
