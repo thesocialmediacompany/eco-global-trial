@@ -53,10 +53,13 @@ export function ProductForm({
   action,
   product,
   collections,
+  defaultCollectionId,
 }: {
   action: (formData: FormData) => Promise<void>;
   product?: ProductData;
   collections: Collection[];
+  /** Pre-selected collection for new products (e.g. the HORECA tab). */
+  defaultCollectionId?: string;
 }) {
   const router = useRouter();
   const isEdit = Boolean(product);
@@ -383,7 +386,7 @@ export function ProductForm({
             <Field label="Collection">
               <select
                 name="collectionId"
-                defaultValue={product?.collectionId ?? ""}
+                defaultValue={product?.collectionId ?? defaultCollectionId ?? ""}
                 className={inputCls}
               >
                 <option value="">No collection</option>

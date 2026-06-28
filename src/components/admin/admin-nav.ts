@@ -16,6 +16,7 @@ import {
   Mail,
   Send,
   Images,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { label: "Abandoned carts", href: "/admin/abandoned", icon: ShoppingBag },
   { label: "Products", href: "/admin/products", icon: Package },
+  { label: "HORECA", href: "/admin/horeca", icon: Building2 },
   { label: "Inventory", href: "/admin/inventory", icon: Boxes },
   { label: "Bundles", href: "/admin/bundles", icon: Gift },
   { label: "Collections", href: "/admin/collections", icon: FolderTree },
