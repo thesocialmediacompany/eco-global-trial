@@ -3,6 +3,7 @@ import { WishlistProvider } from "@/lib/wishlist";
 import { getSettings } from "@/lib/settings";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { getNavLinks } from "@/lib/navigation";
+import { brandThemeCss } from "@/lib/theme";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { OccasionBanner } from "@/components/site/OccasionBanner";
 import { Header } from "@/components/site/Header";
@@ -21,8 +22,10 @@ export default async function StoreLayout({
     getShippingConfig(),
     getNavLinks("header"),
   ]);
+  const themeCss = brandThemeCss(settings.brandPurple, settings.brandGreen);
   return (
     <WishlistProvider>
+      {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
       <CartProvider shippingConfig={shippingConfig}>
         <OccasionBanner
           enabled={settings.occasionBannerEnabled === "true"}

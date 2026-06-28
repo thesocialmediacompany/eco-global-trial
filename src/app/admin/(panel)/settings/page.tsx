@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type, Mail } from "lucide-react";
+import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type, Mail, Palette } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { paymentMethods } from "@/lib/payments";
@@ -121,6 +121,19 @@ export default async function SettingsPage() {
                 </span>
                 <textarea name="stockistSubtext" rows={2} defaultValue={s.stockistSubtext} className={input} />
               </label>
+            </div>
+          </Section>
+
+          <Section icon={Palette} title="Brand colours">
+            <p className="-mt-1 mb-3 text-xs text-purple-900/50">
+              Set your two brand anchor colours as hex codes (e.g. <code>#3b1538</code>
+              and <code>#233f18</code>). The site&apos;s gradients (hero, buttons,
+              category cards, banners) are regenerated from these. Leave both blank to
+              use the default purple &amp; green theme.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Primary (purple) hex" name="brandPurple" value={s.brandPurple} />
+              <Field label="Secondary (green) hex" name="brandGreen" value={s.brandGreen} />
             </div>
           </Section>
 

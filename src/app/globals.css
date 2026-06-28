@@ -70,6 +70,17 @@
 :root {
   --background: #faf6ef;
   --foreground: #1c1326;
+
+  /* Brand gradient stops (overridable at runtime from admin Brand colours). */
+  --grad-p1: #19081a;
+  --grad-p2: #3b1538;
+  --grad-p3: #5e3052;
+  --grad-pg1: #19081a;
+  --grad-pg2: #3b1538;
+  --grad-pg3: #233f18;
+  --grad-g1: #0f1d0a;
+  --grad-g2: #233f18;
+  --grad-g3: #3c6326;
 }
 
 html {
@@ -91,13 +102,13 @@ body {
     font-family: var(--font-display), Georgia, serif;
   }
   .gradient-purple {
-    background-image: linear-gradient(135deg, #19081a 0%, #3b1538 55%, #5e3052 100%);
+    background-image: linear-gradient(135deg, var(--grad-p1) 0%, var(--grad-p2) 55%, var(--grad-p3) 100%);
   }
   .gradient-purple-green {
-    background-image: linear-gradient(135deg, #19081a 0%, #3b1538 45%, #233f18 100%);
+    background-image: linear-gradient(135deg, var(--grad-pg1) 0%, var(--grad-pg2) 45%, var(--grad-pg3) 100%);
   }
   .gradient-green {
-    background-image: linear-gradient(135deg, #0f1d0a 0%, #233f18 60%, #3c6326 100%);
+    background-image: linear-gradient(135deg, var(--grad-g1) 0%, var(--grad-g2) 60%, var(--grad-g3) 100%);
   }
   .text-gradient-gold {
     background-image: linear-gradient(90deg, #e7cf94, #d4af52, #e7cf94);

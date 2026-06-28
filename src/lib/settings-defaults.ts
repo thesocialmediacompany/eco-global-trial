@@ -64,6 +64,11 @@ export const defaultSettings = {
   smtpPass: "", // app password
   smtpFromName: "Eco Global Foods",
   smtpFromEmail: "", // the "from" address shown to recipients
+  // Brand colours. Leave blank to use the built-in purple/green theme. When set
+  // (hex like #3b1538), the site's gradients (hero, buttons, category cards,
+  // banners) are regenerated from these two anchor colours.
+  brandPurple: "", // primary / purple anchor, e.g. #3b1538
+  brandGreen: "", // secondary / green anchor, e.g. #233f18
 } as const;
 
 export type SettingKey = keyof typeof defaultSettings;

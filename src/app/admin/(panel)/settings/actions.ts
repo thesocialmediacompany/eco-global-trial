@@ -44,6 +44,8 @@ const editableKeys: SettingKey[] = [
   "newsletterSubtext",
   "stockistHeading",
   "stockistSubtext",
+  "brandPurple",
+  "brandGreen",
   "payCod",
   "payJazzcash",
   "payEasypaisa",
