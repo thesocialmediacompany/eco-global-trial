@@ -29,7 +29,9 @@ async function resolveDiscount(code: string | undefined, subtotal: number) {
   if (!code) return { discount: 0, freeShipping: false, code: "" };
   const d = await prisma.discount.findUnique({ where: { code: code.toUpperCase() } });
   if (!d || !d.active) return { discount: 0, freeShipping: false, code: "" };
+  if (d.startsAt && d.startsAt > new Date()) return { discount: 0, freeShipping: false, code: "" };
   if (d.endsAt && d.endsAt < new Date()) return { discount: 0, freeShipping: false, code: "" };
+  if (d.usageLimit && d.usedCount >= d.usageLimit) return { discount: 0, freeShipping: false, code: "" };
   if (subtotal < d.minSubtotal) return { discount: 0, freeShipping: false, code: "" };
 
   if (d.type === "percentage") {
@@ -191,6 +193,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }),
     ...decrements,
   ]);
+
+  // Count the discount usage (powers the usage-limit condition).
+  if (code) {
+    await prisma.discount
+      .update({ where: { code }, data: { usedCount: { increment: 1 } } })
+      .catch(() => {});
+  }
 
   // Mark any abandoned checkout for this email as recovered.
   if (customer.email) {

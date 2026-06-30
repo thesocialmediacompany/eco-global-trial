@@ -50,6 +50,9 @@ export const defaultSettings = {
   heroTitle: "Taste The Goodness",
   heroSubtitle:
     "Granola, oats, malted drinks and protein bars made with natural, pure ingredients. Real food for real life, packed in Pakistan since 1999.",
+  // Turn off when no discount is running so you don't promise an offer you
+  // aren't honouring (shows neutral "Join our newsletter" copy instead).
+  newsletterOfferEnabled: "true",
   newsletterHeading: "Get 20% off your first order",
   newsletterSubtext:
     "Join our list for new products, recipes and offers. We will send your discount code straight away.",

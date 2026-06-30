@@ -6,10 +6,17 @@ import { NewsletterForm } from "@/components/site/NewsletterForm";
 export function Newsletter({
   heading,
   subtext,
+  offerEnabled = true,
 }: {
   heading: string;
   subtext: string;
+  /** When false, drops the discount-offer framing and shows neutral copy. */
+  offerEnabled?: boolean;
 }) {
+  const shownHeading = offerEnabled ? heading : "Join our newsletter";
+  const shownSubtext = offerEnabled
+    ? subtext
+    : "Be the first to hear about new products, recipes and offers.";
   return (
     <section className="relative py-12 sm:py-16">
       <div className="mx-auto max-w-5xl px-5 lg:px-8">
@@ -28,9 +35,9 @@ export function Newsletter({
           />
           <span className="text-4xl">🌿</span>
           <h2 className="mx-auto mt-4 max-w-xl font-display text-3xl font-semibold sm:text-4xl">
-            {heading}
+            {shownHeading}
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-cream/80">{subtext}</p>
+          <p className="mx-auto mt-3 max-w-md text-cream/80">{shownSubtext}</p>
 
           <NewsletterForm variant="hero" source="home" />
 

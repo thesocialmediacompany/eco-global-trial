@@ -107,7 +107,21 @@ export default async function SettingsPage() {
                 </span>
                 <textarea name="heroSubtitle" rows={2} defaultValue={s.heroSubtitle} className={input} />
               </label>
-              <Field label="Newsletter heading" name="newsletterHeading" value={s.newsletterHeading} full />
+              <label className="flex items-center justify-between rounded-lg border border-purple-100 px-4 py-3">
+                <span className="text-sm font-medium text-purple-900">
+                  Show the discount offer on the newsletter block
+                  <span className="mt-0.5 block text-xs font-normal text-purple-900/50">
+                    Turn off when no discount is running — shows neutral &ldquo;Join our newsletter&rdquo; copy instead.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  name="newsletterOfferEnabled"
+                  defaultChecked={s.newsletterOfferEnabled === "true"}
+                  className="h-4 w-4 accent-green-600"
+                />
+              </label>
+              <Field label="Newsletter heading (offer)" name="newsletterHeading" value={s.newsletterHeading} full />
               <label className="block">
                 <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
                   Newsletter subtext

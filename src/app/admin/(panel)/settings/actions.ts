@@ -40,6 +40,7 @@ const editableKeys: SettingKey[] = [
   "heroBadge",
   "heroTitle",
   "heroSubtitle",
+  "newsletterOfferEnabled",
   "newsletterHeading",
   "newsletterSubtext",
   "stockistHeading",
@@ -54,6 +55,7 @@ const editableKeys: SettingKey[] = [
 ];
 
 const toggleKeys: SettingKey[] = [
+  "newsletterOfferEnabled",
   "payCod",
   "payJazzcash",
   "payEasypaisa",

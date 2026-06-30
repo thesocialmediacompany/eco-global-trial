@@ -56,7 +56,11 @@ export default async function Home() {
       <WhyUs />
       <StockedAt />
       <WhyOrderOnline />
-      <Newsletter heading={s.newsletterHeading} subtext={s.newsletterSubtext} />
+      <Newsletter
+        heading={s.newsletterHeading}
+        subtext={s.newsletterSubtext}
+        offerEnabled={s.newsletterOfferEnabled === "true"}
+      />
     </>
   );
 }
