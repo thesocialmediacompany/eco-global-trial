@@ -271,8 +271,10 @@ model Order {
   fulfillmentStatus String @default("unfulfilled") // unfulfilled | fulfilled | cancelled
 
   // shipping / courier (ZoomCOD)
-  courier        String @default("")
-  trackingNumber String @default("")
+  courier          String @default("")
+  trackingNumber   String @default("")
+  shipmentLabelUrl String @default("") // ZoomCOD printable invoice/label link
+  courierStatus    String @default("") // last fetched ZoomCOD status
 
   note  String      @default("")
   items OrderItem[]

@@ -1,26 +1,36 @@
 import "server-only";
 
 /**
- * Pluggable shipping layer. The storefront/admin talk to this interface, not to
- * any specific courier - so couriers can be swapped or added without touching
- * callers. ZoomCOD (https://zoomcod.com) is the configured provider; its real
- * API (booking, bulk, tracking sync) plugs into `bookShipment` later.
+ * Pluggable shipping layer. Callers (admin order actions) talk to this
+ * interface, not to any specific courier. ZoomCOD (https://zoomcod.com) is the
+ * configured provider; its real REST API is documented at
+ * portal.zoomcod.com (Zoom_COD_API_Documentation.pdf).
+ *
+ * Config (env, with EGF account defaults baked in so it works once the key is
+ * set): ZOOMCOD_API_KEY (required for live), ZOOMCOD_API_BASE,
+ * ZOOMCOD_CLIENT_CODE, ZOOMCOD_PROFILE_ID, ZOOMCOD_ORIGIN_CITY,
+ * ZOOMCOD_PRODUCT, ZOOMCOD_SERVICE_TYPE.
  */
 
 export interface ShipmentRequest {
   orderNumber: number;
   customerName: string;
   phone: string;
+  email?: string;
   address: string;
-  city: string;
-  amount: number; // COD amount in PKR
+  city: string; // destination city — must match a ZoomCOD city name
+  amount: number; // COD collection amount in PKR
   weightKg?: number;
+  description?: string;
 }
 
 export interface ShipmentResult {
   courier: string;
   trackingNumber: string;
   status: "booked" | "failed";
+  labelUrl?: string;
+  thirdParty?: string;
+  message?: string;
 }
 
 export interface ShippingProvider {
@@ -29,58 +39,138 @@ export interface ShippingProvider {
   bookShipment(req: ShipmentRequest): Promise<ShipmentResult>;
 }
 
-/**
- * ZoomCOD adapter. Currently a structured stub that returns a deterministic
- * tracking number; replace the body of `bookShipment` with a fetch() to the
- * ZoomCOD booking API once credentials are provided.
- */
+function zoomConfig() {
+  return {
+    apiKey: process.env.ZOOMCOD_API_KEY || "",
+    base: (process.env.ZOOMCOD_API_BASE || "https://portal.zoomcod.com/API").replace(/\/$/, ""),
+    clientCode: process.env.ZOOMCOD_CLIENT_CODE || "2253",
+    profileId: process.env.ZOOMCOD_PROFILE_ID || "20543",
+    origin: process.env.ZOOMCOD_ORIGIN_CITY || "LAHORE",
+    product: process.env.ZOOMCOD_PRODUCT || "Overnight",
+    serviceType: process.env.ZOOMCOD_SERVICE_TYPE || "Regular",
+  };
+}
+
+export function zoomCodConfigured() {
+  return Boolean(process.env.ZOOMCOD_API_KEY);
+}
+
+/** Non-secret ZoomCOD config for display in the admin (never exposes the key). */
+export function zoomCodPublicConfig() {
+  const c = zoomConfig();
+  return {
+    live: Boolean(c.apiKey),
+    clientCode: c.clientCode,
+    profileId: c.profileId,
+    origin: c.origin,
+    product: c.product,
+    serviceType: c.serviceType,
+    base: c.base,
+  };
+}
+
+/** ZoomCOD courier adapter (real API). */
 export const zoomCod: ShippingProvider = {
   id: "zoomcod",
   name: "ZoomCOD",
   async bookShipment(req) {
-    const apiKey = process.env.ZOOMCOD_API_KEY;
-    const apiBase = process.env.ZOOMCOD_API_BASE || "https://api.zoomcod.com";
+    const c = zoomConfig();
 
-    // When credentials are present, call the real ZoomCOD booking API.
-    if (apiKey) {
-      try {
-        const res = await fetch(`${apiBase}/v1/bookings`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            // TODO: confirm exact field names against ZoomCOD's API docs.
-            order_reference: req.orderNumber,
-            consignee_name: req.customerName,
-            consignee_phone: req.phone,
-            consignee_address: req.address,
-            consignee_city: req.city,
-            cod_amount: req.amount,
-            weight_kg: req.weightKg ?? 0.5,
-            pickup_address_id: process.env.ZOOMCOD_PICKUP_ADDRESS_ID,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return {
-            courier: "ZoomCOD",
-            trackingNumber: data.tracking_number ?? data.cn ?? String(req.orderNumber),
-            status: "booked",
-          };
-        }
-      } catch {
-        /* fall through to local fallback below */
-      }
-      return { courier: "ZoomCOD", trackingNumber: "", status: "failed" };
+    // No key yet → deterministic placeholder so the workflow stays testable.
+    if (!c.apiKey) {
+      return {
+        courier: "ZoomCOD",
+        trackingNumber: "ZC-" + String(req.orderNumber).padStart(7, "0"),
+        status: "booked",
+        message: "Test mode (no ZOOMCOD_API_KEY set).",
+      };
     }
 
-    // Not configured yet - deterministic placeholder so the workflow is testable.
-    const trackingNumber = "ZC-" + String(req.orderNumber).padStart(7, "0");
-    return { courier: "ZoomCOD", trackingNumber, status: "booked" };
+    try {
+      const res = await fetch(`${c.base}/CreateOrder.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          auth_key: c.apiKey,
+          client_code: c.clientCode,
+          profile_id: c.profileId,
+          product: c.product,
+          service_type: c.serviceType,
+          origin: c.origin,
+          destination: (req.city || "").toUpperCase().trim(),
+          receiver_name: req.customerName,
+          receiver_phone: req.phone,
+          receiver_email: req.email || "",
+          receiver_address: req.address,
+          weight: String(req.weightKg ?? 0.5),
+          pieces: 1,
+          collection_amount: String(req.amount),
+          product_description: req.description || "Eco Global Foods order",
+          special_instruction: "",
+          order_id: req.orderNumber,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const tracking = data?.tracking_no || data?.thirdparty_tracking_no || "";
+      if (res.ok && tracking) {
+        return {
+          courier: "ZoomCOD",
+          trackingNumber: String(tracking),
+          status: "booked",
+          labelUrl: data?.invoice_link || "",
+          thirdParty: data?.thirdparty_name || "",
+          message: data?.message || "",
+        };
+      }
+      return {
+        courier: "ZoomCOD",
+        trackingNumber: "",
+        status: "failed",
+        message: data?.message || data?.error || `Booking failed (HTTP ${res.status})`,
+      };
+    } catch (e) {
+      return {
+        courier: "ZoomCOD",
+        trackingNumber: "",
+        status: "failed",
+        message: e instanceof Error ? e.message : "Network error",
+      };
+    }
   },
 };
+
+/** Cancel a ZoomCOD shipment by tracking number. */
+export async function cancelZoomCodShipment(trackingNo: string): Promise<{ ok: boolean; message: string }> {
+  const c = zoomConfig();
+  if (!c.apiKey || !trackingNo) return { ok: false, message: "Not configured" };
+  try {
+    const url = `${c.base}/CancelOrder.php?auth_key=${encodeURIComponent(c.apiKey)}&tracking_no=${encodeURIComponent(trackingNo)}`;
+    const res = await fetch(url, { method: "GET" });
+    const data = await res.json().catch(() => ({}));
+    const ok = res.ok && (data?.response === 1 || data?.response === "1");
+    return { ok, message: data?.message?.message || data?.message || (ok ? "Cancelled" : "Cancel failed") };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Network error" };
+  }
+}
+
+/** Fetch the current ZoomCOD status for a tracking number. */
+export async function zoomCodCurrentStatus(trackingNo: string): Promise<string> {
+  const c = zoomConfig();
+  if (!c.apiKey || !trackingNo) return "";
+  try {
+    const res = await fetch(`${c.base}/currentStatus.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tracking_no: trackingNo }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return typeof data?.status === "string" ? data.status : "";
+  } catch {
+    return "";
+  }
+}
 
 export const shippingProviders: ShippingProvider[] = [zoomCod];
 

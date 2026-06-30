@@ -8,6 +8,7 @@ import {
   markPaid,
   markFulfilled,
   bookZoomCOD,
+  refreshZoomCodStatus,
   resendConfirmation,
   placeDraftOrder,
   notifyShipped,
@@ -31,6 +32,7 @@ export default async function OrderDetailPage({
   const markPaidAction = markPaid.bind(null, order.id);
   const markFulfilledAction = markFulfilled.bind(null, order.id);
   const bookAction = bookZoomCOD.bind(null, order.id);
+  const refreshStatusAction = refreshZoomCodStatus.bind(null, order.id);
   const resendAction = resendConfirmation.bind(null, order.id);
   const placeDraftAction = placeDraftOrder.bind(null, order.id);
   const notifyShippedAction = notifyShipped.bind(null, order.id);
@@ -185,7 +187,7 @@ export default async function OrderDetailPage({
               <Truck className="h-4 w-4 text-green-600" /> Shipping
             </h2>
             {order.courier ? (
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-3">
                 <p className="text-sm text-purple-900/80">
                   Booked with <strong>{order.courier}</strong>
                   {order.trackingNumber && (
@@ -198,11 +200,35 @@ export default async function OrderDetailPage({
                     </>
                   )}
                 </p>
-                <form action={notifyShippedAction}>
-                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                    <Send className="h-4 w-4" /> Email tracking
-                  </button>
-                </form>
+                {order.courierStatus && (
+                  <p className="text-sm">
+                    <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                      {order.courierStatus}
+                    </span>
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <form action={notifyShippedAction}>
+                    <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
+                      <Send className="h-4 w-4" /> Email tracking
+                    </button>
+                  </form>
+                  <form action={refreshStatusAction}>
+                    <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
+                      Refresh status
+                    </button>
+                  </form>
+                  {order.shipmentLabelUrl && (
+                    <a
+                      href={order.shipmentLabelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-semibold text-green-800 hover:bg-green-100"
+                    >
+                      Print label
+                    </a>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-between">

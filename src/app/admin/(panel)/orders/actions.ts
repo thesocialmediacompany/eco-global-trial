@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getShippingProvider } from "@/lib/shipping";
+import {
+  getShippingProvider,
+  cancelZoomCodShipment,
+  zoomCodCurrentStatus,
+} from "@/lib/shipping";
 import {
   sendOrderConfirmation,
   sendShippingNotification,
@@ -189,6 +193,16 @@ export async function cancelOrder(orderId: string) {
     ...restockOps,
   ]);
 
+  // If a ZoomCOD shipment was booked, cancel it too (best-effort).
+  if (order.courier === "ZoomCOD" && order.trackingNumber) {
+    const r = await cancelZoomCodShipment(order.trackingNumber);
+    if (r.ok) {
+      await prisma.order.update({ where: { id: orderId }, data: { courierStatus: "Cancelled" } });
+    } else {
+      console.error("ZoomCOD cancel failed:", r.message);
+    }
+  }
+
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
 }
@@ -206,20 +220,40 @@ export async function bookZoomCOD(orderId: string) {
     orderNumber: order.orderNumber,
     customerName: order.customerName,
     phone: order.phone,
+    email: order.email,
     address: order.address,
     city: order.city,
     amount: order.total,
+    description: "Eco Global Foods order #" + order.orderNumber,
   });
 
   if (result.status === "booked") {
     await prisma.order.update({
       where: { id: orderId },
-      data: { courier: result.courier, trackingNumber: result.trackingNumber },
+      data: {
+        courier: result.courier,
+        trackingNumber: result.trackingNumber,
+        shipmentLabelUrl: result.labelUrl ?? "",
+        courierStatus: "Order is Booked",
+      },
     });
     // Let the customer know it's on the way, with the fresh tracking number.
     await sendShippingNotification(orderId).catch((e) =>
       console.error("shipping email failed:", e),
     );
+  } else {
+    console.error("ZoomCOD booking failed:", result.message);
+  }
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+/** Pull the latest ZoomCOD status for an order's shipment. */
+export async function refreshZoomCodStatus(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order?.trackingNumber) return;
+  const status = await zoomCodCurrentStatus(order.trackingNumber);
+  if (status) {
+    await prisma.order.update({ where: { id: orderId }, data: { courierStatus: status } });
   }
   revalidatePath(`/admin/orders/${orderId}`);
 }

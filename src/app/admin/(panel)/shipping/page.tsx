@@ -3,7 +3,7 @@ import { Truck, Check, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR, formatWeight } from "@/lib/utils";
 import { getSettings, settingNumber } from "@/lib/settings";
-import { shippingProviders } from "@/lib/shipping";
+import { shippingProviders, zoomCodPublicConfig } from "@/lib/shipping";
 import {
   createShippingRate,
   updateShippingRate,
@@ -31,7 +31,8 @@ export default async function ShippingPage() {
 
   const threshold = settingNumber(settings, "freeShippingThreshold", 7000);
   const flat = settingNumber(settings, "flatShippingRate", 250);
-  const zoomLive = Boolean(process.env.ZOOMCOD_API_KEY);
+  const zoom = zoomCodPublicConfig();
+  const zoomLive = zoom.live;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -66,12 +67,25 @@ export default async function ShippingPage() {
             </div>
           ))}
         </div>
-        {!zoomLive && (
+        {zoomLive ? (
+          <div className="mt-3 rounded-lg bg-cream/60 px-4 py-3 text-xs text-purple-900/70">
+            <p className="mb-1.5 font-semibold text-purple-900">Live booking config</p>
+            <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+              <span>Client code: <strong>{zoom.clientCode}</strong></span>
+              <span>Profile (shipper): <strong>{zoom.profileId}</strong></span>
+              <span>Origin city: <strong>{zoom.origin}</strong></span>
+              <span>Product / service: <strong>{zoom.product} · {zoom.serviceType}</strong></span>
+            </div>
+            <p className="mt-2 text-[0.7rem] text-purple-900/45">
+              Real shipments are created on ZoomCOD when you click &ldquo;Book with ZoomCOD&rdquo;
+              on an order. Destination uses the customer&apos;s city (must match a ZoomCOD city).
+            </p>
+          </div>
+        ) : (
           <p className="mt-3 text-xs text-purple-900/50">
             Set <code className="rounded bg-cream px-1">ZOOMCOD_API_KEY</code> in your
-            environment to enable live bookings. Until then, bookings generate a test
-            tracking number. See{" "}
-            <span className="font-medium text-green-700">docs/INTEGRATIONS.md</span>.
+            environment (and on Vercel) to enable live bookings. Until then, bookings generate
+            a test tracking number.
           </p>
         )}
       </div>
