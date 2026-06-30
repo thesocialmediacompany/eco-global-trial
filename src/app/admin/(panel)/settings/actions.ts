@@ -27,6 +27,7 @@ const editableKeys: SettingKey[] = [
   "footerCredit",
   "footerCreditUrl",
   "ga4MeasurementId",
+  "googleSiteVerification",
   "metaPixelId",
   "smtpHost",
   "smtpPort",

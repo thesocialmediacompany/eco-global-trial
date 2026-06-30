@@ -11,12 +11,14 @@ import { WhyOrderOnline } from "@/components/home/WhyOrderOnline";
 import { Newsletter } from "@/components/home/Newsletter";
 import { getSettings } from "@/lib/settings";
 import { getPageHero } from "@/lib/page-hero";
+import { SITE_URL } from "@/lib/site-url";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Eco Global Foods (SMC-PVT) Ltd.",
-  url: "https://www.ecoglobalfoods.com",
+  url: SITE_URL,
+  logo: `${SITE_URL}/brand/logo-full.png`,
   foundingDate: "1999",
   description:
     "Granola, instant oats, malted drinks, protein bars and natural pantry staples, made in Pakistan since 1999.",
@@ -38,6 +40,18 @@ const orgJsonLd = {
   ],
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Eco Global Foods",
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default async function Home() {
   const [s, homeCover] = await Promise.all([getSettings(), getPageHero("home")]);
   return (
@@ -45,6 +59,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} cover={homeCover} />
       <ValueTicker />

@@ -185,6 +185,7 @@ export default async function SettingsPage() {
                 value={s.ga4MeasurementId}
               />
               <Field label="Meta Pixel ID" name="metaPixelId" value={s.metaPixelId} />
+              <Field label="Google Search Console token" name="googleSiteVerification" value={s.googleSiteVerification} full />
             </div>
             <p className="mt-2 text-xs text-purple-900/50">
               Leave blank to disable. GA4 looks like <code>G-XXXXXXXXXX</code>; the Meta
