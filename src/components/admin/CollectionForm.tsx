@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import { GRADIENTS as gradientOptions } from "@/data/gradients";
 
 type CollectionData = {
   id: string;
@@ -20,11 +21,6 @@ type CollectionData = {
   seoKeywords: string;
 };
 
-const gradientOptions = [
-  { value: "gradient-purple", label: "Purple" },
-  { value: "gradient-green", label: "Green" },
-  { value: "gradient-purple-green", label: "Purple → Green" },
-];
 
 export function CollectionForm({
   action,

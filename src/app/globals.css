@@ -110,6 +110,47 @@ body {
   .gradient-green {
     background-image: linear-gradient(135deg, var(--grad-g1) 0%, var(--grad-g2) 60%, var(--grad-g3) 100%);
   }
+  /* Extra decorative gradients (selectable for page covers / categories). */
+  .gradient-sunset {
+    background-image: linear-gradient(135deg, #3b1538 0%, #7a2f4a 50%, #d4773a 100%);
+  }
+  .gradient-berry {
+    background-image: linear-gradient(135deg, #2a0f28 0%, #7a1f53 55%, #c2417a 100%);
+  }
+  .gradient-rose {
+    background-image: linear-gradient(135deg, #2a0f28 0%, #7a2f4a 50%, #e08a9a 100%);
+  }
+  .gradient-ocean {
+    background-image: linear-gradient(135deg, #0f1d2a 0%, #13434f 55%, #2f8f86 100%);
+  }
+  .gradient-emerald {
+    background-image: linear-gradient(135deg, #06251c 0%, #0f5c43 55%, #36c08a 100%);
+  }
+  .gradient-forest {
+    background-image: linear-gradient(135deg, #0f1d0a 0%, #1f3d22 50%, #557a30 100%);
+  }
+  .gradient-gold {
+    background-image: linear-gradient(135deg, #3b2a12 0%, #8a6a1f 50%, #d4af52 100%);
+  }
+  .gradient-spice {
+    background-image: linear-gradient(135deg, #2a0f12 0%, #8a2f1f 50%, #d4773a 100%);
+  }
+  .gradient-midnight {
+    background-image: linear-gradient(135deg, #0b0a1a 0%, #1a1740 55%, #3a3a7a 100%);
+  }
+  .gradient-plum-gold {
+    background-image: linear-gradient(135deg, #19081a 0%, #5e3052 50%, #c39a37 100%);
+  }
+  /* "Running" gradient — animates the colour band slowly across the cover. */
+  .gradient-animated {
+    background-size: 220% 220%;
+    animation: gradientFlow 16s ease infinite;
+  }
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
   .text-gradient-gold {
     background-image: linear-gradient(90deg, #e7cf94, #d4af52, #e7cf94);
     -webkit-background-clip: text;

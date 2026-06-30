@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { getJournalPosts, formatPostDate } from "@/lib/posts";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default async function BlogPage() {
 
   return (
     <>
-      <PageBanner
+      <PageCover pageKey="blog"
         emoji="📖"
         eyebrow="The Goodness Journal"
         title="Stories, recipes & wellness"

@@ -10,6 +10,7 @@ import { StockedAt } from "@/components/home/StockedAt";
 import { WhyOrderOnline } from "@/components/home/WhyOrderOnline";
 import { Newsletter } from "@/components/home/Newsletter";
 import { getSettings } from "@/lib/settings";
+import { getPageHero } from "@/lib/page-hero";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -38,14 +39,14 @@ const orgJsonLd = {
 };
 
 export default async function Home() {
-  const s = await getSettings();
+  const [s, homeCover] = await Promise.all([getSettings(), getPageHero("home")]);
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
       />
-      <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} />
+      <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} cover={homeCover} />
       <ValueTicker />
       <FeaturedProducts />
       <SpecialOffers />

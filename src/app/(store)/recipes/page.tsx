@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock, ChefHat } from "lucide-react";
 import { getRecipePosts, formatPostDate } from "@/lib/posts";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default async function RecipesPage() {
 
   return (
     <>
-      <PageBanner
+      <PageCover pageKey="recipes"
         emoji="👩‍🍳"
         eyebrow="From our kitchen"
         title="Wholesome Recipes"

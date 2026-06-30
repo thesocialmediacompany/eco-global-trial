@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getProductsByCollection } from "@/lib/products";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { ProductsGrid } from "@/components/store/ProductsGrid";
 
 export async function generateMetadata({
@@ -33,7 +33,7 @@ export default async function CategoryPage({
 
   return (
     <>
-      <PageBanner
+      <PageCover pageKey={slug}
         emoji={collection.emoji}
         eyebrow="Collection"
         title={collection.name}

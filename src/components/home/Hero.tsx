@@ -4,6 +4,15 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { CountUp } from "@/components/motion/CountUp";
+import { CoverSlider } from "@/components/store/CoverSlider";
+
+export interface HeroCover {
+  mode: "gradient" | "slider";
+  gradient: string;
+  animated: boolean;
+  images: string[];
+  autoplayMs: number;
+}
 
 // dx/dy = how far each token drifts (px) as the user scrolls down the hero.
 const floats = [
@@ -59,28 +68,44 @@ export function Hero({
   badge,
   title,
   subtitle,
+  cover,
 }: {
   badge: string;
   title: string;
   subtitle: string;
+  cover?: HeroCover | null;
 }) {
   // Split the editable title into words; highlight the last word in gold.
   const words = title.trim().split(/\s+/);
+  const isSlider = cover?.mode === "slider" && cover.images.length > 0;
+  const gradientClass = cover?.gradient || "gradient-purple-green";
+  const animated = cover?.animated && !isSlider;
   return (
-    <section className="relative isolate overflow-hidden gradient-purple-green pt-20 pb-16 text-cream sm:pt-24 lg:pb-20">
-      {/* animated background orbs */}
-      <motion.div
-        aria-hidden
-        className="absolute -left-32 top-10 h-96 w-96 rounded-full bg-purple-500/40 blur-3xl"
-        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="absolute -right-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-green-400/30 blur-3xl"
-        animate={{ x: [0, -40, 0], y: [0, -20, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      />
+    <section
+      className={`relative isolate overflow-hidden pt-20 pb-16 text-cream sm:pt-24 lg:pb-20 ${
+        isSlider ? "" : `${gradientClass} ${animated ? "gradient-animated" : ""}`
+      }`}
+    >
+      {/* editable cover image slider */}
+      {isSlider && <CoverSlider images={cover!.images} autoplayMs={cover!.autoplayMs} />}
+
+      {/* animated background orbs (hidden when a photo cover is shown) */}
+      {!isSlider && (
+        <>
+          <motion.div
+            aria-hidden
+            className="absolute -left-32 top-10 h-96 w-96 rounded-full bg-purple-500/40 blur-3xl"
+            animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            aria-hidden
+            className="absolute -right-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-green-400/30 blur-3xl"
+            animate={{ x: [0, -40, 0], y: [0, -20, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
+      )}
 
       {/* floating product tokens (drift on scroll) */}
       {floats.map((f) => (

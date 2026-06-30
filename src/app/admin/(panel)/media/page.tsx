@@ -1,6 +1,7 @@
 import { Trash2, Plus, Star, FileText, Images } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
+import { GRADIENTS } from "@/data/gradients";
 import { UploadField } from "@/components/admin/UploadField";
 import {
   addGalleryImage,
@@ -93,9 +94,9 @@ export default async function MediaPage() {
                     <label className="block">
                       <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Placeholder colour</span>
                       <select name="gradient" defaultValue={g.gradient} className={input}>
-                        <option value="gradient-green">Green</option>
-                        <option value="gradient-purple">Purple</option>
-                        <option value="gradient-purple-green">Purple → Green</option>
+                        {GRADIENTS.map((gr) => (
+                          <option key={gr.value} value={gr.value}>{gr.label}</option>
+                        ))}
                       </select>
                     </label>
                     <div className="sm:col-span-2">
@@ -149,9 +150,9 @@ export default async function MediaPage() {
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Placeholder colour</span>
               <select name="gradient" className={input} defaultValue="gradient-green">
-                <option value="gradient-green">Green</option>
-                <option value="gradient-purple">Purple</option>
-                <option value="gradient-purple-green">Purple → Green</option>
+                {GRADIENTS.map((gr) => (
+                  <option key={gr.value} value={gr.value}>{gr.label}</option>
+                ))}
               </select>
             </label>
             <label className="flex items-center gap-2 text-sm text-purple-900">

@@ -347,6 +347,19 @@ model GalleryImage {
   createdAt   DateTime @default(now())
 }
 
+/// Editable cover for a main page: an auto-sliding image carousel (1-5 images)
+/// or a colour gradient (optionally animated). Keyed by a page slug.
+model PageHero {
+  id         String   @id @default(cuid())
+  pageKey    String   @unique // home | horeca | bundles | recipes | about | blog | contact
+  mode       String   @default("gradient") // gradient | slider
+  gradient   String   @default("gradient-purple-green")
+  animated   Boolean  @default(false) // running/animated gradient
+  images     String   @default("") // comma-separated image URLs (max 5)
+  autoplayMs Int      @default(5000)
+  createdAt  DateTime @default(now())
+}
+
 /// An editable navigation link for the header menu or footer link columns.
 model NavLink {
   id        String   @id @default(cuid())

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getProductsByCollection } from "@/lib/products";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { ProductsGrid } from "@/components/store/ProductsGrid";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function BundlesPage() {
 
   return (
     <>
-      <PageBanner
+      <PageCover pageKey="bundles"
         emoji="🎁"
         eyebrow="Better together"
         title="Curated Bundles"

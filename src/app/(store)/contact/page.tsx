@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { ContactForm } from "@/components/store/ContactForm";
 import { SocialLinks } from "@/components/site/SocialLinks";
 import { getSettings } from "@/lib/settings";
@@ -41,7 +41,7 @@ export default async function ContactPage() {
   ];
   return (
     <>
-      <PageBanner
+      <PageCover pageKey="contact"
         emoji="✉️"
         eyebrow="Contact"
         title="We'd love to hear from you"

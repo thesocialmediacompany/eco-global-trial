@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { getSettings } from "@/lib/settings";
 import { getGalleryImages, getCatalogFiles } from "@/lib/media";
-import { PageBanner } from "@/components/store/PageBanner";
+import { PageCover } from "@/components/store/PageCover";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { GetQuote } from "@/components/store/GetQuote";
@@ -83,7 +83,7 @@ export default async function AboutPage() {
 
   return (
     <>
-      <PageBanner
+      <PageCover pageKey="about"
         emoji="🌿"
         eyebrow="Who We Are"
         title="At the forefront of food innovation"
