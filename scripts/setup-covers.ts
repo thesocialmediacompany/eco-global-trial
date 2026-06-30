@@ -24,7 +24,7 @@ async function imagesFor(slugs: string[], fallbackCount: number): Promise<string
 }
 
 async function setCover(pageKey: string, data: Partial<{
-  mode: string; gradient: string; animated: boolean; images: string; autoplayMs: number;
+  mode: string; gradient: string; animated: boolean; gradientSpeed: number; images: string; autoplayMs: number;
 }>) {
   await prisma.pageHero.upsert({
     where: { pageKey },
@@ -34,6 +34,7 @@ async function setCover(pageKey: string, data: Partial<{
       mode: data.mode ?? "gradient",
       gradient: data.gradient ?? "gradient-purple-green",
       animated: data.animated ?? false,
+      gradientSpeed: data.gradientSpeed ?? 8,
       images: data.images ?? "",
       autoplayMs: data.autoplayMs ?? 5000,
     },
@@ -50,7 +51,7 @@ async function main() {
     4,
   );
 
-  await setCover("home", { mode: "gradient", gradient: "gradient-purple-green", animated: true });
+  await setCover("home", { mode: "gradient", gradient: "gradient-purple-green", animated: true, gradientSpeed: 5 });
   await setCover("recipes", { mode: "gradient", gradient: "gradient-sunset", animated: false });
   await setCover("horeca", { mode: "slider", images: horeca.join(","), autoplayMs: 5000 });
   await setCover("bundles", { mode: "slider", images: bundles.join(","), autoplayMs: 4500 });

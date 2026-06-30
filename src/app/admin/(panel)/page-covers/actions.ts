@@ -17,6 +17,7 @@ export async function savePageHero(pageKey: string, formData: FormData) {
     mode: String(formData.get("mode") ?? "gradient") === "slider" ? "slider" : "gradient",
     gradient: String(formData.get("gradient") ?? "gradient-purple-green"),
     animated: formData.get("animated") === "on",
+    gradientSpeed: Math.min(60, Math.max(2, Number(formData.get("gradientSpeed") ?? 8) || 8)),
     images,
     autoplayMs: Math.max(2000, (Number(formData.get("autoplaySec") ?? 5) || 5) * 1000),
   };

@@ -352,12 +352,13 @@ model GalleryImage {
 model PageHero {
   id         String   @id @default(cuid())
   pageKey    String   @unique // home | horeca | bundles | recipes | about | blog | contact
-  mode       String   @default("gradient") // gradient | slider
-  gradient   String   @default("gradient-purple-green")
-  animated   Boolean  @default(false) // running/animated gradient
-  images     String   @default("") // comma-separated image URLs (max 5)
-  autoplayMs Int      @default(5000)
-  createdAt  DateTime @default(now())
+  mode          String   @default("gradient") // gradient | slider
+  gradient      String   @default("gradient-purple-green")
+  animated      Boolean  @default(false) // running/animated gradient
+  gradientSpeed Int      @default(8) // seconds per loop (lower = faster)
+  images        String   @default("") // comma-separated image URLs (max 5)
+  autoplayMs    Int      @default(5000)
+  createdAt     DateTime @default(now())
 }
 
 /// An editable navigation link for the header menu or footer link columns.

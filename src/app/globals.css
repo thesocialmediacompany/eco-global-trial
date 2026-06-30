@@ -141,10 +141,11 @@ body {
   .gradient-plum-gold {
     background-image: linear-gradient(135deg, #19081a 0%, #5e3052 50%, #c39a37 100%);
   }
-  /* "Running" gradient — animates the colour band diagonally across the cover. */
+  /* "Running" gradient — animates the colour band diagonally across the cover.
+     Speed is controlled per-page via the --grad-anim-duration variable. */
   .gradient-animated {
     background-size: 320% 320%;
-    animation: gradientFlow 11s ease-in-out infinite;
+    animation: gradientFlow var(--grad-anim-duration, 8s) ease-in-out infinite;
   }
   @keyframes gradientFlow {
     0% { background-position: 0% 0%; }

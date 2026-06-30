@@ -5,6 +5,7 @@ export interface PageHeroData {
   mode: "gradient" | "slider";
   gradient: string;
   animated: boolean;
+  gradientSpeed: number; // seconds per loop (lower = faster)
   images: string[];
   autoplayMs: number;
 }
@@ -37,6 +38,7 @@ export async function getPageHero(pageKey: string): Promise<PageHeroData | null>
     mode: row.mode === "slider" && images.length > 0 ? "slider" : "gradient",
     gradient: row.gradient || "gradient-purple-green",
     animated: row.animated,
+    gradientSpeed: Math.min(60, Math.max(2, row.gradientSpeed || 8)),
     images,
     autoplayMs: row.autoplayMs || 5000,
   };

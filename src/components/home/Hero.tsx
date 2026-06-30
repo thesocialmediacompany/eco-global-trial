@@ -10,6 +10,7 @@ export interface HeroCover {
   mode: "gradient" | "slider";
   gradient: string;
   animated: boolean;
+  gradientSpeed: number;
   images: string[];
   autoplayMs: number;
 }
@@ -85,6 +86,11 @@ export function Hero({
       className={`relative isolate overflow-hidden pt-20 pb-16 text-cream sm:pt-24 lg:pb-20 ${
         isSlider ? "" : `${gradientClass} ${animated ? "gradient-animated" : ""}`
       }`}
+      style={
+        animated
+          ? ({ "--grad-anim-duration": `${cover!.gradientSpeed}s` } as React.CSSProperties)
+          : undefined
+      }
     >
       {/* editable cover image slider */}
       {isSlider && <CoverSlider images={cover!.images} autoplayMs={cover!.autoplayMs} />}

@@ -55,6 +55,19 @@ export default async function PageCoversPage() {
                 Running (animated) gradient
               </label>
               <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Running speed (seconds per loop — lower = faster)
+                </span>
+                <input
+                  name="gradientSpeed"
+                  type="number"
+                  min={2}
+                  max={60}
+                  defaultValue={r?.gradientSpeed ?? 8}
+                  className={`${input} w-28`}
+                />
+              </label>
+              <label className="block">
                 <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Slide every (seconds)</span>
                 <input
                   name="autoplaySec"

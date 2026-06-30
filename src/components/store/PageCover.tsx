@@ -29,6 +29,11 @@ export async function PageCover({ pageKey, eyebrow, title, description, emoji }:
         <div
           aria-hidden
           className={`absolute inset-0 -z-10 ${gradientClass} ${animated ? "gradient-animated" : ""}`}
+          style={
+            animated
+              ? ({ "--grad-anim-duration": `${hero!.gradientSpeed}s` } as React.CSSProperties)
+              : undefined
+          }
         >
           <div className="absolute -right-20 top-0 h-72 w-72 rounded-full bg-green-400/20 blur-3xl" />
           <div className="absolute -left-20 bottom-0 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl" />
