@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { CartProvider } from "@/lib/cart";
 import { WishlistProvider } from "@/lib/wishlist";
 import { getSettings } from "@/lib/settings";
 import { getShippingConfig } from "@/lib/shipping-config";
+
+/** Google Search Console verification, via Next's head management (no manual
+ * <head> — that caused a hydration crash). DB-safe with a try/catch fallback. */
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const token = (await getSettings()).googleSiteVerification;
+    return token ? { verification: { google: token } } : {};
+  } catch {
+    return {};
+  }
+}
 import { getNavLinks } from "@/lib/navigation";
 import { brandThemeCss } from "@/lib/theme";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";

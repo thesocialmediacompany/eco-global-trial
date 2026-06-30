@@ -47,30 +47,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Google Search Console verification token (admin-editable). DB-safe: a hiccup
-  // just omits the tag rather than breaking the page.
-  let googleVerification = "";
-  try {
-    const { getSettings } = await import("@/lib/settings");
-    googleVerification = (await getSettings()).googleSiteVerification;
-  } catch {
-    /* ignore — render without the verification meta */
-  }
   return (
     <html
       lang="en"
       className={`${fraunces.variable} ${jakarta.variable} h-full antialiased`}
     >
-      <head>
-        {googleVerification && (
-          <meta name="google-site-verification" content={googleVerification} />
-        )}
-      </head>
       <body className="min-h-full bg-cream text-ink flex flex-col overflow-x-hidden">
         {children}
       </body>
