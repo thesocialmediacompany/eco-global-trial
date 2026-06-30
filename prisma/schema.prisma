@@ -375,6 +375,18 @@ model NavLink {
   createdAt DateTime @default(now())
 }
 
+/// A retail partner shown in the "Also available at" / Stores sections.
+model Stockist {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#3c6326") // accent for the styled name badge
+  url       String   @default("") // optional link to the retailer
+  logoUrl   String   @default("") // optional uploaded logo (else styled name)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 /// A downloadable catalog / brochure PDF shown on the About page.
 model CatalogFile {
   id          String   @id @default(cuid())

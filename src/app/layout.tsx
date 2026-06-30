@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site-url";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -15,7 +16,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.ecoglobalfoods.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Eco Global Foods | Taste The Goodness",
     template: "%s | Eco Global Foods",

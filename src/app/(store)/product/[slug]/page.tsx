@@ -31,14 +31,24 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Product not found" };
+  const image = product.imageUrl || product.images?.[0];
   return {
     title: product.seo.title,
     description: product.seo.description,
     keywords: product.seo.keywords,
+    alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: product.seo.title,
       description: product.seo.description,
       type: "website",
+      url: `/product/${product.slug}`,
+      ...(image ? { images: [{ url: image, alt: product.name }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.seo.title,
+      description: product.seo.description,
+      ...(image ? { images: [image] } : {}),
     },
   };
 }

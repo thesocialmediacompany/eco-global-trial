@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
-import { retailers } from "@/data/retailers";
 import { getSettings } from "@/lib/settings";
+import { getStockists } from "@/lib/stockists";
 import { PageBanner } from "@/components/store/PageBanner";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
@@ -15,17 +15,7 @@ export const metadata: Metadata = {
     "Find Eco Global Foods products on the shelves of leading retailers across Pakistan, including Al-Fatah, Imtiaz, Naheed, Carrefour and more.",
 };
 
-const LOGO_EXTS = ["svg", "png", "webp", "jpg", "jpeg"];
 const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
-
-/** Resolve an official logo file for a retailer if one was dropped in public/stores. */
-function findLogo(slug: string): string | null {
-  for (const ext of LOGO_EXTS) {
-    const rel = `/stores/${slug}.${ext}`;
-    if (fs.existsSync(path.join(process.cwd(), "public", rel))) return rel;
-  }
-  return null;
-}
 
 /** In-store display photos dropped into public/stores/photos. */
 function findPhotos(): string[] {
@@ -39,9 +29,7 @@ function findPhotos(): string[] {
 }
 
 export default async function StoresPage() {
-  const s = await getSettings();
-  const items = retailers.map((r) => ({ ...r, logo: findLogo(r.slug) }));
-  const photos = findPhotos();
+  const [s, items, photos] = await Promise.all([getSettings(), getStockists(), findPhotos()]);
 
   return (
     <>
@@ -58,29 +46,38 @@ export default async function StoresPage() {
           stagger={0.05}
           className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
         >
-          {items.map((r) => (
-            <RevealItem
-              key={r.slug}
-              className="flex h-28 items-center justify-center rounded-2xl border border-purple-100 bg-white px-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-md"
-            >
-              {r.logo ? (
-                <Image
-                  src={r.logo}
-                  alt={r.name}
-                  width={180}
-                  height={80}
-                  className="max-h-16 w-auto object-contain"
-                />
-              ) : (
-                <span
-                  className="text-center font-display text-xl font-bold leading-tight"
-                  style={{ color: r.color }}
-                >
-                  {r.name}
-                </span>
-              )}
-            </RevealItem>
-          ))}
+          {items.map((r) => {
+            const inner = r.logoUrl ? (
+              <Image
+                src={r.logoUrl}
+                alt={r.name}
+                width={180}
+                height={80}
+                className="max-h-16 w-auto object-contain"
+              />
+            ) : (
+              <span
+                className="text-center font-display text-xl font-bold leading-tight"
+                style={{ color: r.color }}
+              >
+                {r.name}
+              </span>
+            );
+            return (
+              <RevealItem
+                key={r.id}
+                className="flex h-28 items-center justify-center rounded-2xl border border-purple-100 bg-white px-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-md"
+              >
+                {r.url ? (
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center">
+                    {inner}
+                  </a>
+                ) : (
+                  inner
+                )}
+              </RevealItem>
+            );
+          })}
         </RevealGroup>
 
         <p className="mt-8 text-center text-sm text-purple-900/45">

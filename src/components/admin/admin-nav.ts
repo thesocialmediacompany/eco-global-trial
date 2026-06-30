@@ -19,6 +19,7 @@ import {
   Building2,
   Navigation as NavIcon,
   LayoutTemplate,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Content", href: "/admin/content", icon: FileText },
   { label: "Media & gallery", href: "/admin/media", icon: Images, ownerOnly: true },
   { label: "Page covers", href: "/admin/page-covers", icon: LayoutTemplate, ownerOnly: true },
+  { label: "Stockists", href: "/admin/stockists", icon: Store, ownerOnly: true },
   { label: "Navigation", href: "/admin/navigation", icon: NavIcon, ownerOnly: true },
   { label: "Discounts", href: "/admin/discounts", icon: Tag, ownerOnly: true },
   { label: "Shipping", href: "/admin/shipping", icon: Truck },
