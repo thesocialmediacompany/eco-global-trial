@@ -375,6 +375,27 @@ model NavLink {
   createdAt DateTime @default(now())
 }
 
+/// An editable FAQ question/answer shown on /faq.
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+/// An editable legal/info page at /policies/[slug]. Body uses light markdown:
+/// lines starting with "## " are headings; blank lines separate paragraphs.
+model Policy {
+  slug      String   @id // privacy | terms | shipping | refund | ...
+  title     String
+  intro     String   @default("")
+  body      String   @default("")
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
 /// A retail partner shown in the "Also available at" / Stores sections.
 model Stockist {
   id        String   @id @default(cuid())

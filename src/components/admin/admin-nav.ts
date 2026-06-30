@@ -20,6 +20,7 @@ import {
   Navigation as NavIcon,
   LayoutTemplate,
   Store,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -46,6 +47,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
   { label: "Campaigns", href: "/admin/campaigns", icon: Send },
   { label: "Content", href: "/admin/content", icon: FileText },
+  { label: "FAQ & pages", href: "/admin/pages", icon: HelpCircle, ownerOnly: true },
   { label: "Media & gallery", href: "/admin/media", icon: Images, ownerOnly: true },
   { label: "Page covers", href: "/admin/page-covers", icon: LayoutTemplate, ownerOnly: true },
   { label: "Stockists", href: "/admin/stockists", icon: Store, ownerOnly: true },
