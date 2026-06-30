@@ -57,8 +57,8 @@ export default async function Home() {
       <StockedAt />
       <WhyOrderOnline />
       <Newsletter
-        heading={s.newsletterHeading}
-        subtext={s.newsletterSubtext}
+        heading={s.newsletterOfferEnabled === "true" ? s.newsletterHeading : ""}
+        subtext={s.newsletterOfferEnabled === "true" ? s.newsletterSubtext : ""}
         offerEnabled={s.newsletterOfferEnabled === "true"}
       />
     </>
