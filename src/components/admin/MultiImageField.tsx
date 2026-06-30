@@ -11,10 +11,12 @@ export function MultiImageField({
   name,
   defaultImages = "",
   max = 5,
+  hint,
 }: {
   name: string;
   defaultImages?: string;
   max?: number;
+  hint?: string;
 }) {
   const [imgs, setImgs] = useState<string[]>(
     defaultImages ? defaultImages.split(",").map((s) => s.trim()).filter(Boolean).slice(0, max) : [],
@@ -84,6 +86,7 @@ export function MultiImageField({
       <p className="mt-1.5 text-[0.7rem] text-purple-900/45">
         {imgs.length}/{max} images. {imgs.length > 1 && "They auto-slide on the page."}
       </p>
+      {hint && <p className="mt-0.5 text-[0.7rem] font-medium text-green-700/80">{hint}</p>}
       <input
         ref={inputRef}
         type="file"

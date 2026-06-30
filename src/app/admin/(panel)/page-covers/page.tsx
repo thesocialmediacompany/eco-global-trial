@@ -68,7 +68,12 @@ export default async function PageCoversPage() {
 
             <div className="mt-4">
               <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Cover photos (up to 5)</span>
-              <MultiImageField name="images" defaultImages={r?.images ?? ""} max={5} />
+              <MultiImageField
+                name="images"
+                defaultImages={r?.images ?? ""}
+                max={5}
+                hint="Recommended: wide landscape, about 2000 × 1000 px (2:1). Keep the subject centred, each file under ~1 MB. JPG, PNG or WebP."
+              />
             </div>
 
             <button className="mt-4 rounded-lg gradient-purple-green px-5 py-2 text-sm font-semibold text-cream">

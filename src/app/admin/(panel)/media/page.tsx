@@ -100,7 +100,7 @@ export default async function MediaPage() {
                       </select>
                     </label>
                     <div className="sm:col-span-2">
-                      <UploadField name="url" kind="image" label="Replace photo (leave blank to keep)" />
+                      <UploadField name="url" kind="image" label="Replace photo (leave blank to keep) · square ~1200×1200px, under 1MB" />
                     </div>
                     <label className="flex items-center gap-2 text-xs text-purple-900">
                       <input type="checkbox" name="featured" defaultChecked={g.featured} className="h-4 w-4 accent-green-600" />
@@ -132,7 +132,7 @@ export default async function MediaPage() {
         <form action={addGalleryImage} className="rounded-xl border border-dashed border-purple-200 bg-cream/30 p-4">
           <p className="mb-3 text-sm font-semibold text-purple-900">Add a photo</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <UploadField name="url" kind="image" label="Photo (optional — blank = placeholder)" />
+            <UploadField name="url" kind="image" label="Photo (optional — blank = placeholder) · square ~1200×1200px, under 1MB" />
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-purple-900/70">Caption</span>
               <input name="caption" className={input} placeholder="e.g. Golden granola, fresh from the oven" />
