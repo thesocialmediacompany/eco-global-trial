@@ -65,7 +65,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} cover={homeCover} />
-      <ValueTicker />
+      <ValueTicker values={s.valueTicker.split("|").map((t) => t.trim()).filter(Boolean)} />
       <FeaturedProducts />
       <SpecialOffers />
       <CategoryGrid />

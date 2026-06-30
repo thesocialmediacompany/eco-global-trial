@@ -1,4 +1,4 @@
-const values = [
+const fallback = [
   "Natural & Pure",
   "No Artificial Flavours",
   "High Protein",
@@ -10,8 +10,9 @@ const values = [
 ];
 
 /** Bold scrolling brand-values strip - a Shan-style statement band. */
-export function ValueTicker() {
-  const loop = [...values, ...values];
+export function ValueTicker({ values }: { values?: string[] }) {
+  const list = values && values.length > 0 ? values : fallback;
+  const loop = [...list, ...list];
   return (
     <div className="relative -mt-px overflow-hidden border-y border-purple-100 bg-purple-900 py-5">
       <div className="flex w-max animate-[marquee_30s_linear_infinite]">

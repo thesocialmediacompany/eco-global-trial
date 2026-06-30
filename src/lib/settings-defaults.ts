@@ -54,6 +54,9 @@ export const defaultSettings = {
     "Granola, oats, malted drinks and protein bars made with natural, pure ingredients. Real food for real life, packed in Pakistan since 1999.",
   // Turn off when no discount is running so you don't promise an offer you
   // aren't honouring (shows neutral "Join our newsletter" copy instead).
+  // Scrolling brand-words band under the hero (separate with "|").
+  valueTicker:
+    "Natural & Pure|No Artificial Flavours|High Protein|Whole Grains|Fibre Rich|Responsibly Sourced|Made in Pakistan|Since 1999",
   newsletterOfferEnabled: "true",
   newsletterHeading: "Get 20% off your first order",
   newsletterSubtext:

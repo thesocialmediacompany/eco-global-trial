@@ -99,6 +99,12 @@ export default async function SettingsPage() {
               Edit the main words customers see on the homepage. No code needed.
             </p>
             <div className="space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-purple-900/70">
+                  Scrolling values band (separate with &ldquo;|&rdquo;)
+                </span>
+                <textarea name="valueTicker" rows={2} defaultValue={s.valueTicker} className={input} />
+              </label>
               <Field label="Hero badge (small pill)" name="heroBadge" value={s.heroBadge} full />
               <Field label="Hero title (last word is highlighted)" name="heroTitle" value={s.heroTitle} full />
               <label className="block">
