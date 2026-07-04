@@ -14,6 +14,7 @@ datasource db {
   // string and run `prisma db push` to create the tables.
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /// Admin/staff accounts for the Shopify-style backend.
