@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -32,6 +33,9 @@ export const metadata: Metadata = {
     "natural foods Pakistan",
     "healthy breakfast",
   ],
+  verification: {
+    google: "0w7Bxs3CDqIKOP_USqL9O_62xvj6f3cfpjvNqfit6FQ",
+  },
   openGraph: {
     type: "website",
     locale: "en_PK",
@@ -59,6 +63,20 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-cream text-ink flex flex-col overflow-x-hidden">
         {children}
+
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-KQMBZ1CQJY"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-KQMBZ1CQJY');
+          `}
+        </Script>
       </body>
     </html>
   );
