@@ -2,10 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { initialPaymentStatus, type PaymentMethodId } from "@/lib/payments";
-import { sendOrderConfirmation } from "@/lib/email";
+import { sendOrderConfirmation, sendShippingNotification } from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { computeShipping } from "@/lib/shipping-rates";
 import { createZoomCODOrder } from "@/lib/zoomcod";
+
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -238,6 +239,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           courierStatus: "New Booked",
         },
       });
+      await sendShippingNotification(createdOrder.id).catch(() => {});
     } catch (e) {
       console.error("ZoomCOD booking failed for order", orderNumber, e);
     }
