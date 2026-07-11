@@ -8,6 +8,11 @@ frontend:
         - echo "AUTH_SECRET=$AUTH_SECRET" >> .env.production
         - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
         - echo "NODE_ENV=production" >> .env.production
+        - echo "ZOOMCOD_API_KEY=$ZOOMCOD_API_KEY" >> .env.production
+        - echo "ZOOMCOD_CLIENT_CODE=$ZOOMCOD_CLIENT_CODE" >> .env.production
+        - echo "ZOOMCOD_PROFILE_ID=$ZOOMCOD_PROFILE_ID" >> .env.production
+        - echo "ZOOMCOD_ORIGIN=$ZOOMCOD_ORIGIN" >> .env.production
+        - echo "ZOOMCOD_SERVICE_TYPE=$ZOOMCOD_SERVICE_TYPE" >> .env.production
         - npm ci --include=dev
         - npx prisma generate
         - npx prisma db push
