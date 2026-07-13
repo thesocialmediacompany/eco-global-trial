@@ -22,32 +22,51 @@ const tabs = [
   { key: "fulfilled", label: "Fulfilled" },
 ];
 
-function whereFor(tab: string): Prisma.OrderWhereInput {
-  switch (tab) {
-    case "drafts":
-      return { isDraft: true };
-    case "unfulfilled":
-      return { isDraft: false, fulfillmentStatus: "unfulfilled" };
-    case "unpaid":
-      return { isDraft: false, paymentStatus: "pending" };
-    case "fulfilled":
-      return { isDraft: false, fulfillmentStatus: "fulfilled" };
-    default:
-      return { isDraft: false };
-  }
+function whereFor(tab: string, q?: string): Prisma.OrderWhereInput {
+  const search: Prisma.OrderWhereInput | undefined = q
+    ? {
+        OR: [
+          { customerName: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q, mode: "insensitive" } },
+          // numeric search by order number
+          ...(isNaN(Number(q.replace("#", "")))
+            ? []
+            : [{ orderNumber: Number(q.replace("#", "")) }]),
+        ],
+      }
+    : undefined;
+
+  const base: Prisma.OrderWhereInput = (() => {
+    switch (tab) {
+      case "drafts":
+        return { isDraft: true };
+      case "unfulfilled":
+        return { isDraft: false, fulfillmentStatus: "unfulfilled" };
+      case "unpaid":
+        return { isDraft: false, paymentStatus: "pending" };
+      case "fulfilled":
+        return { isDraft: false, fulfillmentStatus: "fulfilled" };
+      default:
+        return { isDraft: false };
+    }
+  })();
+
+  return search ? { AND: [base, search] } : base;
 }
 
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
-  const { tab = "all" } = await searchParams;
+  const { tab = "all", q } = await searchParams;
+  const where = whereFor(tab, q);
 
   const [orders, totalCount, itemsAgg, fulfilledCount, deliveredCount] =
     await Promise.all([
       prisma.order.findMany({
-        where: whereFor(tab),
+        where,
         orderBy: { createdAt: "desc" },
         include: { _count: { select: { items: true } } },
       }),
@@ -66,20 +85,17 @@ export default async function OrdersPage({
   ];
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-6xl">
       {/* header */}
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold text-purple-900">Orders</h1>
-        <div className="flex items-center gap-2">
-          <a
-            href="/api/admin/orders/export"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50"
-          >
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
             <Download className="h-4 w-4" /> Export
-          </a>
+          </button>
           <Link
             href="/admin/orders/new"
-            className="inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream hover:opacity-95"
+            className="inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream"
           >
             <Plus className="h-4 w-4" /> Create order
           </Link>
@@ -87,44 +103,43 @@ export default async function OrdersPage({
       </div>
 
       {/* metric summary bar */}
-      <div className="mb-5 grid grid-cols-2 divide-purple-100 overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
+      <div className="mb-6 flex flex-wrap gap-4 rounded-xl border border-purple-100 bg-white px-5 py-4 shadow-sm">
         {metrics.map((m) => (
-          <div key={m.label} className="px-5 py-4">
-            <p className="text-xs font-medium text-purple-900/50">{m.label}</p>
-            <p className="mt-1 font-display text-xl font-semibold text-purple-900">
-              {m.value}
-            </p>
+          <div key={m.label} className="flex flex-col">
+            <span className="text-xs text-purple-900/50">{m.label}</span>
+            <span className="font-semibold text-purple-900">{m.value}</span>
           </div>
         ))}
       </div>
 
       {/* table card */}
-      <div className="overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm">
-        {/* tabs + search */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-purple-100 px-4 py-3">
-          <div className="flex gap-1">
-            {tabs.map((t) => (
-              <Link
-                key={t.key}
-                href={`/admin/orders?tab=${t.key}`}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  tab === t.key
-                    ? "bg-purple-100 text-purple-900"
-                    : "text-purple-900/60 hover:bg-purple-50"
-                }`}
-              >
-                {t.label}
-              </Link>
-            ))}
-          </div>
-          <div className="relative ml-auto min-w-[200px] flex-1 sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-900/40" />
-            <input
-              placeholder="Search and filter"
-              className="w-full rounded-lg border border-purple-100 bg-cream/50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-purple-300 focus:bg-white"
-            />
-          </div>
+      <div className="rounded-xl border border-purple-100 bg-white shadow-sm">
+        {/* tabs + search status */}
+        <div className="flex items-center gap-1 border-b border-purple-100 px-4 pt-3">
+          {tabs.map((t) => (
+            <Link
+              key={t.key}
+              href={`/admin/orders?tab=${t.key}`}
+              className={`rounded-t-lg px-3 py-2 text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? "border-b-2 border-purple-600 text-purple-900"
+                  : "text-purple-900/50 hover:text-purple-900"
+              }`}
+            >
+              {t.label}
+            </Link>
+          ))}
         </div>
+
+        {q && (
+          <div className="flex items-center gap-2 border-b border-purple-100 bg-purple-50 px-5 py-2.5 text-sm text-purple-900/70">
+            <Search className="h-4 w-4" />
+            Showing results for <strong>&ldquo;{q}&rdquo;</strong>
+            <Link href="/admin/orders" className="ml-auto text-xs text-purple-600 hover:underline">
+              Clear
+            </Link>
+          </div>
+        )}
 
         <OrdersTable
           orders={orders.map((o) => ({
@@ -141,11 +156,10 @@ export default async function OrdersPage({
           bulkFulfill={bulkFulfillOrders}
         />
 
-        <div className="flex items-center justify-between border-t border-purple-100 px-4 py-3 text-sm text-purple-900/50">
-          <span>
-            Showing {orders.length} order{orders.length === 1 ? "" : "s"}
-          </span>
-        </div>
+        <p className="border-t border-purple-100 px-5 py-3 text-xs text-purple-900/50">
+          Showing {orders.length} order{orders.length === 1 ? "" : "s"}
+          {q && ` matching "${q}"`}
+        </p>
       </div>
     </div>
   );

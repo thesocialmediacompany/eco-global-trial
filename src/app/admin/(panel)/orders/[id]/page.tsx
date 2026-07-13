@@ -194,9 +194,14 @@ export default async function OrderDetailPage({
                     <>
                       {" "}
                       · Tracking{" "}
-                      <span className="font-mono text-purple-700">
+                      <a
+                        href={`https://portal.zoomcod.com/track-details.php?track_code=${order.trackingNumber}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-blue-600 underline hover:text-blue-800"
+                      >
                         {order.trackingNumber}
-                      </span>
+                      </a>
                     </>
                   )}
                 </p>
@@ -366,3 +371,5 @@ function waOrderLink(
   }
   return `https://wa.me/${waNumber(order.phone)}?text=${encodeURIComponent(msg)}`;
 }
+
+

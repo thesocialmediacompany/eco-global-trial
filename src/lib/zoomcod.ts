@@ -7,8 +7,10 @@
  *   ZOOMCOD_CLIENT_CODE  — your client_code (e.g. "1001")
  *   ZOOMCOD_PROFILE_ID   — your shipper profile_id (e.g. "20045")
  *   ZOOMCOD_ORIGIN       — your dispatch city in UPPERCASE (e.g. "LAHORE")
- *   ZOOMCOD_PRODUCT      — product type: "Overnight" | "Overland" (default: "Overnight")
- *   ZOOMCOD_SERVICE_TYPE — service type: "Regular" | "Overland" (default: "Regular")
+ *
+ * Product & service_type are auto-selected by weight:
+ *   < 8 kg  → Overnight / Regular
+ *   >= 8 kg → Overland  / Overland
  */
 
 const BASE = "https://portal.zoomcod.com/API";
@@ -17,6 +19,16 @@ function authKey() {
   const key = process.env.ZOOMCOD_API_KEY;
   if (!key) throw new Error("ZOOMCOD_API_KEY is not set");
   return key;
+}
+
+// ─── Weight-based selectors ───────────────────────────────────────────────────
+
+function getProductForWeight(weightKg: number): string {
+  return weightKg < 8 ? "Overnight" : "Overland";
+}
+
+function getServiceTypeForWeight(weightKg: number): string {
+  return weightKg < 8 ? "Regular" : "Overland";
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -46,23 +58,24 @@ export interface ZoomCODOrderResult {
 
 // ─── Create Order ─────────────────────────────────────────────────────────────
 
-
 export async function createZoomCODOrder(
   input: ZoomCODOrderInput
 ): Promise<ZoomCODOrderResult> {
+  const weightKg = input.weightKg ?? 0.5;
+
   const payload = {
     auth_key: authKey(),
     client_code: process.env.ZOOMCOD_CLIENT_CODE ?? "",
     profile_id: process.env.ZOOMCOD_PROFILE_ID ?? "",
-    product: getProductForWeight(input.weightKg ?? 0.5),
-    service_type: process.env.ZOOMCOD_SERVICE_TYPE ?? "Regular",
+    product: getProductForWeight(weightKg),
+    service_type: getServiceTypeForWeight(weightKg),
     origin: process.env.ZOOMCOD_ORIGIN ?? "LAHORE",
     destination: input.destination.toUpperCase(),
     receiver_name: input.receiverName,
     receiver_phone: input.receiverPhone,
     receiver_email: input.receiverEmail ?? "",
     receiver_address: input.receiverAddress,
-    weight: String(input.weightKg ?? 0.5),
+    weight: String(weightKg),
     pieces: input.pieces ?? 1,
     collection_amount: String(input.collectionAmount),
     product_description: input.productDescription,
@@ -81,7 +94,7 @@ export async function createZoomCODOrder(
   }
 
   const data = await res.json();
-  
+
   if (!data.tracking_no) {
     throw new Error(data.message ?? "ZoomCOD returned no tracking_no");
   }
@@ -167,10 +180,3 @@ export async function getZoomCODCities(): Promise<ZoomCODCity[]> {
     name: c.city_name,
   }));
 }
-
-function getProductForWeight(weightKg: number): string {
-  if (weightKg <= 8) return "Overnight";   // lighter/faster
-  return "Overland";                        // heavier/slower
-}
-
-

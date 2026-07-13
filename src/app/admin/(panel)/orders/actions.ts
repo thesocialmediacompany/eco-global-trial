@@ -1,5 +1,4 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -60,6 +59,7 @@ export async function createManualOrder(
 
   const subtotal = lineItems.reduce((s, l) => s + l.total, 0);
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
+
   const agg = await prisma.order.aggregate({ _max: { orderNumber: true } });
   const orderNumber = (agg._max.orderNumber ?? 1000) + 1;
 
@@ -164,7 +164,6 @@ export async function cancelOrder(orderId: string) {
   });
   if (!order || order.fulfillmentStatus === "cancelled") return;
 
-  // Resolve which variant each line maps to (queries run now)...
   const lookups = await Promise.all(
     order.items.map(async (it) => {
       if (!it.productId) return null;
@@ -175,7 +174,6 @@ export async function cancelOrder(orderId: string) {
     }),
   );
 
-  // ...then batch the restock increments + the status flip into one transaction.
   const restockOps = lookups
     .filter((l): l is NonNullable<typeof l> => l !== null)
     .map((l) =>
@@ -215,6 +213,9 @@ export async function bookZoomCOD(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return;
 
+  // Guard: already booked — prevent duplicate bookings if button clicked multiple times
+  if (order.trackingNumber) return;
+
   const provider = getShippingProvider("zoomcod");
   const result = await provider.bookShipment({
     orderNumber: order.orderNumber,
@@ -235,6 +236,7 @@ export async function bookZoomCOD(orderId: string) {
         trackingNumber: result.trackingNumber,
         shipmentLabelUrl: result.labelUrl ?? "",
         courierStatus: "Order is Booked",
+        fulfillmentStatus: "fulfilled",
       },
     });
     // Let the customer know it's on the way, with the fresh tracking number.
@@ -244,6 +246,7 @@ export async function bookZoomCOD(orderId: string) {
   } else {
     console.error("ZoomCOD booking failed:", result.message);
   }
+
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
@@ -251,9 +254,11 @@ export async function bookZoomCOD(orderId: string) {
 export async function refreshZoomCodStatus(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order?.trackingNumber) return;
+
   const status = await zoomCodCurrentStatus(order.trackingNumber);
   if (status) {
     await prisma.order.update({ where: { id: orderId }, data: { courierStatus: status } });
   }
+
   revalidatePath(`/admin/orders/${orderId}`);
 }
