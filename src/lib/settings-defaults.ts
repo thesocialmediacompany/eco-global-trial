@@ -39,7 +39,7 @@ export const defaultSettings = {
   footerCredit: "Designed by tsmc.pk",
   footerCreditUrl: "https://tsmc.pk",
   // analytics / marketing pixels (leave blank to disable)
-  ga4MeasurementId: "",
+  ga4MeasurementId: "G-KQMBZ1CQJY",
   // Google Search Console: paste the "HTML tag" content value (the token only).
   googleSiteVerification: "", // e.g. G-XXXXXXXXXX
   metaPixelId: "", // e.g. 1234567890

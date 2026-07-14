@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -63,20 +62,9 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-cream text-ink flex flex-col overflow-x-hidden">
         {children}
-
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-KQMBZ1CQJY"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-KQMBZ1CQJY');
-          `}
-        </Script>
+        {/* Google Analytics is injected once by <Analytics> in the storefront
+         * layout, driven by the GA4 ID in Settings (defaults to G-KQMBZ1CQJY).
+         * Keeping it there avoids double-counting and keeps GA off the admin. */}
       </body>
     </html>
   );
