@@ -74,7 +74,7 @@ export default async function ShippingPage() {
               <span>Client code: <strong>{zoom.clientCode}</strong></span>
               <span>Profile (shipper): <strong>{zoom.profileId}</strong></span>
               <span>Origin city: <strong>{zoom.origin}</strong></span>
-              <span>Product / service: <strong>{zoom.product} · {zoom.serviceType}</strong></span>
+              <span>Product / service: <strong>Weight-based (auto)</strong></span>
             </div>
             <p className="mt-2 text-[0.7rem] text-purple-900/45">
               Real shipments are created on ZoomCOD when you click &ldquo;Book with ZoomCOD&rdquo;
