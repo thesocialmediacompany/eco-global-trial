@@ -206,15 +206,43 @@ export async function cancelOrder(orderId: string) {
 }
 
 /**
- * Book the order with ZoomCOD (https://zoomcod.com) via the pluggable shipping
- * adapter. Swapping couriers is a one-line change in @/lib/shipping.
+ * Book the order with ZoomCOD via the pluggable shipping adapter.
+ * Computes real weight from order items + variants for accurate
+ * product/service_type selection (Overnight vs Overland).
  */
 export async function bookZoomCOD(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: {
+          product: { include: { variants: true } },
+        },
+      },
+    },
+  });
   if (!order) return;
 
   // Guard: already booked — prevent duplicate bookings if button clicked multiple times
   if (order.trackingNumber) return;
+
+  // Compute total weight from actual variant weightGrams data
+  const totalGrams = order.items.reduce((sum, item) => {
+    const variant = item.product?.variants.find(
+      (v) => v.title === item.variantTitle,
+    );
+    const grams = variant?.weightGrams ?? item.product?.variants[0]?.weightGrams ?? 0;
+    return sum + grams * item.quantity;
+  }, 0);
+  const weightKg = Math.max(0.5, Math.round((totalGrams / 1000) * 10) / 10);
+
+  // Build product description from line items
+  const description = order.items
+    .map(
+      (it) =>
+        `${it.title}${it.variantTitle ? ` (${it.variantTitle})` : ""} x${it.quantity}`,
+    )
+    .join(", ");
 
   const provider = getShippingProvider("zoomcod");
   const result = await provider.bookShipment({
@@ -225,7 +253,8 @@ export async function bookZoomCOD(orderId: string) {
     address: order.address,
     city: order.city,
     amount: order.total,
-    description: "Eco Global Foods order #" + order.orderNumber,
+    weightKg,
+    description,
   });
 
   if (result.status === "booked") {

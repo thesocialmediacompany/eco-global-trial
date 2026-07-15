@@ -2,11 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { initialPaymentStatus, type PaymentMethodId } from "@/lib/payments";
-import { sendOrderConfirmation, sendShippingNotification } from "@/lib/email";
+import { sendOrderConfirmation } from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { computeShipping } from "@/lib/shipping-rates";
-import { createZoomCODOrder } from "@/lib/zoomcod";
-
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -209,42 +207,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       .updateMany({ where: { email: customer.email.toLowerCase() }, data: { recovered: true } })
       .catch(() => {});
   }
-
- // ── ZoomCOD: book a COD shipment automatically ─────────────────────────────
-  if (paymentMethod === "cod") {
-    try {
-      const productDescription = validItems
-        .map((l) => `${l.title}${l.variantTitle ? ` (${l.variantTitle})` : ""} x${l.quantity}`)
-        .join(", ");
-
-      const zoomResult = await createZoomCODOrder({
-        receiverName: customer.name,
-        receiverPhone: customer.phone,
-        receiverEmail: customer.email || undefined,
-        receiverAddress: customer.address,
-        destination: customer.city,
-        collectionAmount: total,
-        productDescription,
-        weightKg: Math.max(0.5, Math.round((totalGrams / 1000) * 10) / 10),
-        pieces: validItems.reduce((s, l) => s + l.quantity, 0),
-        orderId: orderNumber,
-      });
-
-      await prisma.order.update({
-        where: { id: createdOrder.id },
-        data: {
-          courier: zoomResult.thirdPartyName || "ZoomCOD",
-          trackingNumber: zoomResult.trackingNo,
-          shipmentLabelUrl: zoomResult.invoiceLink,
-          courierStatus: "New Booked",
-        },
-      });
-      await sendShippingNotification(createdOrder.id).catch(() => {});
-    } catch (e) {
-      console.error("ZoomCOD booking failed for order", orderNumber, e);
-    }
-  }
-  // ──────────────────────────────────────────────────────────────────────────
 
   // Order confirmation email (never block/fail the order on email errors).
   try {

@@ -8,8 +8,11 @@ import "server-only";
  *
  * Config (env, with EGF account defaults baked in so it works once the key is
  * set): ZOOMCOD_API_KEY (required for live), ZOOMCOD_API_BASE,
- * ZOOMCOD_CLIENT_CODE, ZOOMCOD_PROFILE_ID, ZOOMCOD_ORIGIN_CITY,
- * ZOOMCOD_PRODUCT, ZOOMCOD_SERVICE_TYPE.
+ * ZOOMCOD_CLIENT_CODE, ZOOMCOD_PROFILE_ID, ZOOMCOD_ORIGIN_CITY.
+ *
+ * Product & service_type are auto-selected by weight:
+ *   < 8 kg  → Overnight / Regular
+ *   >= 8 kg → Overland  / Overland
  */
 
 export interface ShipmentRequest {
@@ -46,9 +49,17 @@ function zoomConfig() {
     clientCode: process.env.ZOOMCOD_CLIENT_CODE || "2253",
     profileId: process.env.ZOOMCOD_PROFILE_ID || "20543",
     origin: process.env.ZOOMCOD_ORIGIN_CITY || "LAHORE",
-    product: process.env.ZOOMCOD_PRODUCT || "Overnight",
-    serviceType: process.env.ZOOMCOD_SERVICE_TYPE || "Regular",
   };
+}
+
+/** Weight-based product selector: < 8 kg → Overnight, >= 8 kg → Overland */
+function getProductForWeight(weightKg: number): string {
+  return weightKg < 8 ? "Overnight" : "Overland";
+}
+
+/** Weight-based service type selector: < 8 kg → Regular, >= 8 kg → Overland */
+function getServiceTypeForWeight(weightKg: number): string {
+  return weightKg < 8 ? "Regular" : "Overland";
 }
 
 export function zoomCodConfigured() {
@@ -63,8 +74,6 @@ export function zoomCodPublicConfig() {
     clientCode: c.clientCode,
     profileId: c.profileId,
     origin: c.origin,
-    product: c.product,
-    serviceType: c.serviceType,
     base: c.base,
   };
 }
@@ -75,6 +84,7 @@ export const zoomCod: ShippingProvider = {
   name: "ZoomCOD",
   async bookShipment(req) {
     const c = zoomConfig();
+    const weightKg = req.weightKg ?? 0.5;
 
     // No key yet → deterministic placeholder so the workflow stays testable.
     if (!c.apiKey) {
@@ -94,15 +104,15 @@ export const zoomCod: ShippingProvider = {
           auth_key: c.apiKey,
           client_code: c.clientCode,
           profile_id: c.profileId,
-          product: c.product,
-          service_type: c.serviceType,
+          product: getProductForWeight(weightKg),
+          service_type: getServiceTypeForWeight(weightKg),
           origin: c.origin,
           destination: (req.city || "").toUpperCase().trim(),
           receiver_name: req.customerName,
           receiver_phone: req.phone,
           receiver_email: req.email || "",
           receiver_address: req.address,
-          weight: String(req.weightKg ?? 0.5),
+          weight: String(weightKg),
           pieces: 1,
           collection_amount: String(req.amount),
           product_description: req.description || "Eco Global Foods order",
