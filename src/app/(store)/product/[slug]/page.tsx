@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Star, Check, ChevronRight, BadgeCheck, ChefHat, ArrowRight } from "lucide-react";
 import { formatPKR } from "@/lib/utils";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
+import { SITE_URL } from "@/lib/site-url";
 import { getApprovedReviews, getReviewStats } from "@/lib/reviews";
 import { getRecipePosts } from "@/lib/posts";
 import { getSettings, settingNumber } from "@/lib/settings";
@@ -103,14 +104,21 @@ export default async function ProductPage({
       ]
     : [];
 
+  const productUrl = `${SITE_URL}/product/${product.slug}`;
+  const productImages = [
+    ...new Set([product.imageUrl, ...(product.images ?? [])].filter(Boolean)),
+  ];
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.seo.description,
+    ...(productImages.length ? { image: productImages } : {}),
+    sku: product.slug,
     brand: { "@type": "Brand", name: "Eco Global Foods" },
     offers: {
       "@type": "Offer",
+      url: productUrl,
       price: product.price,
       priceCurrency: "PKR",
       availability: "https://schema.org/InStock",
@@ -126,11 +134,25 @@ export default async function ProductPage({
       : {}),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Shop", item: `${SITE_URL}/shop` },
+      { "@type": "ListItem", position: 3, name: product.name, item: productUrl },
+    ],
+  };
+
   return (
     <div className="pt-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       {/* breadcrumb */}

@@ -52,6 +52,28 @@ const websiteJsonLd = {
   },
 };
 
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Store",
+  name: "Eco Global Foods (SMC-PVT) Ltd.",
+  image: `${SITE_URL}/brand/logo-full.png`,
+  url: SITE_URL,
+  telephone: "+92-304-3950505",
+  priceRange: "₨₨",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "14 KM Multan Road, near Thokar Niaz Baig",
+    addressLocality: "Lahore",
+    addressRegion: "Punjab",
+    addressCountry: "PK",
+  },
+  sameAs: [
+    "https://instagram.com/ecoglobalfoods",
+    "https://facebook.com/ecoglobalfoods",
+    "https://www.linkedin.com/company/ecoglobalfoods",
+  ],
+};
+
 export default async function Home() {
   const [s, homeCover] = await Promise.all([getSettings(), getPageHero("home")]);
   return (
@@ -59,6 +81,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
       />
       <script
         type="application/ld+json"
