@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const isPdf = String(form.get("kind") ?? "") === "pdf";
   const allowed = isPdf ? ALLOWED_DOC_TYPES : ALLOWED_IMAGE_TYPES;
   const maxBytes = isPdf ? MAX_DOC_BYTES : MAX_UPLOAD_BYTES;
-  const maxLabel = isPdf ? "25 MB" : "8 MB";
+  const maxLabel = "25 MB";
 
   const storage = getStorage();
   const urls: string[] = [];

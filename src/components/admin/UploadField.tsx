@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Upload, Loader2, X, FileText } from "lucide-react";
+import { MAX_UPLOAD_BYTES, tooLargeMessage } from "@/lib/upload-limits";
 
 interface Props {
   /** hidden input name that receives the uploaded file URL */
@@ -34,6 +35,10 @@ export function UploadField({ name, kind = "image", label, sizeName }: Props) {
     const file = files?.[0];
     if (!file) return;
     setError("");
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(tooLargeMessage(file.name, file.size));
+      return;
+    }
     setBusy(true);
     try {
       // Prefer a presigned direct-to-S3 upload (bypasses the WAF/body limit);

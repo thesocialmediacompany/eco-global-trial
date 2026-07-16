@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Upload, X, Plus, Loader2, ImageIcon } from "lucide-react";
+import { MAX_UPLOAD_BYTES, tooLargeMessage } from "@/lib/upload-limits";
 
 interface Props {
   defaultImageUrl?: string;
@@ -25,6 +26,7 @@ export function ImageUploader({ defaultImageUrl = "", defaultImages = "" }: Prop
   const galleryInput = useRef<HTMLInputElement>(null);
 
   async function uploadOne(file: File): Promise<string> {
+    if (file.size > MAX_UPLOAD_BYTES) throw new Error(tooLargeMessage(file.name, file.size));
     // 1. Ask the app for a presigned URL (a tiny JSON request that slips under
     //    the WAF/body-size limit). In production this returns a direct-to-S3
     //    URL; in local dev it returns { fallback: true }.

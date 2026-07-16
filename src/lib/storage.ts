@@ -133,7 +133,7 @@ export async function createUploadUrl({
 }
 
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB (high-res product photos)
 
 export const ALLOWED_DOC_TYPES = ["application/pdf"];
 export const MAX_DOC_BYTES = 25 * 1024 * 1024; // 25 MB (catalogs / brochures)
