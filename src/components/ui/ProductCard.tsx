@@ -14,6 +14,7 @@ import { WishlistButton } from "@/components/store/WishlistButton";
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
+  const outOfStock = product.inStock === false;
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
       ? Math.round(
@@ -22,6 +23,7 @@ export function ProductCard({ product }: { product: Product }) {
       : null;
 
   function quickAdd() {
+    if (outOfStock) return;
     addItem({
       productId: product.id,
       slug: product.slug,
@@ -49,12 +51,17 @@ export function ProductCard({ product }: { product: Product }) {
       >
         {/* badges */}
         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
-          {product.isNew && (
+          {outOfStock && (
+            <span className="rounded-full bg-purple-900/85 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-cream">
+              Out of stock
+            </span>
+          )}
+          {product.isNew && !outOfStock && (
             <span className="rounded-full bg-cream px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-purple-800">
               New
             </span>
           )}
-          {discount && (
+          {discount && !outOfStock && (
             <span className="rounded-full bg-green-500 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
               -{discount}%
             </span>
@@ -68,7 +75,7 @@ export function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`object-cover transition-transform duration-500 group-hover:scale-105 ${outOfStock ? "opacity-60" : ""}`}
           />
         ) : (
           <motion.div
@@ -99,7 +106,8 @@ export function ProductCard({ product }: { product: Product }) {
         {/* shine sweep on hover */}
         <div className="pointer-events-none absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[120%]" />
 
-        {/* quick add (above the stretched link) */}
+        {/* quick add (above the stretched link) — hidden when out of stock */}
+        {!outOfStock && (
         <motion.button
           type="button"
           onClick={quickAdd}
@@ -127,6 +135,7 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </AnimatePresence>
         </motion.button>
+        )}
       </div>
 
       {/* Body */}

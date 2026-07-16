@@ -45,6 +45,11 @@ export function toCardProduct(p: DbProductWithRels): Product & {
     isNew: p.isNew,
     isBestseller: p.isBestseller,
     isFeatured: p.isFeatured,
+    // In stock only if at least one variant is available with inventory.
+    // (No variants → treat as in stock so it isn't wrongly blocked.)
+    inStock:
+      p.variants.length === 0 ||
+      p.variants.some((v) => v.available && v.inventoryQty > 0),
     weightGrams: p.variants[0]?.weightGrams ?? 0,
     ingredients: p.ingredients || undefined,
     allergens: p.allergens

@@ -52,6 +52,8 @@ export interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   isFeatured?: boolean;
+  /** false when every variant is out of stock / unavailable */
+  inStock?: boolean;
   /** representative net weight in grams (first variant) for shipping estimates */
   weightGrams?: number;
   /** food labelling */
