@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Bell, ChevronDown, LogOut, ExternalLink } from "lucide-react";
+import { Bell, ChevronDown, LogOut, ExternalLink } from "lucide-react";
 import { logout } from "@/app/admin/login/actions";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
+import { AdminSearchBox } from "@/components/admin/AdminSearchBox";
 
 export function AdminTopbar({
   userName = "EGF Admin",
@@ -15,8 +15,6 @@ export function AdminTopbar({
   role?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const router = useRouter();
 
   const initials = userName
     .split(" ")
@@ -25,26 +23,10 @@ export function AdminTopbar({
     .slice(0, 2)
     .toUpperCase();
 
-  function handleSearch(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && query.trim()) {
-      router.push(`/admin/search?q=${encodeURIComponent(query.trim())}`);
-    }
-  }
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-purple-100 bg-white/90 px-4 backdrop-blur lg:px-6">
       <AdminMobileNav role={role} />
-      <div className="relative flex-1 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-900/40" />
-        <input
-          type="search"
-          placeholder="Search products, customers, orders…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleSearch}
-          className="w-full rounded-lg border border-purple-100 bg-cream/60 py-2 pl-9 pr-3 text-sm text-purple-900 outline-none transition focus:border-purple-300 focus:bg-white"
-        />
-      </div>
+      <AdminSearchBox />
 
       <div className="ml-auto flex items-center gap-2">
         <button
