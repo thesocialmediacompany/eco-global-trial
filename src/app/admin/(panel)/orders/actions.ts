@@ -223,18 +223,30 @@ export async function bookZoomCOD(orderId: string) {
   });
   if (!order) return;
 
-  // Guard: already booked — prevent duplicate bookings if button clicked multiple times
-  if (order.trackingNumber) return;
+  // Guard: already booked — prevent duplicate bookings
+  if (order.trackingNumber) {
+    return;
+  }
 
-  // Compute total weight from actual variant weightGrams data
+  // Compute total weight from all line items
+
+
   const totalGrams = order.items.reduce((sum, item) => {
     const variant = item.product?.variants.find(
       (v) => v.title === item.variantTitle,
     );
     const grams = variant?.weightGrams ?? item.product?.variants[0]?.weightGrams ?? 0;
-    return sum + grams * item.quantity;
+    const lineGrams = grams * item.quantity;
+
+
+    return sum + lineGrams;
   }, 0);
-  const weightKg = Math.max(0.5, Math.round((totalGrams / 1000) * 10) / 10);
+
+  const weightKg = Math.round((totalGrams / 1000) * 10) / 10;
+  const product = weightKg < 8 ? "Overnight" : "Overland";
+  const serviceType = weightKg < 8 ? "Regular" : "Overland";
+
+
 
   // Build product description from line items
   const description = order.items
@@ -257,6 +269,8 @@ export async function bookZoomCOD(orderId: string) {
     description,
   });
 
+
+
   if (result.status === "booked") {
     await prisma.order.update({
       where: { id: orderId },
@@ -268,12 +282,11 @@ export async function bookZoomCOD(orderId: string) {
         fulfillmentStatus: "fulfilled",
       },
     });
-    // Let the customer know it's on the way, with the fresh tracking number.
     await sendShippingNotification(orderId).catch((e) =>
       console.error("shipping email failed:", e),
     );
   } else {
-    console.error("ZoomCOD booking failed:", result.message);
+    console.error("[ZoomCOD] Booking failed:", result.message);
   }
 
   revalidatePath(`/admin/orders/${orderId}`);

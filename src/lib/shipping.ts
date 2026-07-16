@@ -48,7 +48,7 @@ function zoomConfig() {
     base: (process.env.ZOOMCOD_API_BASE || "https://portal.zoomcod.com/API").replace(/\/$/, ""),
     clientCode: process.env.ZOOMCOD_CLIENT_CODE || "2253",
     profileId: process.env.ZOOMCOD_PROFILE_ID || "20543",
-    origin: process.env.ZOOMCOD_ORIGIN_CITY || "LAHORE",
+    origin: process.env.ZOOMCOD_ORIGIN || process.env.ZOOMCOD_ORIGIN_CITY || "LAHORE",
   };
 }
 
@@ -84,7 +84,7 @@ export const zoomCod: ShippingProvider = {
   name: "ZoomCOD",
   async bookShipment(req) {
     const c = zoomConfig();
-    const weightKg = req.weightKg ?? 0.5;
+    const weightKg = req.weightKg ?? 0;
 
     // No key yet → deterministic placeholder so the workflow stays testable.
     if (!c.apiKey) {
