@@ -1,12 +1,29 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Plus } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { AdminSearch } from "@/components/admin/AdminSearch";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const where: Prisma.ProductWhereInput = q
+    ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { collection: { name: { contains: q, mode: "insensitive" } } },
+        ],
+      }
+    : {};
   const products = await prisma.product.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       collection: true,
@@ -16,19 +33,23 @@ export default async function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-semibold text-purple-900">Products</h1>
           <p className="mt-1 text-sm text-purple-900/60">
-            {products.length} products
+            {products.length} {products.length === 1 ? "product" : "products"}
+            {q ? ` matching “${q}”` : ""}
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream shadow-sm transition hover:opacity-95"
-        >
-          <Plus className="h-4 w-4" /> Add product
-        </Link>
+        <div className="flex items-center gap-3">
+          <AdminSearch defaultValue={q} placeholder="Search products…" />
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream shadow-sm transition hover:opacity-95"
+          >
+            <Plus className="h-4 w-4" /> Add product
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm">

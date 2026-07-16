@@ -1,9 +1,27 @@
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
+import { AdminSearch } from "@/components/admin/AdminSearch";
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const where: Prisma.CustomerWhereInput = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q, mode: "insensitive" } },
+          { city: { contains: q, mode: "insensitive" } },
+        ],
+      }
+    : {};
   const customers = await prisma.customer.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       orders: { select: { total: true } },
@@ -12,9 +30,15 @@ export default async function CustomersPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-semibold text-purple-900">Customers</h1>
-        <p className="mt-1 text-sm text-purple-900/60">{customers.length} customers</p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-purple-900">Customers</h1>
+          <p className="mt-1 text-sm text-purple-900/60">
+            {customers.length} {customers.length === 1 ? "customer" : "customers"}
+            {q ? ` matching “${q}”` : ""}
+          </p>
+        </div>
+        <AdminSearch defaultValue={q} placeholder="Search customers…" />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm">
