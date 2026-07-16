@@ -36,16 +36,37 @@ export function UploadField({ name, kind = "image", label, sizeName }: Props) {
     setError("");
     setBusy(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      if (kind === "pdf") fd.append("kind", "pdf");
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Upload failed");
+      // Prefer a presigned direct-to-S3 upload (bypasses the WAF/body limit);
+      // fall back to a multipart POST when S3 isn't configured (local dev).
+      const pres = await fetch("/api/admin/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, kind }),
+      });
+      if (!pres.ok) {
+        const err = await pres.json().catch(() => ({}));
+        throw new Error(err.error || "Upload failed");
       }
-      const d = await res.json();
-      setUrl(d.url);
+      const info = await pres.json();
+      if (info.uploadUrl) {
+        const put = await fetch(info.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+        if (!put.ok) throw new Error(`S3 upload failed (${put.status})`);
+        setUrl(info.publicUrl);
+      } else {
+        const fd = new FormData();
+        fd.append("file", file);
+        if (kind === "pdf") fd.append("kind", "pdf");
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || "Upload failed");
+        }
+        setUrl((await res.json()).url);
+      }
       setSize(humanSize(file.size));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");

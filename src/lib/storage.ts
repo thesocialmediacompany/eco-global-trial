@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * Pluggable file storage. The default `local` provider writes to
@@ -100,6 +101,35 @@ export const s3StorageProvider: StorageProvider = {
 export function getStorage(): StorageProvider {
   if (process.env.S3_BUCKET) return s3StorageProvider;
   return localStorageProvider;
+}
+
+/** True when S3 is configured (production). */
+export function s3Configured() {
+  return Boolean(process.env.S3_BUCKET);
+}
+
+/**
+ * Create a short-lived presigned PUT URL so the browser can upload a file
+ * DIRECTLY to S3, bypassing the app server. This is essential on serverless
+ * hosts (AWS Amplify) where the Lambda / WAF caps request bodies (WAF blocks
+ * bodies over ~8 KB) - the bytes never pass through the app. Returns the URL to
+ * PUT to plus the final public URL the file will live at.
+ */
+export async function createUploadUrl({
+  filename,
+  contentType,
+}: {
+  filename: string;
+  contentType: string;
+}): Promise<{ uploadUrl: string; publicUrl: string }> {
+  const key = `uploads/${safeName(filename)}`;
+  const cmd = new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+  const uploadUrl = await getSignedUrl(s3Client(), cmd, { expiresIn: 120 });
+  return { uploadUrl, publicUrl: s3PublicUrl(key) };
 }
 
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];

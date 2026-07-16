@@ -24,16 +24,46 @@ export function ImageUploader({ defaultImageUrl = "", defaultImages = "" }: Prop
   const primaryInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
 
-  async function upload(files: FileList): Promise<string[]> {
+  async function uploadOne(file: File): Promise<string> {
+    // 1. Ask the app for a presigned URL (a tiny JSON request that slips under
+    //    the WAF/body-size limit). In production this returns a direct-to-S3
+    //    URL; in local dev it returns { fallback: true }.
+    const pres = await fetch("/api/admin/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, contentType: file.type }),
+    });
+    if (!pres.ok) {
+      const err = await pres.json().catch(() => ({}));
+      throw new Error(err.error || "Upload failed");
+    }
+    const info = await pres.json();
+    if (info.uploadUrl) {
+      // 2. PUT the file straight to S3 - the bytes never touch the app server,
+      //    so the WAF/Lambda body limits don't apply.
+      const put = await fetch(info.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!put.ok) throw new Error(`S3 upload failed (${put.status})`);
+      return info.publicUrl as string;
+    }
+    // Fallback (local dev / no S3): multipart to the app server.
     const fd = new FormData();
-    Array.from(files).forEach((f) => fd.append("file", f));
+    fd.append("file", file);
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || "Upload failed");
     }
-    const data = await res.json();
-    return data.urls as string[];
+    return (await res.json()).url as string;
+  }
+
+  async function upload(files: FileList): Promise<string[]> {
+    const out: string[] = [];
+    for (const file of Array.from(files)) out.push(await uploadOne(file));
+    return out;
   }
 
   async function onPrimary(files: FileList | null) {
