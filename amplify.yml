@@ -18,6 +18,9 @@ frontend:
         - echo "S3_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID" >> .env.production
         - echo "S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY" >> .env.production
         - echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .env.production
+        - echo "GA4_PROPERTY_ID=$GA4_PROPERTY_ID" >> .env.production
+        - echo "GA4_CLIENT_EMAIL=$GA4_CLIENT_EMAIL" >> .env.production
+        - echo "GA4_PRIVATE_KEY=$GA4_PRIVATE_KEY" >> .env.production
         - npm ci --include=dev
         - npx prisma generate
         - npx prisma db push
