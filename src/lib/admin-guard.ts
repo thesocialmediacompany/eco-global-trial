@@ -2,6 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SESSION_COOKIE, verifySession, type SessionPayload } from "@/lib/auth";
+import { isOwnerRole } from "@/lib/roles";
 
 /** Current admin session (or null). */
 export async function getAdminSession(): Promise<SessionPayload | null> {
@@ -12,6 +13,6 @@ export async function getAdminSession(): Promise<SessionPayload | null> {
 /** Guard owner-only admin pages; staff are sent back to the dashboard. */
 export async function requireOwner(): Promise<SessionPayload> {
   const session = await getAdminSession();
-  if (!session || session.role !== "owner") redirect("/admin");
+  if (!session || !isOwnerRole(session.role)) redirect("/admin");
   return session;
 }

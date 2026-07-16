@@ -24,6 +24,7 @@ import {
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
+import { isOwnerRole } from "@/lib/roles";
 
 export interface AdminNavItem {
   label: string;
@@ -62,7 +63,7 @@ export const adminNav: AdminNavItem[] = [
 
 /** Nav items visible for a given role. */
 export function navForRole(role?: string): AdminNavItem[] {
-  return role === "owner" ? adminNav : adminNav.filter((i) => !i.ownerOnly);
+  return isOwnerRole(role) ? adminNav : adminNav.filter((i) => !i.ownerOnly);
 }
 
 /** Whether a nav item is the active route. */
