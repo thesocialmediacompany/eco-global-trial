@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       // Real product photography served from the Shopify CDN.
       { protocol: "https", hostname: "cdn.shopify.com" },
+      // Admin-uploaded images stored in Amazon S3 (any bucket/region).
+      { protocol: "https", hostname: "**.amazonaws.com" },
     ],
   },
   async redirects() {

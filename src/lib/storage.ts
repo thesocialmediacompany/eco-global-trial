@@ -2,13 +2,15 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 /**
  * Pluggable file storage. The default `local` provider writes to
  * `public/uploads` and returns a same-origin URL - works on any Node host
- * (VPS, self-hosted). For serverless (Vercel) or scale, implement a cloud
- * provider (S3 / Cloudinary / Vercel Blob) with the same interface and switch
- * `getStorage()` based on an env flag - callers don't change.
+ * (VPS, self-hosted). Serverless hosts (AWS Amplify / Lambda, Vercel) have a
+ * read-only / disposable filesystem, so uploads there MUST go to a cloud
+ * provider - the S3 provider below is selected automatically when `S3_BUCKET`
+ * is configured. Callers only ever touch `getStorage()`.
  */
 
 export interface SavedFile {
@@ -36,10 +38,67 @@ export const localStorageProvider: StorageProvider = {
   },
 };
 
-// To enable a cloud provider later:
-//   export const s3Provider: StorageProvider = { async save(file) { /* PutObject */ } };
-// then return it from getStorage() when process.env.STORAGE_DRIVER === "s3".
+/**
+ * Amazon S3 provider. Objects are stored under an `uploads/` prefix and served
+ * publicly (configure the bucket policy for public GET on `uploads/*`, or front
+ * it with CloudFront and set S3_PUBLIC_BASE_URL).
+ *
+ * Env:
+ *   S3_BUCKET            - bucket name (presence of this switches storage to S3)
+ *   S3_REGION            - e.g. "ap-south-1" (falls back to AWS_REGION)
+ *   S3_ACCESS_KEY_ID     - IAM key with s3:PutObject on the bucket (optional if
+ *   S3_SECRET_ACCESS_KEY   the Lambda execution role already grants access)
+ *   S3_PUBLIC_BASE_URL   - optional CDN/custom-domain base for returned URLs
+ */
+function s3Region() {
+  return process.env.S3_REGION || process.env.AWS_REGION || "us-east-1";
+}
+
+let _s3: S3Client | null = null;
+function s3Client(): S3Client {
+  if (!_s3) {
+    const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+    _s3 = new S3Client({
+      region: s3Region(),
+      // Explicit keys when provided; otherwise fall back to the default AWS
+      // credential chain (e.g. the Amplify/Lambda execution role).
+      credentials:
+        accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : undefined,
+    });
+  }
+  return _s3;
+}
+
+function s3PublicUrl(key: string) {
+  const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  if (base) return `${base}/${key}`;
+  return `https://${process.env.S3_BUCKET}.s3.${s3Region()}.amazonaws.com/${key}`;
+}
+
+export const s3StorageProvider: StorageProvider = {
+  async save({ buffer, filename, contentType }) {
+    const key = `uploads/${safeName(filename)}`;
+    await s3Client().send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+        CacheControl: "public, max-age=31536000, immutable",
+      }),
+    );
+    return { url: s3PublicUrl(key) };
+  },
+};
+
+/**
+ * Pick the storage backend. S3 is used whenever `S3_BUCKET` is set (i.e. in
+ * production on Amplify); otherwise the local-disk provider is used for
+ * development on a normal filesystem.
+ */
 export function getStorage(): StorageProvider {
+  if (process.env.S3_BUCKET) return s3StorageProvider;
   return localStorageProvider;
 }
 
