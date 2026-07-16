@@ -51,12 +51,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `File too large (max ${maxLabel})` }, { status: 413 });
     }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { url } = await storage.save({
-      buffer,
-      filename: file.name,
-      contentType: file.type,
-    });
-    urls.push(url);
+    try {
+      const { url } = await storage.save({
+        buffer,
+        filename: file.name,
+        contentType: file.type,
+      });
+      urls.push(url);
+    } catch (e) {
+      // Surface the real storage error (S3 AccessDenied / NoSuchBucket /
+      // read-only FS when S3 isn't configured) instead of a blank 500 so the
+      // admin UI shows why the upload failed.
+      const message = e instanceof Error ? e.message : "unknown error";
+      console.error("[admin/upload] storage.save failed:", e);
+      return NextResponse.json({ error: `Storage error: ${message}` }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ urls, url: urls[0] });
