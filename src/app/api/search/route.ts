@@ -10,9 +10,9 @@ export async function GET(req: NextRequest) {
     where: {
       status: "active",
       OR: [
-        { title: { contains: q } },
-        { badges: { contains: q } },
-        { collection: { is: { name: { contains: q } } } },
+        { title: { contains: q, mode: "insensitive" } },
+        { badges: { contains: q, mode: "insensitive" } },
+        { collection: { is: { name: { contains: q, mode: "insensitive" } } } },
       ],
     },
     select: {

@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, ShoppingBag, User, ChevronDown, Heart } from "lucide-react";
+import { Menu, X, ShoppingBag, User, ChevronDown, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { categories } from "@/data/categories";
+import { HeaderSearch } from "@/components/site/HeaderSearch";
 
 export interface HeaderNavItem {
   label: string;
@@ -124,13 +125,7 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
 
         {/* Actions */}
         <div className="flex items-center gap-1.5">
-          <Link
-            href="/search"
-            aria-label="Search"
-            className="grid h-10 w-10 place-items-center rounded-full text-purple-900 transition-colors hover:bg-purple-100"
-          >
-            <Search className="h-[1.15rem] w-[1.15rem]" />
-          </Link>
+          <HeaderSearch />
           <Link
             href="/wishlist"
             aria-label="Wishlist"
