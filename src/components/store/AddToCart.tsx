@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, ShoppingBag, Check, Truck, BadgeCheck, Clock } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Check, Truck, BadgeCheck, Clock, PackageX } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { formatPKR } from "@/lib/utils";
 import { paymentMethods } from "@/lib/payments";
@@ -186,6 +186,18 @@ export function AddToCart({
           )}
         </motion.button>
       </div>
+
+      {/* out-of-stock explainer so the disabled button has a clear reason */}
+      {outOfStock && (
+        <div className="flex items-start gap-2.5 rounded-2xl border border-rose-100 bg-rose-50/70 p-4 text-sm text-rose-700">
+          <PackageX className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            This item is <strong>currently out of stock</strong>. We restock regularly, so
+            please check back in a few days. Need it urgently? Message us on WhatsApp and
+            we&apos;ll let you know as soon as it&apos;s back.
+          </span>
+        </div>
+      )}
 
       {/* delivery reassurance */}
       <div className="space-y-2.5 rounded-2xl border border-purple-100 bg-cream/40 p-4 text-sm text-purple-900/75">
