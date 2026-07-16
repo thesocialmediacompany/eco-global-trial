@@ -1,31 +1,15 @@
 import { Leaf, ShieldCheck, Truck, Headset } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import type { StoreSettings } from "@/lib/settings-defaults";
 
-const features = [
-  {
-    icon: Leaf,
-    title: "Natural & Pure",
-    body: "No artificial flavours or additives. Just good ingredients you can pronounce.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Safe Payments",
-    body: "Pay your way: Cash on Delivery, JazzCash, Easypaisa, card or bank transfer.",
-  },
-  {
-    icon: Truck,
-    title: "Nationwide Delivery",
-    body: "Fast, tracked delivery across Pakistan. Free shipping on orders over Rs 7,000.",
-  },
-  {
-    icon: Headset,
-    title: "Here to Help",
-    body: "A real team on call, plus a 30-day satisfaction promise on every order.",
-  },
-];
-
-export function WhyUs() {
+export function WhyUs({ s }: { s: StoreSettings }) {
+  const features = [
+    { icon: Leaf, title: s.whyUsF1Title, body: s.whyUsF1Body },
+    { icon: ShieldCheck, title: s.whyUsF2Title, body: s.whyUsF2Body },
+    { icon: Truck, title: s.whyUsF3Title, body: s.whyUsF3Body },
+    { icon: Headset, title: s.whyUsF4Title, body: s.whyUsF4Body },
+  ];
   return (
     <section id="why" className="relative overflow-hidden gradient-purple py-12 text-cream sm:py-16">
       <div
@@ -40,9 +24,9 @@ export function WhyUs() {
       <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
         <SectionHeading
           tone="light"
-          eyebrow="Why Eco Global Foods"
-          title="Food you can trust"
-          description="We have been making food in Pakistan since 1999. Here is what you get with every order."
+          eyebrow={s.whyUsEyebrow}
+          title={s.whyUsTitle}
+          description={s.whyUsDescription}
         />
 
         <RevealGroup

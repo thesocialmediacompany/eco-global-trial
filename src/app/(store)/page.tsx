@@ -69,11 +69,11 @@ export default async function Home() {
       <FeaturedProducts />
       <SpecialOffers />
       <CategoryGrid />
-      <BrandStory />
+      <BrandStory s={s} />
       <KitchenBand />
-      <WhyUs />
+      <WhyUs s={s} />
       <StockedAt />
-      <WhyOrderOnline />
+      <WhyOrderOnline s={s} />
       <Newsletter
         heading={s.newsletterOfferEnabled === "true" ? s.newsletterHeading : ""}
         subtext={s.newsletterOfferEnabled === "true" ? s.newsletterSubtext : ""}

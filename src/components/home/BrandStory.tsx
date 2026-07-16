@@ -2,14 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/motion/Reveal";
+import type { StoreSettings } from "@/lib/settings-defaults";
 
-const pillars = [
-  { value: "1999", label: "In business since" },
-  { value: "Lahore", label: "Made in" },
-  { value: "Natural", label: "Ingredients, always" },
-];
-
-export function BrandStory() {
+export function BrandStory({ s }: { s: StoreSettings }) {
+  const pillars = [
+    { value: s.brandStoryStat1Value, label: s.brandStoryStat1Label },
+    { value: s.brandStoryStat2Value, label: s.brandStoryStat2Label },
+    { value: s.brandStoryStat3Value, label: s.brandStoryStat3Label },
+  ];
   return (
     <section id="story" className="relative overflow-hidden py-12 sm:py-16">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:gap-16 lg:px-8">
@@ -51,19 +51,17 @@ export function BrandStory() {
         <div>
           <Reveal>
             <span className="text-xs font-bold uppercase tracking-[0.28em] text-green-600">
-              Our Story
+              {s.brandStoryEyebrow}
             </span>
           </Reveal>
           <Reveal delay={0.05}>
             <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-purple-900 sm:text-5xl">
-              Making good food since 1999
+              {s.brandStoryTitle}
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-5 text-base text-purple-900/70 sm:text-lg">
-              Eco Global Foods is a Lahore based food manufacturer. For over 25 years we
-              have put real ingredients first and kept the shortcuts out. Food should be
-              honest, taste good and do you good. That is the whole idea.
+              {s.brandStoryBody}
             </p>
           </Reveal>
 

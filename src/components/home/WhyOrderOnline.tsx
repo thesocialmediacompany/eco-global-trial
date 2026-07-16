@@ -1,30 +1,18 @@
 import Link from "next/link";
 import { PackageOpen, Home, Tag, ArrowRight } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
-
-const POINTS = [
-  {
-    icon: PackageOpen,
-    title: "The full range, in one place",
-    body: "Over 120 products — far more than any single shelf carries. Find every flavour and size here.",
-  },
-  {
-    icon: Home,
-    title: "Doorstep Cash on Delivery",
-    body: "Skip the trip. We deliver across Pakistan and you pay at your door — no card needed.",
-  },
-  {
-    icon: Tag,
-    title: "Online-only welcome offer",
-    body: "New here? Use code WELCOME20 at checkout for 20% off your first order.",
-  },
-];
+import type { StoreSettings } from "@/lib/settings-defaults";
 
 /**
  * Gives shoppers a reason to buy online rather than just grabbing one item off
  * a retail shelf. Sits right after the stockist strip to balance it out.
  */
-export function WhyOrderOnline() {
+export function WhyOrderOnline({ s }: { s: StoreSettings }) {
+  const POINTS = [
+    { icon: PackageOpen, title: s.whyOnlineP1Title, body: s.whyOnlineP1Body },
+    { icon: Home, title: s.whyOnlineP2Title, body: s.whyOnlineP2Body },
+    { icon: Tag, title: s.whyOnlineP3Title, body: s.whyOnlineP3Body },
+  ];
   return (
     <section className="relative py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -32,14 +20,13 @@ export function WhyOrderOnline() {
           <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] lg:items-center">
             <Reveal direction="right">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-green-600">
-                Why order online
+                {s.whyOnlineEyebrow}
               </span>
               <h2 className="mt-3 font-display text-3xl font-semibold text-purple-900 sm:text-4xl">
-                Love it at the store? You&apos;ll love it at your door.
+                {s.whyOnlineTitle}
               </h2>
               <p className="mt-3 text-purple-900/65">
-                Buying direct gets you the whole range, doorstep delivery, and an
-                offer you won&apos;t find on the shelf.
+                {s.whyOnlineBody}
               </p>
               <Link
                 href="/shop"

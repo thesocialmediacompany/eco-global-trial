@@ -98,7 +98,7 @@ export default async function AboutPage() {
               <div className="grid h-full w-full place-items-center rounded-[1.8rem] bg-purple-950/20">
                 <span className="text-[8rem]">🏭</span>
                 <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-cream/95 px-5 py-2 font-display text-sm font-semibold text-purple-900 shadow-lg">
-                  25+ Years of Experience
+                  {settings.aboutBadge}
                 </span>
               </div>
             </div>
@@ -106,29 +106,25 @@ export default async function AboutPage() {
           <div>
             <Reveal>
               <span className="text-xs font-bold uppercase tracking-[0.28em] text-green-600">
-                About
+                {settings.aboutEyebrow}
               </span>
             </Reveal>
             <Reveal delay={0.05}>
               <h2 className="mt-3 font-display text-3xl font-semibold text-purple-900 sm:text-4xl">
-                Wholesome choices for modern living
+                {settings.aboutHeading}
               </h2>
             </Reveal>
-            <Reveal delay={0.1}>
-              <p className="mt-5 text-purple-900/70">
-                Eco Global Foods (SMC-PVT) Ltd. stands at the forefront of the food
-                manufacturing industry, integrating technology, knowledge and innovation to
-                achieve excellence in food processing and advance the food ingredients and
-                value chain in agribusiness.
-              </p>
-            </Reveal>
-            <Reveal delay={0.15}>
-              <p className="mt-4 text-purple-900/70">
-                Since our inception in 1999, we have been committed to delivering
-                high-quality food products to meet the evolving needs of consumers and
-                businesses alike.
-              </p>
-            </Reveal>
+            {settings.aboutBody
+              .split(/\n\s*\n/)
+              .map((para) => para.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <Reveal key={i} delay={0.1 + i * 0.05}>
+                  <p className={`${i === 0 ? "mt-5" : "mt-4"} text-purple-900/70`}>
+                    {para}
+                  </p>
+                </Reveal>
+              ))}
           </div>
         </div>
       </section>
@@ -141,14 +137,10 @@ export default async function AboutPage() {
               <div className="h-full rounded-[2rem] gradient-purple p-8 text-cream sm:p-10">
                 <Target className="h-9 w-9 text-gold-300" />
                 <h2 className="mt-4 font-display text-2xl font-semibold sm:text-3xl">
-                  Mission Statement
+                  {settings.aboutMissionTitle}
                 </h2>
                 <p className="mt-4 leading-relaxed text-cream/80">
-                  Our mission is to be a leading provider of innovative and sustainable food
-                  solutions, leveraging our expertise in food processing, supply chain
-                  management, and product development to deliver exceptional value to our
-                  customers. We are dedicated to maintaining the highest standards of
-                  quality, safety, and customer satisfaction in everything we do.
+                  {settings.aboutMissionBody}
                 </p>
               </div>
             </Reveal>
@@ -156,15 +148,10 @@ export default async function AboutPage() {
               <div className="h-full rounded-[2rem] gradient-green p-8 text-cream sm:p-10">
                 <Eye className="h-9 w-9 text-gold-300" />
                 <h2 className="mt-4 font-display text-2xl font-semibold sm:text-3xl">
-                  Our Concept
+                  {settings.aboutConceptTitle}
                 </h2>
                 <p className="mt-4 leading-relaxed text-cream/80">
-                  At Eco Global Foods, we operate on the principles of efficiency,
-                  sustainability, and customer-centricity. Our team of skilled professionals
-                  works tirelessly to optimise our supply chain, streamline production
-                  processes, and innovate new products to meet market demands. We strive to
-                  establish long-term partnerships with our customers and suppliers, built
-                  on trust, transparency, and mutual respect.
+                  {settings.aboutConceptBody}
                 </p>
               </div>
             </Reveal>
