@@ -21,6 +21,7 @@ import {
   LayoutTemplate,
   Store,
   HelpCircle,
+  UploadCloud,
   type LucideIcon,
 } from "lucide-react";
 
@@ -55,6 +56,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Discounts", href: "/admin/discounts", icon: Tag, ownerOnly: true },
   { label: "Shipping", href: "/admin/shipping", icon: Truck },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3, ownerOnly: true },
+  { label: "Migrate images", href: "/admin/tools/migrate-images", icon: UploadCloud, ownerOnly: true },
   { label: "Settings", href: "/admin/settings", icon: Settings, ownerOnly: true },
 ];
 
