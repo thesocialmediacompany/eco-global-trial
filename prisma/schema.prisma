@@ -182,16 +182,29 @@ model Review {
 
 /// An abandoned checkout — captured when a shopper starts but doesn't finish.
 model AbandonedCheckout {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String   @default("")
-  phone     String   @default("")
-  itemsJson String   @default("[]")
-  subtotal  Int      @default(0)
-  recovered Boolean  @default(false)
-  recoveryEmailSentAt DateTime? // when a recovery nudge was last emailed
+  /// Shopify shows an opaque checkout reference; the tail of this cuid serves
+  /// the same purpose. Deliberately not an autoincrement column: adding a
+  /// unique one to a populated table makes `prisma db push` demand
+  /// --accept-data-loss, which the Amplify build does not pass, so every
+  /// deploy would fail at preBuild.
+  id String @id @default(cuid())
+
+  email     String @unique
+  name      String @default("")
+  phone     String @default("")
+  city      String @default("")
+  itemsJson String @default("[]")
+  subtotal  Int    @default(0)
+
+  recovered Boolean @default(false)
+  /// how many nudges have gone out; caps the follow-up sequence
+  recoveryCount       Int       @default(0)
+  recoveryEmailSentAt DateTime? // when the last nudge was emailed
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([recovered, recoveryCount])
 }
 
 /// Newsletter / marketing email subscribers.

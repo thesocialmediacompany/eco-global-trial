@@ -14,16 +14,27 @@ export async function markRecovered(id: string) {
   revalidatePath("/admin/abandoned");
 }
 
-/** Email the shopper a recovery nudge and stamp when it was sent. */
+/**
+ * Send the next nudge now rather than waiting for the schedule.
+ *
+ * Advances recoveryCount exactly as the automatic sweep would, so a nudge sent
+ * by hand isn't repeated an hour later by the cron.
+ */
 export async function sendRecoveryEmail(id: string) {
-  const result = await sendAbandonedRecovery(id).catch((e) => {
+  const cart = await prisma.abandonedCheckout.findUnique({ where: { id } });
+  if (!cart || cart.recovered) return;
+
+  const stage = cart.recoveryCount === 0 ? 1 : 2;
+
+  const result = await sendAbandonedRecovery(id, stage).catch((e) => {
     console.error("recovery email failed:", e);
     return { sent: false } as const;
   });
+
   if (result.sent) {
     await prisma.abandonedCheckout.update({
       where: { id },
-      data: { recoveryEmailSentAt: new Date() },
+      data: { recoveryCount: stage, recoveryEmailSentAt: new Date() },
     });
   }
   revalidatePath("/admin/abandoned");

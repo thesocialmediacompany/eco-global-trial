@@ -300,8 +300,18 @@ export async function sendCampaignEmail(opts: {
   return deliver({ to: opts.to, subject: opts.subject, html, text });
 }
 
-/** Nudge a shopper who left items in their cart to come back and finish. */
-export async function sendAbandonedRecovery(abandonedId: string): Promise<SendResult> {
+/**
+ * Nudge a shopper who left items in their cart to come back and finish.
+ *
+ * `stage` is which nudge this is in the sequence. The second is worded
+ * differently on purpose: the same message twice reads as a retry rather than
+ * a follow-up, and it leans on cash-on-delivery, which is the objection most
+ * likely to have stopped a first-time shopper here.
+ */
+export async function sendAbandonedRecovery(
+  abandonedId: string,
+  stage: 1 | 2 = 1,
+): Promise<SendResult> {
   const [cart, settings] = await Promise.all([
     prisma.abandonedCheckout.findUnique({ where: { id: abandonedId } }),
     getSettings(),
@@ -322,25 +332,34 @@ export async function sendAbandonedRecovery(abandonedId: string): Promise<SendRe
     .map((i) => `${escapeHtml(i.title)}${i.variantTitle ? ` · ${escapeHtml(i.variantTitle)}` : ""} × ${i.quantity}`)
     .join("<br/>");
 
+  const opening =
+    stage === 1
+      ? `Hi ${escapeHtml(first)}, you left some good food in your cart. We saved it for you 🛒`
+      : `Hi ${escapeHtml(first)}, your cart is still here. We'll hold it a little longer in case you'd like it.`;
+
+  const closing =
+    stage === 1
+      ? "Pick up right where you left off - it only takes a moment to check out."
+      : "No payment up front: pay cash when it arrives at your door, anywhere in Pakistan.";
+
   const body = `
-    <p style="color:#2a0f28;font-size:15px;margin:0 0 16px;">
-      Hi ${escapeHtml(first)}, you left some good food in your cart. We saved it for you 🛒
-    </p>
+    <p style="color:#2a0f28;font-size:15px;margin:0 0 16px;">${opening}</p>
     ${itemsLine ? `<div style="padding:14px 16px;background:#f4fbef;border-radius:12px;font-size:14px;color:#2a0f28;">${itemsLine}</div>` : ""}
-    <p style="color:#5e3052;font-size:14px;margin:16px 0 0;">
-      Pick up right where you left off - it only takes a moment to check out.
-    </p>
+    <p style="color:#5e3052;font-size:14px;margin:16px 0 0;">${closing}</p>
     ${ctaButton(`${siteUrl}/cart`, "Return to my cart")}`;
 
   return deliver({
     to: cart.email,
-    subject: "You left something in your cart 🛒",
+    subject:
+      stage === 1
+        ? "You left something in your cart 🛒"
+        : "Your cart is still waiting 🌿",
     html: shell({
       storeName: settings.storeName,
       storeLegalName: settings.storeLegalName,
       storePhone: settings.storePhone,
       storeEmail: settings.storeEmail,
-      heading: "Still thinking it over?",
+      heading: stage === 1 ? "Still thinking it over?" : "Your cart is still waiting",
       body,
     }),
     text:

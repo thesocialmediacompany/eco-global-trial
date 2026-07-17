@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Lock, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { formatPKR, formatWeight } from "@/lib/utils";
+import { formatPKR, formatWeight, LOOKS_LIKE_EMAIL } from "@/lib/utils";
 import type { PaymentMethod, PaymentMethodId } from "@/lib/payments";
 import { placeOrder } from "@/app/(store)/checkout/actions";
 import { TrustBadges } from "@/components/store/TrustBadges";
@@ -34,28 +34,36 @@ export function CheckoutForm({ methods }: Props) {
 
   const total = subtotal + shipping;
 
-  // Capture abandoned checkout once a valid email is entered (debounced).
+  /*
+   * Capture the in-progress checkout so we can follow up if it's never placed.
+   *
+   * Requires a complete-looking address, not merely an "@": this fires while
+   * the shopper is still typing, so "someone@gmai" would otherwise be saved as
+   * its own cart. Those rows can never be emailed and never match the finished
+   * order, so they sit in the abandoned list as permanent false leads.
+   */
   const abandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!form.email.includes("@") || items.length === 0) return;
+    if (!LOOKS_LIKE_EMAIL.test(form.email.trim()) || items.length === 0) return;
     if (abandonTimer.current) clearTimeout(abandonTimer.current);
     abandonTimer.current = setTimeout(() => {
       fetch("/api/checkout/abandon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
+          email: form.email.trim(),
           name: form.name,
           phone: form.phone,
+          city: form.city,
           subtotal,
           items: items.map((i) => ({ title: i.title, variantTitle: i.variantTitle, quantity: i.quantity, price: i.price })),
         }),
       }).catch(() => {});
-    }, 1200);
+    }, 1500);
     return () => {
       if (abandonTimer.current) clearTimeout(abandonTimer.current);
     };
-  }, [form.email, form.name, form.phone, subtotal, items]);
+  }, [form.email, form.name, form.phone, form.city, subtotal, items]);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));

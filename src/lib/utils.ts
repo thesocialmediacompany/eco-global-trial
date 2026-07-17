@@ -5,6 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
+/**
+ * A complete-looking address: something, an @, a domain, a dot, a suffix.
+ * Deliberately not a full RFC 5322 check, which accepts addresses no real
+ * mailbox uses. The point is to reject half-typed input like "me@gmai" from
+ * code that watches a field as the user types.
+ */
+export const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 /** Format a number as Pakistani Rupees. */
 export function formatPKR(amount: number) {
   return new Intl.NumberFormat("en-PK", {
