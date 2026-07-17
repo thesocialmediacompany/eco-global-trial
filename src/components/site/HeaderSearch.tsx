@@ -25,12 +25,43 @@ export function HeaderSearch() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Suggestion[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [panelTop, setPanelTop] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  /**
+   * On phones the panel spans the viewport instead of hanging off the icon: the
+   * icon sits mid-header, so a right-aligned panel is wider than the space to
+   * its left and would spill past the screen edge. Only the top edge needs
+   * measuring, since the icon's height varies with the announcement bar.
+   */
+  useEffect(() => {
+    if (!open || !isMobile) return;
+    const update = () => {
+      const r = ref.current?.getBoundingClientRect();
+      if (r) setPanelTop(r.bottom + 8);
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, isMobile]);
 
   // Debounced typeahead.
   useEffect(() => {
@@ -98,7 +129,14 @@ export function HeaderSearch() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-40 mt-2 w-[min(92vw,420px)] rounded-2xl border border-purple-100 bg-white p-2 shadow-xl">
+        <div
+          className={`z-50 rounded-2xl border border-purple-100 bg-white p-2 shadow-xl ${
+            isMobile
+              ? "fixed left-3 right-3"
+              : "absolute right-0 top-full mt-2 w-[min(92vw,420px)]"
+          }`}
+          style={isMobile ? { top: panelTop ?? 72 } : undefined}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
