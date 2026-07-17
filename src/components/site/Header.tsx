@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,8 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [megaLeft, setMegaLeft] = useState(0);
+  const megaWrapRef = useRef<HTMLDivElement>(null);
   const { count, openCart } = useCart();
   const { count: wishCount } = useWishlist();
 
@@ -37,6 +39,37 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  /**
+   * Any nav item can be flagged Mega from the admin, so the 640px panel can be
+   * triggered from an item near either end of the nav. Centring it on its
+   * trigger would then push it past the screen edge, where body's
+   * overflow-x-hidden silently clips it rather than showing a scrollbar.
+   *
+   * The offset is computed here rather than with `left-1/2 -translate-x-1/2`
+   * because framer-motion writes an inline transform to animate y, which
+   * overrides any transform-based centring. Staying on `left` sidesteps that.
+   */
+  useEffect(() => {
+    if (!megaOpen) return;
+    const update = () => {
+      const el = megaWrapRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const width = Math.min(vw * 0.9, 640);
+      const centred = (r.left + r.right) / 2 - width / 2;
+      const clamped = Math.max(12, Math.min(centred, vw - 12 - width));
+      setMegaLeft(clamped - r.left); // back to wrapper-relative
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
+    };
+  }, [megaOpen]);
 
   return (
     <motion.header
@@ -72,6 +105,7 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
           {nav.map((item) => (
             <div
               key={item.href}
+              ref={item.mega ? megaWrapRef : undefined}
               className="relative"
               onMouseEnter={() => item.mega && setMegaOpen(true)}
               onMouseLeave={() => item.mega && setMegaOpen(false)}
@@ -94,7 +128,8 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute left-1/2 top-full w-[min(90vw,640px)] -translate-x-1/2 pt-3"
+                      style={{ left: megaLeft, width: "min(90vw, 640px)" }}
+                      className="absolute top-full pt-3"
                     >
                       <div className="grid grid-cols-2 gap-1 rounded-2xl border border-purple-100 bg-cream/95 p-3 shadow-xl backdrop-blur-xl sm:grid-cols-3">
                         {categories.map((c) => (
