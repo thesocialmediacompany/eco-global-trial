@@ -20,6 +20,7 @@ import { getOrderTimeline } from "@/lib/order-events";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { OrderTimeline } from "@/components/admin/OrderTimeline";
 import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { OrderNotesCard } from "@/components/admin/OrderNotesCard";
 import { OrderTagsCard } from "@/components/admin/OrderTagsCard";
 import {
@@ -105,6 +106,12 @@ export default async function OrderDetailPage({
   const notifyShippedAction = notifyShipped.bind(null, order.id);
   const refundAction = refundOrder.bind(null, order.id);
 
+  const cancelAction = cancelOrder.bind(null, order.id);
+  const canCancel = !isCancelled && !order.isDraft;
+
+  // Cancel is a visible header button (below), not buried here — staff cancel
+  // COD orders often, and an unpaid order has no other destructive control to
+  // hint the action even exists.
   const menuActions = [
     { label: "Resend confirmation email", action: resendConfirmation.bind(null, order.id) },
     ...(isFulfilled && order.email
@@ -114,9 +121,6 @@ export default async function OrderDetailPage({
       ? [{ label: "Email tracking to customer", action: notifyShippedAction }]
       : []),
     { label: order.archivedAt ? "Unarchive" : "Archive", action: toggleArchive.bind(null, order.id) },
-    ...(!isCancelled
-      ? [{ label: "Cancel and restock", action: cancelOrder.bind(null, order.id), danger: true }]
-      : []),
   ];
 
   return (
@@ -164,6 +168,17 @@ export default async function OrderDetailPage({
                 Refund
               </button>
             </form>
+          )}
+          {canCancel && (
+            <ConfirmSubmitButton
+              action={cancelAction}
+              confirmMessage={`Cancel order #${order.orderNumber}? This returns its items to stock${
+                order.courier ? " and cancels the courier booking" : ""
+              }. This can't be undone.`}
+              className="rounded-lg border border-rose-200 bg-white px-3.5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+            >
+              Cancel order
+            </ConfirmSubmitButton>
           )}
           <Link
             href={`/admin/orders/${order.id}/packing-slip`}
