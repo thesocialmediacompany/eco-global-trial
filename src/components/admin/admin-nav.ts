@@ -22,6 +22,7 @@ import {
   Store,
   HelpCircle,
   UploadCloud,
+  BookText,
   type LucideIcon,
 } from "lucide-react";
 import { isOwnerRole } from "@/lib/roles";
@@ -50,6 +51,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Campaigns", href: "/admin/campaigns", icon: Send },
   { label: "Content", href: "/admin/content", icon: FileText },
   { label: "FAQ & pages", href: "/admin/pages", icon: HelpCircle, ownerOnly: true },
+  { label: "About page", href: "/admin/about", icon: BookText, ownerOnly: true },
   { label: "Media & gallery", href: "/admin/media", icon: Images, ownerOnly: true },
   { label: "Page covers", href: "/admin/page-covers", icon: LayoutTemplate, ownerOnly: true },
   { label: "Stockists", href: "/admin/stockists", icon: Store, ownerOnly: true },

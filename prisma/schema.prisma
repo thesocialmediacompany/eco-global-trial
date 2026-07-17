@@ -433,3 +433,24 @@ model OrderItem {
   price        Int
   total        Int
 }
+
+/// Editable items for the About page grids (values, certifications, quality
+/// policy, packaging options, timeline). Kept out of Settings deliberately:
+/// ~23 title/body pairs there would push the Settings form over the WAF's
+/// 8 KB body limit. Icons are chosen from a fixed code-side registry so the
+/// design can't be broken from the admin.
+model AboutItem {
+  id        String  @id @default(cuid())
+  /// values | certifications | quality | packaging | timeline
+  grid      String
+  /// key from ABOUT_ICONS (src/lib/about-icons.tsx); unused for timeline
+  icon      String  @default("")
+  /// timeline only, e.g. "1999" / "Today"
+  year      String  @default("")
+  title     String
+  body      String  @default("")
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@index([grid, sortOrder])
+}

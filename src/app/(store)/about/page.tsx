@@ -1,27 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Target,
-  Eye,
-  Heart,
-  Sprout,
-  ShieldCheck,
-  BadgeCheck,
-  Leaf,
-  Globe2,
-  Landmark,
-  Award,
-  Scale,
-  TrendingUp,
-  GraduationCap,
-  Handshake,
-  Recycle,
-  Package2,
-  Box,
-  Store,
-  ShoppingBag,
-} from "lucide-react";
+import { Target, Eye } from "lucide-react";
 import { getSettings } from "@/lib/settings";
+import { getAboutItems } from "@/lib/about-items";
+import { aboutIcon } from "@/lib/about-icons";
 import { getGalleryImages, getCatalogFiles } from "@/lib/media";
 import { PageCover } from "@/components/store/PageCover";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -36,50 +18,19 @@ export const metadata: Metadata = {
     "Eco Global Foods (SMC-PVT) Ltd. has been making food in Pakistan since 1999. ISO 22000, HACCP and Halal certified, with bulk and private-label packaging for businesses.",
 };
 
-const values = [
-  { icon: Sprout, title: "Natural & Pure", body: "Good natural ingredients, never artificial flavours or additives." },
-  { icon: Target, title: "Innovation", body: "Technology and knowledge applied to advance food processing and value." },
-  { icon: Heart, title: "Well-being", body: "Food that is delicious and thoughtfully made for active, balanced living." },
-  { icon: Eye, title: "Quality", body: "The highest standards of quality, safety and satisfaction in every batch." },
-];
-
-const certifications = [
-  { icon: ShieldCheck, title: "ISO 22000 & HACCP", body: "Food safety and quality management systems." },
-  { icon: BadgeCheck, title: "Halal & Organic", body: "Certified Halal and organic production." },
-  { icon: Leaf, title: "ISO 14001", body: "Environmental management systems." },
-  { icon: Globe2, title: "International Standards", body: "Aligned with global food industry benchmarks." },
-  { icon: Landmark, title: "PSQCA & Food Authority", body: "Regulatory approvals, verified by the Pakistan Food Authority." },
-];
-
-const qualityPolicy = [
-  { icon: Award, title: "Customer Satisfaction", body: "We prioritise our customers' needs, aim to exceed expectations with every product, and actively seek feedback to keep improving." },
-  { icon: Scale, title: "Compliance", body: "We adhere to all relevant regulatory requirements, industry standards and internal quality controls for safe, legal, honest products." },
-  { icon: TrendingUp, title: "Continuous Improvement", body: "Our people look for ways to do better at every stage of production, from sourcing to packing." },
-  { icon: GraduationCap, title: "Training & Development", body: "We invest in our employees' skills, knowledge and resources so they can uphold our quality standards." },
-  { icon: Handshake, title: "Supplier Relationships", body: "Close collaboration with suppliers ensures the quality and consistency of every raw material and ingredient." },
-  { icon: Recycle, title: "Environmental Responsibility", body: "We work to cut waste, save energy and use resources responsibly across the business." },
-];
-
-const packagingOptions = [
-  { icon: Package2, title: "Bulk Loose Packing", body: "Ideal for commercial use." },
-  { icon: Box, title: "Non-Branded Consumer Pack", body: "Standard packaging suitable for various retail outlets." },
-  { icon: Store, title: "Own Brand Bulk Pack", body: "Customised packaging for major retailers (Hyperstar, Metro)." },
-  { icon: ShoppingBag, title: "Own Brand Consumer Pack", body: "Consumer-friendly retail packaging (Hyperstar, Metro)." },
-];
-
-const timeline = [
-  { year: "1999", title: "The beginning", body: "Eco Global Foods is founded with a commitment to high-quality food products." },
-  { year: "2010", title: "Growing range", body: "Expansion across spices, flours, seeds and natural pantry staples." },
-  { year: "2020", title: "Modern living", body: "Focus shifts to wholesome, convenient foods for modern lifestyles." },
-  { year: "Today", title: "A new range", body: "Granola, oats, malted drinks and protein bars for the way people eat now." },
-];
-
 export default async function AboutPage() {
-  const [settings, gallery, catalogs] = await Promise.all([
+  const [settings, gallery, catalogs, aboutItems] = await Promise.all([
     getSettings(),
     getGalleryImages(),
     getCatalogFiles(),
+    getAboutItems(),
   ]);
+  // Editable via Admin -> About page. Sections hide themselves when empty.
+  const values = aboutItems.values ?? [];
+  const certifications = aboutItems.certifications ?? [];
+  const qualityPolicy = aboutItems.quality ?? [];
+  const packagingOptions = aboutItems.packaging ?? [];
+  const timeline = aboutItems.timeline ?? [];
 
   return (
     <>
@@ -160,6 +111,7 @@ export default async function AboutPage() {
       </section>
 
       {/* certifications */}
+      {certifications.length > 0 && (
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-5 lg:px-8">
           <SectionHeading
@@ -171,11 +123,13 @@ export default async function AboutPage() {
             stagger={0.08}
             className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5"
           >
-            {certifications.map((c) => (
-              <RevealItem key={c.title}>
+            {certifications.map((c) => {
+              const Icon = aboutIcon(c.icon);
+              return (
+              <RevealItem key={c.id}>
                 <div className="h-full rounded-3xl border border-purple-100 bg-white p-6 text-center">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl gradient-purple-green text-cream">
-                    <c.icon className="h-7 w-7" />
+                    <Icon className="h-7 w-7" />
                   </span>
                   <h3 className="mt-4 font-display text-base font-semibold leading-tight text-purple-900">
                     {c.title}
@@ -183,12 +137,15 @@ export default async function AboutPage() {
                   <p className="mt-2 text-xs text-purple-900/60">{c.body}</p>
                 </div>
               </RevealItem>
-            ))}
+              );
+            })}
           </RevealGroup>
         </div>
       </section>
+      )}
 
       {/* quality policy */}
+      {qualityPolicy.length > 0 && (
       <section className="bg-cream-dark/40 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-5 lg:px-8">
           <SectionHeading
@@ -200,11 +157,13 @@ export default async function AboutPage() {
             stagger={0.08}
             className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {qualityPolicy.map((q) => (
-              <RevealItem key={q.title}>
+            {qualityPolicy.map((q) => {
+              const Icon = aboutIcon(q.icon);
+              return (
+              <RevealItem key={q.id}>
                 <div className="h-full rounded-3xl border border-purple-100 bg-white p-7">
                   <span className="grid h-12 w-12 place-items-center rounded-xl bg-green-100 text-green-700">
-                    <q.icon className="h-6 w-6" />
+                    <Icon className="h-6 w-6" />
                   </span>
                   <h3 className="mt-4 font-display text-lg font-semibold text-purple-900">
                     {q.title}
@@ -212,12 +171,15 @@ export default async function AboutPage() {
                   <p className="mt-2 text-sm text-purple-900/60">{q.body}</p>
                 </div>
               </RevealItem>
-            ))}
+              );
+            })}
           </RevealGroup>
         </div>
       </section>
+      )}
 
       {/* values */}
+      {values.length > 0 && (
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-5 lg:px-8">
           <SectionHeading eyebrow="What we stand for" title="Our Values" />
@@ -225,11 +187,13 @@ export default async function AboutPage() {
             stagger={0.1}
             className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {values.map((v) => (
-              <RevealItem key={v.title}>
+            {values.map((v) => {
+              const Icon = aboutIcon(v.icon);
+              return (
+              <RevealItem key={v.id}>
                 <div className="h-full rounded-3xl border border-purple-100 bg-white p-7">
                   <span className="grid h-14 w-14 place-items-center rounded-2xl gradient-purple-green text-cream">
-                    <v.icon className="h-7 w-7" />
+                    <Icon className="h-7 w-7" />
                   </span>
                   <h3 className="mt-5 font-display text-xl font-semibold text-purple-900">
                     {v.title}
@@ -237,10 +201,12 @@ export default async function AboutPage() {
                   <p className="mt-2 text-sm text-purple-900/60">{v.body}</p>
                 </div>
               </RevealItem>
-            ))}
+              );
+            })}
           </RevealGroup>
         </div>
       </section>
+      )}
 
       {/* packaging + quote (bulk buyers) */}
       <section id="bulk" className="bg-cream-dark/40 py-20 sm:py-28">
@@ -250,24 +216,30 @@ export default async function AboutPage() {
             title="Flexible packaging for every business"
             description="Dehydrated vegetables, spices, instant premixes, breakfast cereals, bars, soups and snack seasonings, packed the way you need them."
           />
-          <RevealGroup
-            stagger={0.08}
-            className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {packagingOptions.map((p) => (
-              <RevealItem key={p.title}>
-                <div className="h-full rounded-3xl border border-purple-100 bg-white p-7 text-center">
-                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-purple-100 text-purple-700">
-                    <p.icon className="h-7 w-7" />
-                  </span>
-                  <h3 className="mt-4 font-display text-lg font-semibold leading-tight text-purple-900">
-                    {p.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-purple-900/60">{p.body}</p>
-                </div>
-              </RevealItem>
-            ))}
-          </RevealGroup>
+          {/* only the grid is guarded - the Get Quote form below must always show */}
+          {packagingOptions.length > 0 && (
+            <RevealGroup
+              stagger={0.08}
+              className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {packagingOptions.map((p) => {
+                const Icon = aboutIcon(p.icon);
+                return (
+                  <RevealItem key={p.id}>
+                    <div className="h-full rounded-3xl border border-purple-100 bg-white p-7 text-center">
+                      <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-purple-100 text-purple-700">
+                        <Icon className="h-7 w-7" />
+                      </span>
+                      <h3 className="mt-4 font-display text-lg font-semibold leading-tight text-purple-900">
+                        {p.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-purple-900/60">{p.body}</p>
+                    </div>
+                  </RevealItem>
+                );
+              })}
+            </RevealGroup>
+          )}
 
           <div className="mt-12">
             <GetQuote whatsappNumber={settings.whatsappNumber} />
@@ -276,6 +248,7 @@ export default async function AboutPage() {
       </section>
 
       {/* timeline */}
+      {timeline.length > 0 && (
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-3xl px-5 lg:px-8">
           <SectionHeading eyebrow="Our journey" title="25+ years of goodness" />
@@ -299,6 +272,7 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Gallery */}
       {gallery.length > 0 && (
