@@ -186,3 +186,22 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Print. The packing slip is the only page we expect to be printed; the admin
+   chrome around it is hidden with print:hidden at the component level. The
+   browser's own URL/date headers are a print-dialog setting and cannot be
+   turned off from CSS. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  /* Keep a row's cells together across a page break. */
+  tr,
+  .print-keep {
+    break-inside: avoid;
+  }
+}

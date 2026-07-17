@@ -6,6 +6,7 @@ import { getSettings } from "@/lib/settings";
 import { formatPKR } from "@/lib/utils";
 import { getPaymentMethod } from "@/lib/payments";
 import { PrintButton } from "@/components/admin/PrintButton";
+import { BrandMark } from "@/components/site/BrandMark";
 
 function formatDate(d: Date) {
   return new Intl.DateTimeFormat("en-PK", {
@@ -29,8 +30,14 @@ export default async function PackingSlipPage({
 
   const payment = getPaymentMethod(order.paymentMethod)?.label ?? order.paymentMethod;
 
+  /* The rider needs one number: how much cash to take. Anything already paid
+     must read as "collect nothing" so it can't be charged twice. */
+  const isPaid = order.paymentStatus === "paid";
+  const amountToCollect = isPaid ? 0 : order.total;
+  const unitCount = order.items.reduce((sum, it) => sum + it.quantity, 0);
+
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl print:max-w-none">
       {/* toolbar (hidden when printing) */}
       <div className="mb-5 flex items-center justify-between print:hidden">
         <Link
@@ -45,18 +52,41 @@ export default async function PackingSlipPage({
       {/* the slip */}
       <div className="rounded-xl border border-purple-100 bg-white p-8 text-purple-900 shadow-sm print:border-0 print:p-0 print:shadow-none">
         <div className="flex items-start justify-between border-b border-purple-100 pb-5">
-          <div>
-            <h1 className="font-display text-2xl font-semibold">{settings.storeName}</h1>
-            <p className="text-sm text-purple-900/60">{settings.storeLegalName}</p>
-            <p className="mt-1 text-xs text-purple-900/50">
-              {settings.storePhone} · {settings.storeEmail}
-            </p>
+          <div className="flex items-start gap-3">
+            <BrandMark className="h-11 w-11 shrink-0" rounded />
+            <div>
+              <h1 className="font-display text-2xl font-semibold">{settings.storeName}</h1>
+              <p className="text-sm text-purple-900/60">{settings.storeLegalName}</p>
+              <p className="mt-1 text-xs text-purple-900/50">
+                {settings.storePhone} · {settings.storeEmail}
+              </p>
+            </div>
           </div>
           <div className="text-right">
             <p className="font-display text-xl font-semibold">Packing Slip</p>
-            <p className="text-sm text-purple-900/60">Order #{order.orderNumber}</p>
+            <p className="font-mono text-lg font-bold tracking-tight">#{order.orderNumber}</p>
             <p className="text-xs text-purple-900/50">{formatDate(order.createdAt)}</p>
+            <p className="mt-1 text-xs text-purple-900/50">
+              {order.items.length} {order.items.length === 1 ? "line" : "lines"} · {unitCount}{" "}
+              {unitCount === 1 ? "unit" : "units"}
+            </p>
           </div>
+        </div>
+
+        {/* The single number the rider acts on. */}
+        <div
+          className={`mt-5 flex items-center justify-between rounded-lg border-2 px-4 py-3 print-keep ${
+            amountToCollect > 0
+              ? "border-purple-900 bg-cream/60 print:bg-transparent"
+              : "border-green-600 bg-green-50 print:bg-transparent"
+          }`}
+        >
+          <span className="text-xs font-bold uppercase tracking-widest">
+            {amountToCollect > 0 ? "Collect on delivery" : "Already paid · collect nothing"}
+          </span>
+          <span className="font-display text-2xl font-bold">
+            {amountToCollect > 0 ? formatPKR(amountToCollect) : formatPKR(0)}
+          </span>
         </div>
 
         {/* ship to */}
@@ -95,6 +125,9 @@ export default async function PackingSlipPage({
         <table className="w-full border-t border-purple-100 text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-purple-900/40">
+              <th className="w-8 py-2 font-medium">
+                <span className="sr-only">Picked</span>
+              </th>
               <th className="py-2 font-medium">Item</th>
               <th className="py-2 text-center font-medium">Qty</th>
               <th className="py-2 text-right font-medium">Price</th>
@@ -104,6 +137,10 @@ export default async function PackingSlipPage({
           <tbody>
             {order.items.map((it) => (
               <tr key={it.id} className="border-t border-purple-50">
+                {/* Ticked by hand while packing, so it must survive printing. */}
+                <td className="py-2.5">
+                  <span className="block h-3.5 w-3.5 rounded-sm border border-purple-900/40" />
+                </td>
                 <td className="py-2.5">
                   {it.title}
                   {it.variantTitle && (

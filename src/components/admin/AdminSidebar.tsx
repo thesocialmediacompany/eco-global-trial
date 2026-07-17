@@ -11,7 +11,7 @@ export function AdminSidebar({ role }: { role?: string }) {
   const adminNav = navForRole(role);
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col gradient-purple text-cream/90 lg:flex">
+    <aside className="hidden w-60 shrink-0 flex-col gradient-purple text-cream/90 lg:flex print:hidden">
       {/* Brand */}
       <Link
         href="/admin"

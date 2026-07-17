@@ -18,11 +18,11 @@ export default async function AdminLayout({
   const session = await verifySession(store.get(SESSION_COOKIE)?.value);
 
   return (
-    <div className="flex min-h-screen w-full bg-cream-dark/40">
+    <div className="flex min-h-screen w-full bg-cream-dark/40 print:block print:min-h-0 print:bg-white">
       <AdminSidebar role={session?.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminTopbar userName={session?.name ?? "EGF Admin"} role={session?.role} />
-        <main className="flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 lg:px-8 print:p-0">{children}</main>
       </div>
     </div>
   );
