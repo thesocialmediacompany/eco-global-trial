@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { initialPaymentStatus, type PaymentMethodId } from "@/lib/payments";
 import { sendOrderConfirmation } from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
-import { computeShipping } from "@/lib/shipping-rates";
+import { computeShipping, bandForWeight } from "@/lib/shipping-rates";
+import { recordSystemOrderEvent } from "@/lib/order-events";
+import { formatPKR } from "@/lib/utils";
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -125,6 +127,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   );
   const total = Math.max(0, subtotal - discount + shipping);
 
+  // Record which rate band the customer actually got, so the orders list can
+  // show a delivery method instead of just a number.
+  const band = bandForWeight(totalGrams, shippingConfig.bands);
+  const shippingMethod =
+    shipping === 0 ? "Free delivery" : (band?.label ?? "Standard delivery");
+
   // OrderItem rows don't store weight; keep only the persisted columns.
   const orderItemData = validItems.map((l) => ({
     productId: l.productId,
@@ -187,12 +195,30 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         paymentMethod,
         paymentStatus: initialPaymentStatus(paymentMethod),
         fulfillmentStatus: "unfulfilled",
+        shippingMethod,
         note: input.note ?? "",
         items: { create: orderItemData },
       },
     }),
     ...decrements,
   ]);
+
+  // Timeline. Never inside the transaction above: a history write must not be
+  // able to roll back a real order.
+  await recordSystemOrderEvent(
+    createdOrder.id,
+    "placed",
+    `${customer.name} placed this order on Online Store.`,
+  );
+  if (createdOrder.paymentStatus !== "paid") {
+    await recordSystemOrderEvent(
+      createdOrder.id,
+      "paid",
+      `A ${formatPKR(total)} payment is pending on ${
+        paymentMethod === "cod" ? "Cash on Delivery (COD)" : paymentMethod
+      }.`,
+    );
+  }
 
   // Count the discount usage (powers the usage-limit condition).
   if (code) {

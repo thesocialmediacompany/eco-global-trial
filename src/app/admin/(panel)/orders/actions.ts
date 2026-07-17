@@ -12,6 +12,9 @@ import {
   sendShippingNotification,
   sendReviewRequest,
 } from "@/lib/email";
+import { recordOrderEvent } from "@/lib/order-events";
+import { getAdminSession } from "@/lib/admin-guard";
+import { formatPKR } from "@/lib/utils";
 
 const FREE_SHIPPING_THRESHOLD = 7000;
 const FLAT_SHIPPING = 250;
@@ -82,6 +85,15 @@ export async function createManualOrder(
     },
   });
 
+  const staff = (await getAdminSession())?.name ?? "Staff";
+  await recordOrderEvent(
+    order.id,
+    "placed",
+    input.isDraft
+      ? `${staff} created this draft order for ${customer.name}.`
+      : `${staff} created this order for ${customer.name}.`,
+  );
+
   revalidatePath("/admin/orders");
   redirect(`/admin/orders/${order.id}`);
 }
@@ -89,45 +101,112 @@ export async function createManualOrder(
 /** Convert a draft order into a placed order. */
 export async function placeDraftOrder(orderId: string) {
   await prisma.order.update({ where: { id: orderId }, data: { isDraft: false } });
+  await recordOrderEvent(orderId, "placed", "Draft order was marked as placed.");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
 export async function resendConfirmation(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
   await sendOrderConfirmation(orderId);
+  await recordOrderEvent(
+    orderId,
+    "email",
+    `Order confirmation email was resent to ${order?.customerName ?? "the customer"}${
+      order?.email ? ` (${order.email})` : ""
+    }.`,
+  );
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
 /** Send (or resend) the "your order has shipped" email with courier + tracking. */
 export async function notifyShipped(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
   await sendShippingNotification(orderId).catch((e) =>
     console.error("shipping email failed:", e),
+  );
+  await recordOrderEvent(
+    orderId,
+    "email",
+    `Shipping notification was sent to ${order?.customerName ?? "the customer"}${
+      order?.trackingNumber ? ` with tracking ${order.trackingNumber}` : ""
+    }.`,
   );
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
 /** Ask the customer to review the products they bought (post-delivery). */
 export async function requestReview(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
   await sendReviewRequest(orderId).catch((e) =>
     console.error("review request email failed:", e),
+  );
+  await recordOrderEvent(
+    orderId,
+    "email",
+    `Review request was sent to ${order?.customerName ?? "the customer"}.`,
   );
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
 export async function markPaid(orderId: string) {
-  await prisma.order.update({
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: { paymentStatus: "paid" },
   });
+  const method = order.paymentMethod === "cod" ? "Cash on Delivery (COD)" : order.paymentMethod;
+  await recordOrderEvent(
+    orderId,
+    "paid",
+    `You manually marked ${formatPKR(order.total)} as paid by ${method}.`,
+  );
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
 }
 
 export async function markFulfilled(orderId: string) {
-  await prisma.order.update({
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: { fulfillmentStatus: "fulfilled" },
   });
+  const count = await prisma.orderItem.aggregate({
+    where: { orderId },
+    _sum: { quantity: true },
+  });
+  await recordOrderEvent(
+    orderId,
+    "fulfilled",
+    `${count._sum.quantity ?? 0} item${(count._sum.quantity ?? 0) === 1 ? "" : "s"} marked as fulfilled for order #${order.orderNumber}.`,
+  );
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
+/** The rider confirmed handover. Separate from fulfilled, which is dispatch. */
+export async function markDelivered(orderId: string) {
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { deliveredAt: new Date(), courierStatus: "Delivered" },
+  });
+  await recordOrderEvent(orderId, "delivered", "Order was marked as delivered.");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
+/** Clear a finished order out of the working list (Shopify's archive). */
+export async function toggleArchive(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return;
+  const archiving = !order.archivedAt;
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { archivedAt: archiving ? new Date() : null },
+  });
+  await recordOrderEvent(
+    orderId,
+    "archive",
+    archiving ? "This order was archived." : "This order was unarchived.",
+  );
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
 }
@@ -136,21 +215,74 @@ export async function markFulfilled(orderId: string) {
 export async function bulkFulfillOrders(ids: string[]) {
   const clean = ids.filter(Boolean);
   if (!clean.length) return;
-  await prisma.order.updateMany({
+  const affected = await prisma.order.findMany({
     where: { id: { in: clean }, fulfillmentStatus: { not: "cancelled" } },
+    select: { id: true },
+  });
+  await prisma.order.updateMany({
+    where: { id: { in: affected.map((o) => o.id) } },
     data: { fulfillmentStatus: "fulfilled" },
   });
+  // Only the orders that actually changed get a timeline entry.
+  await Promise.all(
+    affected.map((o) =>
+      recordOrderEvent(o.id, "fulfilled", "Marked as fulfilled from the orders list."),
+    ),
+  );
   revalidatePath("/admin/orders");
 }
 
 /** Mark an order's payment as refunded. */
 export async function refundOrder(orderId: string) {
-  await prisma.order.update({
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: { paymentStatus: "refunded" },
   });
+  await recordOrderEvent(orderId, "refund", `${formatPKR(order.total)} was refunded.`);
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+}
+
+/** Staff note on the order (Shopify's Notes card). */
+export async function updateOrderNote(orderId: string, formData: FormData) {
+  const note = String(formData.get("note") ?? "").trim();
+  await prisma.order.update({ where: { id: orderId }, data: { note } });
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+export async function addOrderTag(orderId: string, formData: FormData) {
+  const tag = String(formData.get("tag") ?? "").trim();
+  if (!tag) return;
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return;
+  const tags = order.tags.split(",").map((t) => t.trim()).filter(Boolean);
+  if (tags.some((t) => t.toLowerCase() === tag.toLowerCase())) return; // no duplicates
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { tags: [...tags, tag].join(",") },
+  });
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+export async function removeOrderTag(orderId: string, formData: FormData) {
+  const tag = String(formData.get("tag") ?? "");
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return;
+  const tags = order.tags
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .filter((t) => t.toLowerCase() !== tag.toLowerCase());
+  await prisma.order.update({ where: { id: orderId }, data: { tags: tags.join(",") } });
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+/** Staff-only comment posted into the timeline. */
+export async function addOrderComment(orderId: string, formData: FormData) {
+  const body = String(formData.get("body") ?? "").trim();
+  if (!body) return;
+  await recordOrderEvent(orderId, "comment", body);
+  revalidatePath(`/admin/orders/${orderId}`);
 }
 
 /**
@@ -191,13 +323,30 @@ export async function cancelOrder(orderId: string) {
     ...restockOps,
   ]);
 
+  const restocked = restockOps.length;
+  await recordOrderEvent(
+    orderId,
+    "cancel",
+    `Order was cancelled${restocked ? ` and ${restocked} line${restocked === 1 ? "" : "s"} returned to stock` : ""}.`,
+  );
+
   // If a ZoomCOD shipment was booked, cancel it too (best-effort).
   if (order.courier === "ZoomCOD" && order.trackingNumber) {
     const r = await cancelZoomCodShipment(order.trackingNumber);
     if (r.ok) {
       await prisma.order.update({ where: { id: orderId }, data: { courierStatus: "Cancelled" } });
+      await recordOrderEvent(
+        orderId,
+        "courier",
+        `ZoomCOD shipment ${order.trackingNumber} was cancelled.`,
+      );
     } else {
       console.error("ZoomCOD cancel failed:", r.message);
+      await recordOrderEvent(
+        orderId,
+        "courier",
+        `Could not cancel the ZoomCOD shipment ${order.trackingNumber}: ${r.message}. Cancel it in the ZoomCOD portal.`,
+      );
     }
   }
 
@@ -282,11 +431,17 @@ export async function bookZoomCOD(orderId: string) {
         fulfillmentStatus: "fulfilled",
       },
     });
+    await recordOrderEvent(
+      orderId,
+      "courier",
+      `${result.courier} booked this order for delivery (${weightKg} kg, ${product}). Tracking ${result.trackingNumber}.`,
+    );
     await sendShippingNotification(orderId).catch((e) =>
       console.error("shipping email failed:", e),
     );
   } else {
     console.error("[ZoomCOD] Booking failed:", result.message);
+    await recordOrderEvent(orderId, "courier", `ZoomCOD booking failed: ${result.message}`);
   }
 
   revalidatePath(`/admin/orders/${orderId}`);

@@ -34,8 +34,11 @@ export async function GET(req: NextRequest) {
     "Shipping",
     "Discount",
     "Total",
+    "Delivery method",
     "Courier",
     "Tracking",
+    "Delivered at",
+    "Tags",
   ];
 
   const rows = orders.map((o) =>
@@ -54,8 +57,11 @@ export async function GET(req: NextRequest) {
       o.shipping,
       o.discount,
       o.total,
+      o.shippingMethod,
       o.courier,
       o.trackingNumber,
+      o.deliveredAt ? o.deliveredAt.toISOString() : "",
+      o.tags,
     ]
       .map(csvCell)
       .join(","),

@@ -9,12 +9,24 @@ import { Search } from "lucide-react";
 export function AdminSearch({
   defaultValue = "",
   placeholder = "Search…",
+  hidden,
+  className = "max-w-xs",
 }: {
   defaultValue?: string;
   placeholder?: string;
+  /**
+   * Other query params to carry through the submit. A GET form sends only its
+   * own fields, so without these anything already in the URL (an active tab,
+   * say) would be dropped the moment someone searches.
+   */
+  hidden?: Record<string, string>;
+  className?: string;
 }) {
   return (
-    <form className="relative w-full max-w-xs" role="search">
+    <form className={`relative w-full ${className}`} role="search">
+      {Object.entries(hidden ?? {}).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-900/40" />
       <input
         type="search"

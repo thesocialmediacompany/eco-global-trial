@@ -276,12 +276,39 @@ model Order {
   trackingNumber   String @default("")
   shipmentLabelUrl String @default("") // ZoomCOD printable invoice/label link
   courierStatus    String @default("") // last fetched ZoomCOD status
+  shippingMethod   String @default("") // rate name shown at checkout, e.g. "3kg and above"
 
-  note  String      @default("")
-  items OrderItem[]
+  deliveredAt DateTime? // rider confirmed handover
+  archivedAt  DateTime? // cleared from the working list, like Shopify's archive
+
+  /// comma-separated; free-form labels staff add on the order page
+  tags String @default("")
+
+  note   String       @default("")
+  items  OrderItem[]
+  events OrderEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// One entry in an order's timeline. Written by the actions that change an
+/// order, so the history is a record of what happened rather than something
+/// re-derived from the order's current state.
+model OrderEvent {
+  id      String @id @default(cuid())
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  /// placed | paid | fulfilled | delivered | courier | email | refund | cancel | archive | comment
+  kind    String
+  message String
+  /// staff member for manual actions and comments; empty when the system acted
+  actor   String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
 }
 
 /// A blog/journal post (storefront "Content").

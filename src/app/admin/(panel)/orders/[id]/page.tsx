@@ -1,12 +1,32 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ChevronLeft, MapPin, Phone, Mail, Truck, Send, Star, MessageCircle, Printer } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Inbox,
+  Package,
+  CreditCard,
+  ShieldQuestion,
+  Truck,
+  MessageCircle,
+  Printer,
+} from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
+import { getSettings } from "@/lib/settings";
+import { getPaymentMethod } from "@/lib/payments";
+import { getOrderTimeline } from "@/lib/order-events";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { OrderTimeline } from "@/components/admin/OrderTimeline";
+import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
+import { OrderNotesCard } from "@/components/admin/OrderNotesCard";
+import { OrderTagsCard } from "@/components/admin/OrderTagsCard";
 import {
   markPaid,
   markFulfilled,
+  markDelivered,
+  toggleArchive,
   bookZoomCOD,
   refreshZoomCodStatus,
   resendConfirmation,
@@ -15,7 +35,21 @@ import {
   refundOrder,
   cancelOrder,
   requestReview,
+  updateOrderNote,
+  addOrderTag,
+  removeOrderTag,
+  addOrderComment,
 } from "../actions";
+
+function fullDateTime(d: Date) {
+  return new Intl.DateTimeFormat("en-PK", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(d);
+}
 
 export default async function OrderDetailPage({
   params,
@@ -25,29 +59,72 @@ export default async function OrderDetailPage({
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },
-    include: { items: true },
+    include: {
+      items: { include: { product: { select: { imageUrl: true, emoji: true, slug: true } } } },
+    },
   });
   if (!order) notFound();
 
+  const [timeline, settings, prev, next, customerOrderCount] = await Promise.all([
+    getOrderTimeline(order),
+    getSettings(),
+    // Shopify's up/down arrows step through orders by number, not by id.
+    prisma.order.findFirst({
+      where: { orderNumber: { gt: order.orderNumber }, isDraft: false },
+      orderBy: { orderNumber: "asc" },
+      select: { id: true },
+    }),
+    prisma.order.findFirst({
+      where: { orderNumber: { lt: order.orderNumber }, isDraft: false },
+      orderBy: { orderNumber: "desc" },
+      select: { id: true },
+    }),
+    order.customerId
+      ? prisma.order.count({ where: { customerId: order.customerId, isDraft: false } })
+      : order.email
+        ? prisma.order.count({ where: { email: order.email, isDraft: false } })
+        : 1,
+  ]);
+
+  const isCancelled = order.fulfillmentStatus === "cancelled";
+  const isRefunded = order.paymentStatus === "refunded";
+  const isPaid = order.paymentStatus === "paid";
+  const isFulfilled = order.fulfillmentStatus === "fulfilled";
+  const unitCount = order.items.reduce((s, i) => s + i.quantity, 0);
+  const paymentLabel = getPaymentMethod(order.paymentMethod)?.label ?? order.paymentMethod;
+  const tags = order.tags.split(",").map((t) => t.trim()).filter(Boolean);
+
+  // Bind the order id once; each of these is a server action the forms post to.
+  const bind = <T,>(fn: (orderId: string, fd: FormData) => Promise<T>) => fn.bind(null, order.id);
   const markPaidAction = markPaid.bind(null, order.id);
   const markFulfilledAction = markFulfilled.bind(null, order.id);
+  const markDeliveredAction = markDelivered.bind(null, order.id);
   const bookAction = bookZoomCOD.bind(null, order.id);
   const refreshStatusAction = refreshZoomCodStatus.bind(null, order.id);
-  const resendAction = resendConfirmation.bind(null, order.id);
   const placeDraftAction = placeDraftOrder.bind(null, order.id);
   const notifyShippedAction = notifyShipped.bind(null, order.id);
   const refundAction = refundOrder.bind(null, order.id);
-  const cancelAction = cancelOrder.bind(null, order.id);
-  const requestReviewAction = requestReview.bind(null, order.id);
-  const isCancelled = order.fulfillmentStatus === "cancelled";
-  const isRefunded = order.paymentStatus === "refunded";
+
+  const menuActions = [
+    { label: "Resend confirmation email", action: resendConfirmation.bind(null, order.id) },
+    ...(isFulfilled && order.email
+      ? [{ label: "Request a review", action: requestReview.bind(null, order.id) }]
+      : []),
+    ...(order.courier
+      ? [{ label: "Email tracking to customer", action: notifyShippedAction }]
+      : []),
+    { label: order.archivedAt ? "Unarchive" : "Archive", action: toggleArchive.bind(null, order.id) },
+    ...(!isCancelled
+      ? [{ label: "Cancel and restock", action: cancelOrder.bind(null, order.id), danger: true }]
+      : []),
+  ];
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl pb-16">
       {order.isDraft && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
           <p className="text-sm font-medium text-amber-900">
-            📝 This is a <strong>draft order</strong> - not yet placed.
+            This is a <strong>draft order</strong> and has not been placed yet.
           </p>
           <form action={placeDraftAction}>
             <button className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
@@ -58,228 +135,353 @@ export default async function OrderDetailPage({
       )}
 
       {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/orders"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-purple-100 bg-white text-purple-900/70 hover:bg-purple-50"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="font-display text-xl font-semibold text-purple-900">
-              Order #{order.orderNumber}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/admin/orders"
+              aria-label="Back to orders"
+              className="grid h-7 w-7 place-items-center rounded text-purple-900/45 hover:bg-purple-50 hover:text-purple-900"
+            >
+              <Inbox className="h-4 w-4" />
+            </Link>
+            <h1 className="font-display text-2xl font-semibold text-purple-900">
+              #{order.orderNumber}
             </h1>
-            <div className="mt-1 flex gap-2">
-              <StatusBadge status={order.paymentStatus} />
-              <StatusBadge status={order.fulfillmentStatus} />
-            </div>
+            <StatusBadge status={order.paymentStatus} />
+            <StatusBadge status={order.fulfillmentStatus} />
+            {order.archivedAt && <StatusBadge status="archived" />}
           </div>
+          <p className="mt-1 pl-9 text-sm text-purple-900/55">
+            {fullDateTime(order.createdAt)} from {order.isDraft ? "Draft" : "Online Store"}
+          </p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
+          {isPaid && !isRefunded && (
+            <form action={refundAction}>
+              <button className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
+                Refund
+              </button>
+            </form>
+          )}
           <Link
             href={`/admin/orders/${order.id}/packing-slip`}
             className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
           >
             <Printer className="h-4 w-4" /> Packing slip
           </Link>
-          <form action={resendAction}>
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-              <Send className="h-4 w-4" /> Resend email
-            </button>
-          </form>
-          {order.paymentStatus !== "paid" && !isRefunded && (
-            <form action={markPaidAction}>
-              <button className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                Mark as paid
-              </button>
-            </form>
-          )}
-          {order.fulfillmentStatus !== "fulfilled" && !isCancelled && (
-            <form action={markFulfilledAction}>
-              <button className="rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream hover:opacity-95">
-                Mark as fulfilled
-              </button>
-            </form>
-          )}
-          {order.fulfillmentStatus === "fulfilled" && order.email && (
-            <form action={requestReviewAction}>
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                <Star className="h-4 w-4" /> Request review
-              </button>
-            </form>
-          )}
+          <OrderActionsMenu actions={menuActions} />
+          <div className="flex">
+            <Link
+              href={prev ? `/admin/orders/${prev.id}` : "#"}
+              aria-disabled={!prev}
+              aria-label="Newer order"
+              className={`grid h-9 w-9 place-items-center rounded-l-lg border border-purple-200 bg-white text-purple-900/70 ${
+                prev ? "hover:bg-purple-50" : "pointer-events-none opacity-40"
+              }`}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Link>
+            <Link
+              href={next ? `/admin/orders/${next.id}` : "#"}
+              aria-disabled={!next}
+              aria-label="Older order"
+              className={`-ml-px grid h-9 w-9 place-items-center rounded-r-lg border border-purple-200 bg-white text-purple-900/70 ${
+                next ? "hover:bg-purple-50" : "pointer-events-none opacity-40"
+              }`}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Refund / cancel row */}
-      {!order.isDraft && !(isCancelled && isRefunded) && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-purple-100 bg-white px-5 py-3.5 shadow-sm">
-          <p className="text-sm text-purple-900/60">
-            {isCancelled
-              ? "This order is cancelled and its stock was returned."
-              : isRefunded
-                ? "This order has been refunded."
-                : "Need to undo this order? Refund the payment or cancel and restock."}
-          </p>
-          <div className="flex gap-2">
-            {order.paymentStatus === "paid" && !isRefunded && (
-              <form action={refundAction}>
-                <button className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100">
-                  Refund payment
-                </button>
-              </form>
-            )}
-            {!isCancelled && (
-              <form action={cancelAction}>
-                <button className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">
-                  Cancel &amp; restock
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        {/* Main */}
-        <div className="space-y-6">
-          {/* Line items */}
-          <div className="rounded-xl border border-purple-100 bg-white shadow-sm">
-            <h2 className="border-b border-purple-100 px-5 py-4 font-display text-base font-semibold text-purple-900">
-              Items
-            </h2>
-            <div className="divide-y divide-purple-50">
-              {order.items.map((it) => (
-                <div key={it.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div>
-                    <p className="font-medium text-purple-900">{it.title}</p>
-                    {it.variantTitle && (
-                      <p className="text-xs text-purple-900/50">{it.variantTitle}</p>
-                    )}
-                  </div>
-                  <div className="text-right text-sm text-purple-900/80">
-                    {formatPKR(it.price)} × {it.quantity}
-                    <span className="ml-3 font-medium text-purple-900">
-                      {formatPKR(it.total)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Totals */}
-            <div className="space-y-1.5 border-t border-purple-100 px-5 py-4 text-sm">
-              <Row label="Subtotal" value={formatPKR(order.subtotal)} />
-              <Row
-                label="Shipping"
-                value={order.shipping === 0 ? "Free" : formatPKR(order.shipping)}
-              />
-              <div className="mt-2 flex justify-between border-t border-purple-100 pt-2 text-base font-semibold text-purple-900">
-                <span>Total</span>
-                <span>{formatPKR(order.total)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Shipping / ZoomCOD */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        {/* Main column */}
+        <div className="space-y-5">
+          {/* Fulfilment */}
           <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 flex items-center gap-2 font-display text-base font-semibold text-purple-900">
-              <Truck className="h-4 w-4 text-green-600" /> Shipping
-            </h2>
-            {order.courier ? (
-              <div className="space-y-3">
-                <p className="text-sm text-purple-900/80">
-                  Booked with <strong>{order.courier}</strong>
-                  {order.trackingNumber && (
-                    <>
-                      {" "}
-                      · Tracking{" "}
-                      <a
-                        href={`https://portal.zoomcod.com/track-details.php?track_code=${order.trackingNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-blue-600 underline hover:text-blue-800"
-                      >
-                        {order.trackingNumber}
-                      </a>
-                    </>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-800">
+                <Package className="h-3.5 w-3.5" />
+                {isFulfilled ? `Fulfilled (${unitCount})` : `Unfulfilled (${unitCount})`}
+              </span>
+              {isFulfilled && (
+                <span className="font-mono text-sm text-purple-900/50">
+                  #{order.orderNumber}-F1
+                </span>
+              )}
+            </div>
+
+            {order.courier && (
+              <div className="mb-4 rounded-xl border border-purple-100 bg-cream/40 px-4 py-3 text-sm">
+                <p className="flex items-center gap-2 text-purple-900/80">
+                  <Truck className="h-4 w-4 text-purple-900/40" />
+                  {order.courier} tracking:{" "}
+                  {order.trackingNumber ? (
+                    <a
+                      href={`https://portal.zoomcod.com/track-details.php?track_code=${order.trackingNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-blue-600 underline hover:text-blue-800"
+                    >
+                      {order.trackingNumber}
+                    </a>
+                  ) : (
+                    <span className="text-purple-900/50">not assigned</span>
                   )}
                 </p>
                 {order.courierStatus && (
-                  <p className="text-sm">
-                    <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
-                      {order.courierStatus}
-                    </span>
+                  <p className="mt-1.5 text-xs text-purple-900/55">
+                    Latest status: {order.courierStatus}
                   </p>
                 )}
-                <div className="flex flex-wrap items-center gap-2">
-                  <form action={notifyShippedAction}>
-                    <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                      <Send className="h-4 w-4" /> Email tracking
-                    </button>
-                  </form>
-                  <form action={refreshStatusAction}>
-                    <button className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                      Refresh status
-                    </button>
-                  </form>
-                  {order.shipmentLabelUrl && (
-                    <a
-                      href={order.shipmentLabelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-semibold text-green-800 hover:bg-green-100"
-                    >
-                      Print label
-                    </a>
-                  )}
-                </div>
               </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-purple-900/60">
-                  Not yet booked with a courier.
-                </p>
+            )}
+
+            <ul className="divide-y divide-purple-50">
+              {order.items.map((it) => (
+                <li key={it.id} className="flex items-center gap-3 py-3">
+                  <span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-purple-100 bg-cream text-lg">
+                    {it.product?.imageUrl ? (
+                      <Image
+                        src={it.product.imageUrl}
+                        alt={it.title}
+                        fill
+                        sizes="44px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      (it.product?.emoji ?? "🌿")
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    {it.product?.slug ? (
+                      <Link
+                        href={`/product/${it.product.slug}`}
+                        className="block truncate text-sm font-medium text-purple-900 hover:text-purple-700"
+                      >
+                        {it.title}
+                      </Link>
+                    ) : (
+                      <span className="block truncate text-sm font-medium text-purple-900">
+                        {it.title}
+                      </span>
+                    )}
+                    {it.variantTitle && (
+                      <span className="mt-0.5 inline-block rounded bg-purple-50 px-1.5 py-0.5 text-xs text-purple-700">
+                        {it.variantTitle}
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-sm text-purple-900/60">
+                    {formatPKR(it.price)} × {it.quantity}
+                  </span>
+                  <span className="w-24 shrink-0 text-right text-sm font-medium text-purple-900">
+                    {formatPKR(it.total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              {!order.courier && !isCancelled && (
                 <form action={bookAction}>
                   <button className="rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-semibold text-green-800 hover:bg-green-100">
                     Book with ZoomCOD
                   </button>
                 </form>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 font-display text-base font-semibold text-purple-900">
-              Customer
-            </h2>
-            <p className="font-medium text-purple-900">{order.customerName}</p>
-            <div className="mt-3 space-y-2 text-sm text-purple-900/70">
-              {order.email && (
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-purple-900/40" /> {order.email}
-                </p>
               )}
-              {order.phone && (
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-purple-900/40" /> {order.phone}
-                </p>
+              {order.courier && (
+                <form action={refreshStatusAction}>
+                  <button className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
+                    Refresh status
+                  </button>
+                </form>
               )}
-              {order.address && (
-                <p className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-purple-900/40" />
-                  <span>
-                    {order.address}
-                    {order.city && `, ${order.city}`}
-                  </span>
-                </p>
+              {order.shipmentLabelUrl && (
+                <a
+                  href={order.shipmentLabelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
+                >
+                  Print label
+                </a>
+              )}
+              {!isFulfilled && !isCancelled && (
+                <form action={markFulfilledAction}>
+                  <button className="rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream">
+                    Mark as fulfilled
+                  </button>
+                </form>
+              )}
+              {isFulfilled && !order.deliveredAt && !isCancelled && (
+                <form action={markDeliveredAction}>
+                  <button className="rounded-lg bg-purple-900 px-3.5 py-2 text-sm font-semibold text-cream hover:bg-purple-800">
+                    Mark as delivered
+                  </button>
+                </form>
+              )}
+              {order.deliveredAt && (
+                <span className="self-center text-sm font-medium text-green-700">
+                  Delivered {fullDateTime(order.deliveredAt)}
+                </span>
               )}
             </div>
           </div>
 
+          {/* Payment */}
+          <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-800">
+              <CreditCard className="h-3.5 w-3.5" />
+              {isRefunded ? "Refunded" : isPaid ? "Paid" : "Payment pending"}
+            </span>
+
+            <dl className="space-y-2 text-sm">
+              <Row
+                label="Subtotal"
+                hint={`${unitCount} item${unitCount === 1 ? "" : "s"}`}
+                value={formatPKR(order.subtotal)}
+              />
+              {order.discount > 0 && (
+                <Row
+                  label="Discount"
+                  hint={order.discountCode || undefined}
+                  value={`− ${formatPKR(order.discount)}`}
+                />
+              )}
+              <Row
+                label="Shipping"
+                hint={order.shippingMethod || undefined}
+                value={order.shipping === 0 ? "Free" : formatPKR(order.shipping)}
+              />
+              <div className="flex justify-between border-t border-purple-100 pt-2 font-semibold text-purple-900">
+                <dt>Total</dt>
+                <dd>{formatPKR(order.total)}</dd>
+              </div>
+              <div className="flex justify-between border-t border-purple-100 pt-2 text-purple-900/70">
+                <dt>
+                  {isRefunded ? "Refunded" : isPaid ? "Paid" : `To collect via ${paymentLabel}`}
+                </dt>
+                <dd className="font-medium text-purple-900">
+                  {isRefunded ? `− ${formatPKR(order.total)}` : formatPKR(order.total)}
+                </dd>
+              </div>
+            </dl>
+
+            {!isPaid && !isRefunded && !isCancelled && (
+              <div className="mt-4 flex justify-end">
+                <form action={markPaidAction}>
+                  <button className="rounded-lg bg-purple-900 px-3.5 py-2 text-sm font-semibold text-cream hover:bg-purple-800">
+                    Collect payment
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Timeline */}
+          <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+            <h2 className="mb-4 font-display text-base font-semibold text-purple-900">
+              Timeline
+            </h2>
+
+            <form action={bind(addOrderComment)} className="mb-5">
+              <textarea
+                name="body"
+                rows={2}
+                placeholder="Leave a comment..."
+                className="w-full rounded-xl border border-purple-200 bg-white px-3.5 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400"
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-xs text-purple-900/45">
+                  Only you and other staff can see comments
+                </p>
+                <button className="rounded-lg gradient-purple-green px-3.5 py-1.5 text-sm font-semibold text-cream">
+                  Post
+                </button>
+              </div>
+            </form>
+
+            <OrderTimeline entries={timeline} />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-5">
+          <OrderNotesCard note={order.note} save={bind(updateOrderNote)} />
+
+          {/* Customer */}
+          <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 font-display text-base font-semibold text-purple-900">
+              Customer
+            </h2>
+            {order.customerId ? (
+              <Link
+                href={`/admin/customers/${order.customerId}`}
+                className="text-sm font-medium text-green-700 hover:text-green-800"
+              >
+                {order.customerName}
+              </Link>
+            ) : (
+              <p className="text-sm font-medium text-purple-900">{order.customerName}</p>
+            )}
+            <p className="mt-0.5 text-sm text-purple-900/55">
+              {customerOrderCount} order{customerOrderCount === 1 ? "" : "s"}
+            </p>
+
+            <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-purple-900/40">
+              Contact information
+            </h3>
+            {order.email ? (
+              <a
+                href={`mailto:${order.email}`}
+                className="mt-1 block break-all text-sm text-green-700 hover:text-green-800"
+              >
+                {order.email}
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-purple-900/45">No email provided</p>
+            )}
+            {order.phone && (
+              <a
+                href={`tel:${order.phone}`}
+                className="mt-0.5 block text-sm text-green-700 hover:text-green-800"
+              >
+                {order.phone}
+              </a>
+            )}
+
+            <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-purple-900/40">
+              Shipping address
+            </h3>
+            <address className="mt-1 whitespace-pre-line text-sm not-italic text-purple-900/70">
+              {[order.customerName, order.address, order.city, "Pakistan", order.phone]
+                .filter(Boolean)
+                .join("\n")}
+            </address>
+            {order.address && (
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(
+                  `${order.address} ${order.city} Pakistan`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-sm text-green-700 hover:text-green-800"
+              >
+                View map
+              </a>
+            )}
+
+            <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-purple-900/40">
+              Billing address
+            </h3>
+            <p className="mt-1 text-sm text-purple-900/70">Same as shipping address</p>
+          </div>
+
+          {/* WhatsApp */}
           {order.phone && (
             <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
               <h2 className="mb-1 flex items-center gap-2 font-display text-base font-semibold text-purple-900">
@@ -298,7 +500,7 @@ export default async function OrderDetailPage({
                 ).map((t) => (
                   <a
                     key={t.kind}
-                    href={waOrderLink(order, t.kind)}
+                    href={waOrderLink(order, t.kind, settings.storeName)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-medium text-green-800 hover:bg-green-100"
@@ -311,30 +513,54 @@ export default async function OrderDetailPage({
             </div>
           )}
 
+          {/* Conversion summary — only the part we can actually stand behind. */}
           <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-purple-900">
-              Payment
+              Conversion summary
             </h2>
-            <p className="text-sm text-purple-900/80">
-              <StatusBadge status={order.paymentMethod} />
+            <p className="flex items-start gap-2 text-sm text-purple-900/70">
+              <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-900/40" />
+              {customerOrderCount === 1
+                ? "This is their first order"
+                : `This is their ${ordinal(customerOrderCount)} order`}
             </p>
-            <p className="mt-3 text-sm text-purple-900/60">
-              Status: <StatusBadge status={order.paymentStatus} />
+            <p className="mt-2 text-xs text-purple-900/45">
+              Session and referral data isn&apos;t tracked per order yet.
             </p>
           </div>
+
+          {/* Order risk */}
+          <div className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+            <h2 className="mb-2 flex items-center justify-between font-display text-base font-semibold text-purple-900">
+              Order risk
+              <ShieldQuestion className="h-4 w-4 text-purple-900/35" />
+            </h2>
+            <p className="text-sm text-purple-900/55">Analysis not available</p>
+          </div>
+
+          <OrderTagsCard tags={tags} add={bind(addOrderTag)} remove={bind(removeOrderTag)} />
         </div>
       </div>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, hint, value }: { label: string; hint?: string; value: string }) {
   return (
-    <div className="flex justify-between text-purple-900/70">
-      <span>{label}</span>
-      <span className="text-purple-900">{value}</span>
+    <div className="flex justify-between gap-3 text-purple-900/70">
+      <dt className="flex-1">
+        {label}
+        {hint && <span className="ml-2 text-purple-900/45">{hint}</span>}
+      </dt>
+      <dd className="shrink-0 text-purple-900">{value}</dd>
     </div>
   );
+}
+
+function ordinal(n: number) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
 /** Pakistan phone → wa.me digits (international, no + or leading 0). */
@@ -355,21 +581,20 @@ function waOrderLink(
     trackingNumber: string;
   },
   kind: "confirmed" | "shipped" | "delivered",
+  storeName: string,
 ) {
   const first = order.customerName.split(" ")[0] || "there";
   const n = order.orderNumber;
   let msg = "";
   if (kind === "confirmed") {
-    msg = `Assalam o Alaikum ${first}, thank you for your order #${n} with Eco Global Foods! 🌿 We've received it and will dispatch it shortly. We'll share tracking once it ships.`;
+    msg = `Assalam o Alaikum ${first}, thank you for your order #${n} with ${storeName}! 🌿 We've received it and will dispatch it shortly. We'll share tracking once it ships.`;
   } else if (kind === "shipped") {
     const track = order.trackingNumber
       ? ` It's on the way via ${order.courier || "our courier"}, tracking ${order.trackingNumber}.`
       : " It's on the way and should arrive in 2-5 working days.";
-    msg = `Good news ${first}! Your Eco Global Foods order #${n} has been dispatched. 🚚${track}`;
+    msg = `Good news ${first}! Your ${storeName} order #${n} has been dispatched. 🚚${track}`;
   } else {
-    msg = `Hi ${first}, we hope your order #${n} arrived safely and you're enjoying it! 🌿 If you have a moment, a quick review would mean a lot. Thank you for shopping with Eco Global Foods.`;
+    msg = `Hi ${first}, we hope your order #${n} arrived safely and you're enjoying it! 🌿 If you have a moment, a quick review would mean a lot. Thank you for shopping with ${storeName}.`;
   }
   return `https://wa.me/${waNumber(order.phone)}?text=${encodeURIComponent(msg)}`;
 }
-
-
