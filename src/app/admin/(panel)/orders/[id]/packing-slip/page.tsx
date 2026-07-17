@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Download } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { formatPKR } from "@/lib/utils";
@@ -46,8 +46,24 @@ export default async function PackingSlipPage({
         >
           <ChevronLeft className="h-4 w-4" /> Back to order
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/admin/orders/${order.id}/packing-slip`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream"
+          >
+            <Download className="h-4 w-4" /> Download PDF
+          </a>
+          <PrintButton />
+        </div>
       </div>
+
+      <p className="mb-4 rounded-lg border border-purple-100 bg-cream/50 px-3 py-2 text-xs text-purple-900/60 print:hidden">
+        <strong className="text-purple-900">Download PDF</strong> gives a clean file with no
+        browser date/URL headers. <strong className="text-purple-900">Print</strong> uses the
+        browser dialog — untick &ldquo;Headers and footers&rdquo; there to hide those.
+      </p>
 
       {/* the slip */}
       <div className="rounded-xl border border-purple-100 bg-white p-8 text-purple-900 shadow-sm print:border-0 print:p-0 print:shadow-none">

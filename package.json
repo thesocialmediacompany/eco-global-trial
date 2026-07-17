@@ -21,6 +21,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1088.0",
     "@google-analytics/data": "^6.1.0",
     "@prisma/client": "^6.19.3",
+    "@react-pdf/renderer": "^4.5.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "csv-parse": "^7.0.1",
