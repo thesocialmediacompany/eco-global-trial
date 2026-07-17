@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { initialPaymentStatus, type PaymentMethodId } from "@/lib/payments";
-import { sendOrderConfirmation } from "@/lib/email";
+import { sendOrderConfirmation, sendNewOrderStaffAlert } from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { computeShipping, bandForWeight } from "@/lib/shipping-rates";
 import { recordSystemOrderEvent } from "@/lib/order-events";
@@ -234,11 +234,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       .catch(() => {});
   }
 
-  // Order confirmation email (never block/fail the order on email errors).
+  // Confirmation to the customer + a new-order alert to staff. Neither may
+  // block or fail the order — a placed order stands even if email is down.
   try {
     await sendOrderConfirmation(createdOrder.id);
   } catch (e) {
     console.error("order confirmation email failed:", e);
+  }
+  try {
+    await sendNewOrderStaffAlert(createdOrder.id);
+  } catch (e) {
+    console.error("new-order staff alert failed:", e);
   }
 
   return { ok: true, orderNumber };

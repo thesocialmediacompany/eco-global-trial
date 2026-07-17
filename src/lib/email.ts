@@ -512,6 +512,185 @@ export async function sendOrderConfirmation(orderId: string): Promise<SendResult
   });
 }
 
+/** Where staff order alerts go: the dedicated address, else the store email. */
+async function notifyRecipient(): Promise<string> {
+  const s = await getSettings();
+  return (s.orderNotifyEmail || s.storeEmail || "").trim();
+}
+
+/**
+ * Alert staff that a new order came in. Internal-facing: worded and subjected
+ * for the team, not the customer, so it reads as an action item rather than
+ * getting lost among the customer's own confirmation copy.
+ */
+export async function sendNewOrderStaffAlert(orderId: string): Promise<SendResult> {
+  const [order, settings, to] = await Promise.all([
+    prisma.order.findUnique({ where: { id: orderId }, include: { items: true } }),
+    getSettings(),
+    notifyRecipient(),
+  ]);
+  if (!order) return { sent: false, reason: "order not found" };
+  if (!to) return { sent: false, reason: "no notify recipient configured" };
+
+  const payment = getPaymentMethod(order.paymentMethod)?.label ?? order.paymentMethod;
+  const paid = order.paymentStatus === "paid";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ecoglobalfoods.com";
+  const units = order.items.reduce((s, i) => s + i.quantity, 0);
+
+  const itemsRows = order.items
+    .map(
+      (it) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #ece0f7;color:#2a0f28;font-size:14px;">
+          ${escapeHtml(it.title)}${it.variantTitle ? ` <span style="color:#9d68d2;">· ${escapeHtml(it.variantTitle)}</span>` : ""}
+          <span style="color:#99628d;"> × ${it.quantity}</span>
+        </td>
+        <td style="padding:8px 0;border-bottom:1px solid #ece0f7;text-align:right;color:#2a0f28;font-size:14px;">${formatPKR(it.total)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const html = `
+  <div style="margin:0;padding:0;background:#faf6ef;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;padding:24px;">
+      <div style="background:#ffffff;border:1px solid #ece0f7;border-radius:16px;padding:24px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#9d68d2;">New order</div>
+        <div style="font-size:24px;font-weight:700;color:#2a0f28;margin-top:4px;">#${order.orderNumber} · ${formatPKR(order.total)}</div>
+        <div style="margin-top:6px;">
+          <span style="display:inline-block;background:${paid ? "#e7f6ec" : "#fdf0da"};color:${paid ? "#267e47" : "#9a6a15"};font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;">
+            ${paid ? "Paid" : "Collect on delivery"} · ${escapeHtml(payment)}
+          </span>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:18px;">${itemsRows}</table>
+        <div style="text-align:right;font-size:13px;color:#5e3052;margin-top:8px;">${units} item${units === 1 ? "" : "s"}</div>
+
+        <div style="margin-top:18px;padding:14px;background:#faf6ef;border-radius:12px;font-size:13px;color:#2a0f28;line-height:1.6;">
+          <strong>${escapeHtml(order.customerName)}</strong><br/>
+          ${escapeHtml(order.phone)}${order.email ? ` · ${escapeHtml(order.email)}` : ""}<br/>
+          ${escapeHtml(order.address)}${order.city ? `, ${escapeHtml(order.city)}` : ""}
+        </div>
+
+        <div style="text-align:center;margin-top:22px;">
+          <a href="${siteUrl}/admin/orders/${order.id}" style="display:inline-block;background:linear-gradient(135deg,#3b1538,#233f18);color:#faf6ef;text-decoration:none;padding:11px 26px;border-radius:999px;font-size:14px;font-weight:600;">Open in dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const text =
+    `New order #${order.orderNumber} — ${formatPKR(order.total)} (${paid ? "Paid" : "COD"}, ${payment})\n\n` +
+    `${order.customerName} · ${order.phone}\n${order.address}${order.city ? ", " + order.city : ""}\n\n` +
+    order.items.map((i) => `- ${i.title} x${i.quantity}  ${formatPKR(i.total)}`).join("\n") +
+    `\n\nOpen: ${siteUrl}/admin/orders/${order.id}`;
+
+  return deliver({
+    to,
+    subject: `🆕 New order #${order.orderNumber} — ${formatPKR(order.total)}${paid ? "" : " (COD)"}`,
+    html,
+    text,
+  });
+}
+
+/**
+ * A once-a-day digest of the previous full day's orders. Sent by the cron so
+ * the team gets a pulse even on days no one watches the dashboard.
+ */
+export async function sendDailyOrderSummary(now = new Date()): Promise<SendResult> {
+  const to = await notifyRecipient();
+  if (!to) return { sent: false, reason: "no notify recipient configured" };
+
+  // Yesterday, bounded by Pakistan midnight — computed against a fixed +5h
+  // offset (Pakistan has no DST) so it's the same window whether this runs on
+  // the UTC Lambda or a local machine. setHours() alone would follow the
+  // server's timezone and mislabel orders on Lambda.
+  const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+  const shifted = new Date(now.getTime() + PKT_OFFSET_MS);
+  shifted.setUTCHours(0, 0, 0, 0); // Pakistan midnight today, in shifted fields
+  const end = new Date(shifted.getTime() - PKT_OFFSET_MS); // real UTC instant
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+
+  const [orders, settings] = await Promise.all([
+    prisma.order.findMany({
+      where: { isDraft: false, createdAt: { gte: start, lt: end } },
+      orderBy: { createdAt: "asc" },
+      include: { _count: { select: { items: true } } },
+    }),
+    getSettings(),
+  ]);
+
+  const dayLabel = new Intl.DateTimeFormat("en-PK", {
+    timeZone: "Asia/Karachi",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(start);
+
+  const total = orders.reduce((s, o) => s + o.total, 0);
+  const paidTotal = orders.filter((o) => o.paymentStatus === "paid").reduce((s, o) => s + o.total, 0);
+  const codCount = orders.filter((o) => o.paymentStatus !== "paid").length;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ecoglobalfoods.com";
+
+  const rows =
+    orders
+      .map(
+        (o) => `
+      <tr>
+        <td style="padding:7px 0;border-bottom:1px solid #ece0f7;font-size:13px;color:#2a0f28;">#${o.orderNumber} <span style="color:#99628d;">· ${escapeHtml(o.customerName)}</span></td>
+        <td style="padding:7px 0;border-bottom:1px solid #ece0f7;text-align:right;font-size:13px;color:#2a0f28;">${formatPKR(o.total)}</td>
+      </tr>`,
+      )
+      .join("") ||
+    `<tr><td style="padding:12px 0;color:#99628d;font-size:14px;">No orders placed.</td></tr>`;
+
+  const html = `
+  <div style="margin:0;padding:0;background:#faf6ef;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;padding:24px;">
+      <div style="background:#ffffff;border:1px solid #ece0f7;border-radius:16px;padding:24px;">
+        <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#9d68d2;">Daily summary</div>
+        <div style="font-size:20px;font-weight:700;color:#2a0f28;margin-top:4px;">${escapeHtml(dayLabel)}</div>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+          <tr>
+            <td style="padding:12px;background:#faf6ef;border-radius:12px;text-align:center;">
+              <div style="font-size:22px;font-weight:700;color:#2a0f28;">${orders.length}</div>
+              <div style="font-size:12px;color:#99628d;">orders</div>
+            </td>
+            <td style="width:10px;"></td>
+            <td style="padding:12px;background:#faf6ef;border-radius:12px;text-align:center;">
+              <div style="font-size:22px;font-weight:700;color:#2a0f28;">${formatPKR(total)}</div>
+              <div style="font-size:12px;color:#99628d;">total value</div>
+            </td>
+          </tr>
+        </table>
+        <div style="font-size:13px;color:#5e3052;margin-top:10px;">
+          ${formatPKR(paidTotal)} already paid · ${codCount} to collect on delivery
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:18px;">${rows}</table>
+
+        <div style="text-align:center;margin-top:22px;">
+          <a href="${siteUrl}/admin/orders" style="display:inline-block;background:linear-gradient(135deg,#3b1538,#233f18);color:#faf6ef;text-decoration:none;padding:11px 26px;border-radius:999px;font-size:14px;font-weight:600;">View all orders</a>
+        </div>
+      </div>
+      <p style="text-align:center;color:#99628d;font-size:12px;margin-top:16px;">${escapeHtml(settings.storeName)} · daily order summary</p>
+    </div>
+  </div>`;
+
+  const text =
+    `Daily summary — ${dayLabel}\n\n${orders.length} orders · ${formatPKR(total)} total\n` +
+    `${formatPKR(paidTotal)} paid · ${codCount} COD\n\n` +
+    orders.map((o) => `- #${o.orderNumber} ${o.customerName}  ${formatPKR(o.total)}`).join("\n") +
+    `\n\n${siteUrl}/admin/orders`;
+
+  return deliver({
+    to,
+    subject: `📊 ${orders.length} order${orders.length === 1 ? "" : "s"} on ${dayLabel} — ${formatPKR(total)}`,
+    html,
+    text,
+  });
+}
+
 function escapeHtml(s: string) {
   return s
     .replace(/&/g, "&amp;")

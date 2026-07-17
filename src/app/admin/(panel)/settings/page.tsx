@@ -306,6 +306,13 @@ export default async function SettingsPage() {
               <Field label="Password / App password" name="smtpPass" value={s.smtpPass} type="password" />
               <Field label="From name" name="smtpFromName" value={s.smtpFromName} />
               <Field label="From email" name="smtpFromEmail" value={s.smtpFromEmail} />
+              <Field
+                label="Order alerts to (staff)"
+                name="orderNotifyEmail"
+                value={s.orderNotifyEmail}
+                placeholder="Defaults to store email · comma-separate for several"
+                full
+              />
             </div>
             <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-purple-100 pt-4">
               <label className="block">
@@ -412,17 +419,25 @@ function Field({
   value,
   type = "text",
   full = false,
+  placeholder,
 }: {
   label: string;
   name: string;
   value: string;
   type?: string;
   full?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className={`block ${full ? "sm:col-span-2" : ""}`}>
       <span className="mb-1.5 block text-xs font-medium text-purple-900/70">{label}</span>
-      <input name={name} type={type} defaultValue={value} className={input} />
+      <input
+        name={name}
+        type={type}
+        defaultValue={value}
+        placeholder={placeholder}
+        className={input}
+      />
     </label>
   );
 }

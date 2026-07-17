@@ -35,6 +35,7 @@ const editableKeys: SettingKey[] = [
   "smtpPass",
   "smtpFromName",
   "smtpFromEmail",
+  "orderNotifyEmail",
   "occasionBannerEnabled",
   "occasionBannerText",
   "occasionBannerEmoji",

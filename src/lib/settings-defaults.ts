@@ -121,6 +121,9 @@ export const defaultSettings = {
   smtpPass: "", // app password
   smtpFromName: "Eco Global Foods",
   smtpFromEmail: "", // the "from" address shown to recipients
+  // Where new-order alerts and the daily summary are sent. Blank = fall back to
+  // storeEmail. Comma-separate to notify more than one address.
+  orderNotifyEmail: "",
   // Brand colours. Leave blank to use the built-in purple/green theme. When set
   // (hex like #3b1538), the site's gradients (hero, buttons, category cards,
   // banners) are regenerated from these two anchor colours.
