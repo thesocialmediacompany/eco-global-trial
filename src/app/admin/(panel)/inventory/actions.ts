@@ -3,26 +3,32 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
-/** Bulk-update variant stock. Inputs are named `qty:<variantId>`. */
-export async function updateInventory(formData: FormData) {
-  const updates: { id: string; qty: number }[] = [];
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("qty:")) {
-      const id = key.slice(4);
-      const qty = Math.max(0, Math.round(Number(value)) || 0);
-      updates.push({ id, qty });
-    }
-  }
-  if (updates.length === 0) return;
+/**
+ * Save ONLY the variants whose stock actually changed.
+ *
+ * The previous version posted every variant on the page (269 fields, ~9 KB),
+ * which the WAF blocks at 8 KB - so saving silently failed. Sending just the
+ * edited rows keeps the request tiny and works regardless of catalogue size.
+ */
+export async function saveInventory(
+  changes: { id: string; qty: number }[],
+): Promise<{ saved: number }> {
+  const clean = (changes ?? [])
+    .filter((c) => c && typeof c.id === "string" && Number.isFinite(c.qty))
+    .map((c) => ({ id: c.id, qty: Math.max(0, Math.round(c.qty)) }));
+
+  if (clean.length === 0) return { saved: 0 };
 
   await prisma.$transaction(
-    updates.map((u) =>
+    clean.map((u) =>
       prisma.variant.update({
         where: { id: u.id },
         data: { inventoryQty: u.qty, available: u.qty > 0 },
       }),
     ),
   );
+
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/products");
+  return { saved: clean.length };
 }
