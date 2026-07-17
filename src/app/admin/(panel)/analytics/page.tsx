@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { formatPKR } from "@/lib/utils";
 import { getPaymentMethod } from "@/lib/payments";
-import { getGA4Overview, getGA4TopPages, getGA4DeviceBreakdown } from "@/lib/ga4";
+import {
+  getGA4Overview,
+  getGA4TopPages,
+  getGA4DeviceBreakdown,
+  ga4Configured,
+} from "@/lib/ga4";
 
 function fmtDuration(secs: number) {
   const m = Math.floor(secs / 60);
@@ -112,7 +117,13 @@ export default async function AnalyticsPage({
         </div>
       </div>
 
-      {/* Store Stats — always all-time */}
+      {/* Store Stats — always all-time; the range selector only drives GA4. */}
+      <div className="mb-2 flex items-center gap-2">
+        <ShoppingCart className="h-4 w-4 text-green-600" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-purple-900/50">
+          Store · all time
+        </span>
+      </div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {storeStats.map((s) => (
           <div key={s.label} className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
@@ -160,11 +171,18 @@ export default async function AnalyticsPage({
             ))}
           </div>
         </>
+      ) : !ga4Configured() ? (
+        <p className="mt-4 rounded-xl border border-purple-100 bg-cream/50 px-4 py-3 text-sm text-purple-900/70">
+          Google Analytics isn&apos;t connected yet. Add <code>GA4_PROPERTY_ID</code>,{" "}
+          <code>GA4_CLIENT_EMAIL</code> and <code>GA4_PRIVATE_KEY</code> in AWS Amplify
+          (Hosting → Environment variables) and redeploy. Your store figures above are
+          unaffected.
+        </p>
       ) : (
         <p className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          GA4 data unavailable — check your{" "}
-          <code>GA4_PROPERTY_ID</code>, <code>GA4_CLIENT_EMAIL</code>, and{" "}
-          <code>GA4_PRIVATE_KEY</code> env vars.
+          Google Analytics is connected but returned no data for this range. If you
+          picked custom dates, check the range is valid and in the past. The server log
+          has the underlying error.
         </p>
       )}
 

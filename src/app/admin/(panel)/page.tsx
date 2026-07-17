@@ -1,13 +1,21 @@
 import Link from "next/link";
-import { ShoppingCart, Package, Users, TrendingUp, ArrowRight, AlertTriangle, BarChart3 } from "lucide-react";
+import { ShoppingCart, Package, Users, TrendingUp, ArrowRight, AlertTriangle, BarChart3, Globe } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { getGA4Timeseries, ga4Configured } from "@/lib/ga4";
 
 const LOW_STOCK_THRESHOLD = 10;
 
 function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
+}
+
+function shortDay(iso: string) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-PK", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 export default async function AdminDashboard() {
@@ -24,6 +32,7 @@ export default async function AdminDashboard() {
     windowOrders,
     lowStock,
     topItems,
+    traffic,
   ] = await Promise.all([
     prisma.order.count(),
     prisma.product.count(),
@@ -50,9 +59,15 @@ export default async function AdminDashboard() {
       orderBy: { _sum: { quantity: "desc" } },
       take: 5,
     }),
+    // Returns [] when GA4 is unconfigured or the call fails, so the dashboard
+    // renders either way.
+    getGA4Timeseries(14),
   ]);
 
   const revenue = paidAgg._sum.total ?? 0;
+
+  const maxSessions = Math.max(1, ...traffic.map((d) => d.sessions));
+  const totalSessions = traffic.reduce((s, d) => s + d.sessions, 0);
 
   // 14-day daily revenue buckets
   const days: { label: string; key: string; revenue: number }[] = [];
@@ -179,6 +194,54 @@ export default async function AdminDashboard() {
             </ul>
           )}
         </div>
+      </div>
+
+      {/* Site traffic (GA4) */}
+      <div className="mt-6 rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold text-purple-900">
+            <Globe className="h-4 w-4 text-purple-400" /> Site traffic · last 14 days
+          </h2>
+          <div className="flex items-center gap-3">
+            {traffic.length > 0 && (
+              <span className="text-sm font-semibold text-purple-900">
+                {totalSessions.toLocaleString()} sessions
+              </span>
+            )}
+            <Link
+              href="/admin/analytics"
+              className="inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:text-green-800"
+            >
+              View analytics <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        {traffic.length > 0 ? (
+          <>
+            <div className="flex h-32 items-end gap-1.5">
+              {traffic.map((d) => (
+                <div key={d.date} className="flex h-full flex-1 flex-col items-center justify-end">
+                  <div
+                    className="w-full rounded-t bg-purple-400 transition-all"
+                    style={{ height: `${Math.max(2, (d.sessions / maxSessions) * 100)}%` }}
+                    title={`${shortDay(d.date)}: ${d.sessions} sessions`}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between text-[0.65rem] text-purple-900/40">
+              <span>{shortDay(traffic[0].date)}</span>
+              <span>{shortDay(traffic[traffic.length - 1].date)}</span>
+            </div>
+          </>
+        ) : (
+          <p className="py-8 text-center text-sm text-purple-900/50">
+            {ga4Configured()
+              ? "No traffic data returned from Google Analytics."
+              : "Connect Google Analytics to see traffic here."}
+          </p>
+        )}
       </div>
 
       {/* Top products + recent orders */}
