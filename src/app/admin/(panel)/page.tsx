@@ -125,9 +125,12 @@ export default async function AdminDashboard() {
             </h2>
             <span className="text-sm font-semibold text-purple-900">{formatPKR(windowTotal)}</span>
           </div>
+          {/* h-full on each bar wrapper gives the bar's percentage height a
+              definite parent to resolve against - without it (items-end stops
+              flex children stretching) every bar collapses to 0. */}
           <div className="flex h-40 items-end gap-1.5">
             {days.map((d) => (
-              <div key={d.key} className="group relative flex flex-1 flex-col items-center justify-end">
+              <div key={d.key} className="group relative flex h-full flex-1 flex-col items-center justify-end">
                 <div
                   className="w-full rounded-t gradient-purple-green transition-all"
                   style={{ height: `${Math.max(2, (d.revenue / maxRev) * 100)}%` }}
