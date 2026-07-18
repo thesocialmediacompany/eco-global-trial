@@ -183,45 +183,31 @@ export async function markFulfilled(orderId: string) {
 }
 
 /**
- * Undo the dispatch step, returning the order to Unfulfilled — for a courier
- * booking made in error or a premature "mark fulfilled".
+ * Undo the dispatch step, returning the order to Unfulfilled — for a premature
+ * "mark fulfilled".
  *
  * Distinct from cancelling the order: the order stays live and stock stays
- * decremented, because it hasn't been returned, only un-dispatched. A booked
- * ZoomCOD shipment is cancelled and its tracking cleared, so the order doesn't
- * sit Unfulfilled while still carrying a live courier booking.
+ * decremented, because it hasn't been returned, only un-dispatched.
+ *
+ * Deliberately does NOT touch the ZoomCOD booking: a shipment may already be in
+ * transit, and cancelling it here could recall a live delivery. The courier and
+ * tracking are left in place; cancel the booking in the ZoomCOD portal instead
+ * if that's actually intended.
  */
 export async function cancelFulfillment(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order || order.fulfillmentStatus !== "fulfilled") return;
 
-  if (order.courier === "ZoomCOD" && order.trackingNumber) {
-    const r = await cancelZoomCodShipment(order.trackingNumber);
-    await recordOrderEvent(
-      orderId,
-      "courier",
-      r.ok
-        ? `ZoomCOD shipment ${order.trackingNumber} was cancelled.`
-        : `Could not cancel ZoomCOD shipment ${order.trackingNumber}: ${r.message}. Cancel it in the ZoomCOD portal.`,
-    );
-    if (!r.ok) console.error("ZoomCOD cancel failed:", r.message);
-  }
-
   await prisma.order.update({
     where: { id: orderId },
-    data: {
-      fulfillmentStatus: "unfulfilled",
-      deliveredAt: null,
-      courier: "",
-      trackingNumber: "",
-      shipmentLabelUrl: "",
-      courierStatus: "",
-    },
+    data: { fulfillmentStatus: "unfulfilled", deliveredAt: null },
   });
   await recordOrderEvent(
     orderId,
     "fulfilled",
-    "Fulfillment was cancelled. The order is back to unfulfilled.",
+    order.trackingNumber
+      ? `Fulfillment was cancelled — order back to unfulfilled. The ${order.courier || "courier"} booking (${order.trackingNumber}) was left in place; cancel it in the courier portal if needed.`
+      : "Fulfillment was cancelled. The order is back to unfulfilled.",
   );
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
