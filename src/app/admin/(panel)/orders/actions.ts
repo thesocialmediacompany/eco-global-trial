@@ -182,6 +182,51 @@ export async function markFulfilled(orderId: string) {
   revalidatePath("/admin/orders");
 }
 
+/**
+ * Undo the dispatch step, returning the order to Unfulfilled — for a courier
+ * booking made in error or a premature "mark fulfilled".
+ *
+ * Distinct from cancelling the order: the order stays live and stock stays
+ * decremented, because it hasn't been returned, only un-dispatched. A booked
+ * ZoomCOD shipment is cancelled and its tracking cleared, so the order doesn't
+ * sit Unfulfilled while still carrying a live courier booking.
+ */
+export async function cancelFulfillment(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || order.fulfillmentStatus !== "fulfilled") return;
+
+  if (order.courier === "ZoomCOD" && order.trackingNumber) {
+    const r = await cancelZoomCodShipment(order.trackingNumber);
+    await recordOrderEvent(
+      orderId,
+      "courier",
+      r.ok
+        ? `ZoomCOD shipment ${order.trackingNumber} was cancelled.`
+        : `Could not cancel ZoomCOD shipment ${order.trackingNumber}: ${r.message}. Cancel it in the ZoomCOD portal.`,
+    );
+    if (!r.ok) console.error("ZoomCOD cancel failed:", r.message);
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      fulfillmentStatus: "unfulfilled",
+      deliveredAt: null,
+      courier: "",
+      trackingNumber: "",
+      shipmentLabelUrl: "",
+      courierStatus: "",
+    },
+  });
+  await recordOrderEvent(
+    orderId,
+    "fulfilled",
+    "Fulfillment was cancelled. The order is back to unfulfilled.",
+  );
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+}
+
 /** The rider confirmed handover. Separate from fulfilled, which is dispatch. */
 export async function markDelivered(orderId: string) {
   await prisma.order.update({

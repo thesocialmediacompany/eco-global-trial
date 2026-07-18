@@ -27,6 +27,7 @@ import {
   markPaid,
   markFulfilled,
   markDelivered,
+  cancelFulfillment,
   toggleArchive,
   bookZoomCOD,
   refreshZoomCodStatus,
@@ -100,6 +101,7 @@ export default async function OrderDetailPage({
   const markPaidAction = markPaid.bind(null, order.id);
   const markFulfilledAction = markFulfilled.bind(null, order.id);
   const markDeliveredAction = markDelivered.bind(null, order.id);
+  const cancelFulfillmentAction = cancelFulfillment.bind(null, order.id);
   const bookAction = bookZoomCOD.bind(null, order.id);
   const refreshStatusAction = refreshZoomCodStatus.bind(null, order.id);
   const placeDraftAction = placeDraftOrder.bind(null, order.id);
@@ -300,50 +302,64 @@ export default async function OrderDetailPage({
               ))}
             </ul>
 
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              {!order.courier && !isCancelled && (
-                <form action={bookAction}>
-                  <button className="rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-semibold text-green-800 hover:bg-green-100">
-                    Book with ZoomCOD
-                  </button>
-                </form>
-              )}
-              {order.courier && (
-                <form action={refreshStatusAction}>
-                  <button className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
-                    Refresh status
-                  </button>
-                </form>
-              )}
-              {order.shipmentLabelUrl && (
-                <a
-                  href={order.shipmentLabelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
-                >
-                  Print label
-                </a>
-              )}
-              {!isFulfilled && !isCancelled && (
-                <form action={markFulfilledAction}>
-                  <button className="rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream">
-                    Mark as fulfilled
-                  </button>
-                </form>
-              )}
-              {isFulfilled && !order.deliveredAt && !isCancelled && (
-                <form action={markDeliveredAction}>
-                  <button className="rounded-lg bg-purple-900 px-3.5 py-2 text-sm font-semibold text-cream hover:bg-purple-800">
-                    Mark as delivered
-                  </button>
-                </form>
-              )}
-              {order.deliveredAt && (
-                <span className="self-center text-sm font-medium text-green-700">
-                  Delivered {fullDateTime(order.deliveredAt)}
-                </span>
-              )}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              {/* Left: undo dispatch. Kept apart from the primary actions so it
+                  can't be hit by reflex. */}
+              <div>
+                {isFulfilled && !isCancelled && (
+                  <form action={cancelFulfillmentAction}>
+                    <button className="rounded-lg border border-rose-200 bg-white px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50">
+                      Cancel fulfillment
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {!order.courier && !isCancelled && (
+                  <form action={bookAction}>
+                    <button className="rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-semibold text-green-800 hover:bg-green-100">
+                      Book with ZoomCOD
+                    </button>
+                  </form>
+                )}
+                {order.courier && (
+                  <form action={refreshStatusAction}>
+                    <button className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50">
+                      Refresh status
+                    </button>
+                  </form>
+                )}
+                {order.shipmentLabelUrl && (
+                  <a
+                    href={order.shipmentLabelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-sm font-semibold text-purple-900 hover:bg-purple-50"
+                  >
+                    Print label
+                  </a>
+                )}
+                {!isFulfilled && !isCancelled && (
+                  <form action={markFulfilledAction}>
+                    <button className="rounded-lg gradient-purple-green px-3.5 py-2 text-sm font-semibold text-cream">
+                      Mark as fulfilled
+                    </button>
+                  </form>
+                )}
+                {isFulfilled && !order.deliveredAt && !isCancelled && (
+                  <form action={markDeliveredAction}>
+                    <button className="rounded-lg bg-purple-900 px-3.5 py-2 text-sm font-semibold text-cream hover:bg-purple-800">
+                      Mark as delivered
+                    </button>
+                  </form>
+                )}
+                {order.deliveredAt && (
+                  <span className="self-center text-sm font-medium text-green-700">
+                    Delivered {fullDateTime(order.deliveredAt)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
