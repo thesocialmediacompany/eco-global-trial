@@ -22,6 +22,8 @@ frontend:
         - echo "GA4_CLIENT_EMAIL=$GA4_CLIENT_EMAIL" >> .env.production
         - echo "GA4_PRIVATE_KEY=$GA4_PRIVATE_KEY" >> .env.production
         - echo "CRON_SECRET=$CRON_SECRET" >> .env.production
+        - echo "VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY" >> .env.production
+        - echo "VAPID_SUBJECT=$VAPID_SUBJECT" >> .env.production
         - npm ci --include=dev
         - npx prisma generate
         - npx prisma db push

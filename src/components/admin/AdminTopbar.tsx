@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bell, ChevronDown, LogOut, ExternalLink } from "lucide-react";
+import { ChevronDown, LogOut, ExternalLink } from "lucide-react";
 import { logout } from "@/app/admin/login/actions";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSearchBox } from "@/components/admin/AdminSearchBox";
+import { PushToggle } from "@/components/admin/PushToggle";
 
 export function AdminTopbar({
   userName = "EGF Admin",
@@ -29,13 +30,7 @@ export function AdminTopbar({
       <AdminSearchBox />
 
       <div className="ml-auto flex items-center gap-2">
-        <button
-          aria-label="Notifications"
-          className="relative grid h-9 w-9 place-items-center rounded-lg text-purple-900/70 transition-colors hover:bg-purple-50"
-        >
-          <Bell className="h-[1.15rem] w-[1.15rem]" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-green-500" />
-        </button>
+        <PushToggle />
 
         <div className="relative">
           <button

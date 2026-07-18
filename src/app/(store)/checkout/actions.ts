@@ -6,6 +6,7 @@ import { sendOrderConfirmation, sendNewOrderStaffAlert } from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { computeShipping, bandForWeight } from "@/lib/shipping-rates";
 import { recordSystemOrderEvent } from "@/lib/order-events";
+import { sendPushToAll } from "@/lib/push";
 import { formatPKR } from "@/lib/utils";
 
 export interface PlaceOrderInput {
@@ -245,6 +246,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     await sendNewOrderStaffAlert(createdOrder.id);
   } catch (e) {
     console.error("new-order staff alert failed:", e);
+  }
+  // Push the same alert to any admin device that opted in (the PWA).
+  try {
+    const unitCount = orderItemData.reduce((s, l) => s + l.quantity, 0);
+    await sendPushToAll({
+      title: `New order #${orderNumber}`,
+      body: `${formatPKR(total)} · ${unitCount} item${unitCount === 1 ? "" : "s"}${
+        customer.city ? ` · ${customer.city}` : ""
+      } · ${paymentMethod === "cod" ? "COD" : paymentMethod}`,
+      url: `/admin/orders/${createdOrder.id}`,
+      tag: `order-${createdOrder.id}`,
+    });
+  } catch (e) {
+    console.error("new-order push failed:", e);
   }
 
   return { ok: true, orderNumber };

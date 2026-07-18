@@ -305,6 +305,18 @@ model Order {
   updatedAt DateTime @updatedAt
 }
 
+/// A browser/device that opted in to admin push notifications (the PWA).
+/// One row per device; keyed by the push endpoint the browser issues.
+model PushSubscription {
+  id       String @id @default(cuid())
+  endpoint String @unique
+  p256dh   String
+  auth     String
+  label    String @default("") // staff member who enabled it, for context
+
+  createdAt DateTime @default(now())
+}
+
 /// One entry in an order's timeline. Written by the actions that change an
 /// order, so the history is a record of what happened rather than something
 /// re-derived from the order's current state.

@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // react-pdf ships its own font/layout engine; keep it out of the bundle and
   // require it from node_modules at runtime, which is the reliable setup for it
   // on the Lambda SSR runtime.
-  serverExternalPackages: ["@react-pdf/renderer"],
+  serverExternalPackages: ["@react-pdf/renderer", "web-push"],
   images: {
     remotePatterns: [
       // Real product photography served from the Shopify CDN.

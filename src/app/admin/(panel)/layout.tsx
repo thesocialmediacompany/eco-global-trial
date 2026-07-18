@@ -1,12 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
+import { PwaRegister } from "@/components/admin/PwaRegister";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Admin - Eco Global Foods",
   robots: { index: false, follow: false },
+  // Makes the admin installable to the home screen as an app (PWA).
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "EGF Admin", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2b0e47",
 };
 
 export default async function AdminLayout({
@@ -24,6 +33,7 @@ export default async function AdminLayout({
   // fixed height so a long packing slip prints in full instead of clipping.
   return (
     <div className="flex h-screen w-full overflow-hidden bg-cream-dark/40 print:block print:h-auto print:overflow-visible print:bg-white">
+      <PwaRegister />
       <AdminSidebar role={session?.role} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden print:overflow-visible">
         <AdminTopbar userName={session?.name ?? "EGF Admin"} role={session?.role} />
