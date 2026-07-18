@@ -9,6 +9,7 @@ import {
   getGA4TopPages,
   getGA4DeviceBreakdown,
   ga4Configured,
+  ga4Diagnose,
 } from "@/lib/ga4";
 
 function fmtDuration(secs: number) {
@@ -57,6 +58,10 @@ export default async function AnalyticsPage({
       getGA4TopPages(startDate, endDate),
       getGA4DeviceBreakdown(startDate, endDate),
     ]);
+
+  // If GA4 is set up but returned nothing, find out exactly why so the fix is
+  // obvious rather than "check the server log".
+  const ga4Problem = !ga4 && ga4Configured() ? await ga4Diagnose() : null;
 
   const revenue     = revenueAgg._sum.total ?? 0;
   const totalOrders = orders;
@@ -179,11 +184,24 @@ export default async function AnalyticsPage({
           unaffected.
         </p>
       ) : (
-        <p className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Google Analytics is connected but returned no data for this range. If you
-          picked custom dates, check the range is valid and in the past. The server log
-          has the underlying error.
-        </p>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <p className="font-semibold">Google Analytics didn&apos;t return data.</p>
+          {ga4Problem?.error && (
+            <p className="mt-1.5">
+              Google says: <code className="rounded bg-amber-100 px-1 py-0.5">{ga4Problem.error}</code>
+            </p>
+          )}
+          <p className="mt-1.5">
+            <strong>Property ID:</strong> {ga4Problem?.propertyIdHint}
+          </p>
+          <p className="mt-1.5 text-amber-700">
+            Most often this is one of: the <code>GA4_PROPERTY_ID</code> is the numeric
+            Property ID (not the <code>G-…</code> Measurement ID); the service account{" "}
+            <code>{process.env.GA4_CLIENT_EMAIL ?? "…"}</code> has been added to the GA4
+            property with <strong>Viewer</strong> access; and the{" "}
+            <strong>Google Analytics Data API</strong> is enabled in the Cloud project.
+          </p>
+        </div>
       )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

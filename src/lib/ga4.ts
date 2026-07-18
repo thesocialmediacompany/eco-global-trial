@@ -48,6 +48,42 @@ function warn(fn: string, err: unknown) {
 }
 
 /**
+ * Runs a minimal report and reports why it failed, so the admin can see the
+ * real reason GA4 isn't returning data instead of a generic message. Also
+ * classifies the property id, since the most common mistake is pasting the
+ * Measurement ID (G-…) where the Data API needs the numeric Property ID.
+ */
+export async function ga4Diagnose(): Promise<{
+  ok: boolean;
+  error?: string;
+  propertyIdHint: string;
+}> {
+  const rawId = process.env.GA4_PROPERTY_ID ?? "";
+  const propertyIdHint = /^\d+$/.test(rawId)
+    ? "numeric — correct format"
+    : rawId.startsWith("G-")
+      ? `set to "${rawId}", which is a Measurement ID. The Data API needs the numeric Property ID (Admin → Property settings → Property ID, a number like 123456789).`
+      : rawId
+        ? `"${rawId}" is not a numeric Property ID.`
+        : "empty";
+
+  const c = client();
+  if (!c) return { ok: false, error: "GA4 credentials are not set.", propertyIdHint };
+  try {
+    await withTimeout(
+      c.runReport({
+        property: property(),
+        dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+        metrics: [{ name: "sessions" }],
+      }),
+    );
+    return { ok: true, propertyIdHint };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err), propertyIdHint };
+  }
+}
+
+/**
  * These reports are awaited alongside the DB queries that actually matter, so
  * a slow or hanging Google API call would otherwise hold up the whole page.
  * Cap the wait and let the caller fall back to its empty state.
