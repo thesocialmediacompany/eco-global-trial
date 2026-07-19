@@ -165,7 +165,7 @@ export default async function OrdersPage({
   const metrics = [
     { label: "Orders", value: rOrders.toString() },
     { label: "Items ordered", value: (rItems._sum.quantity ?? 0).toString() },
-    { label: "Sales reversals", value: formatPKR(rRefunds._sum.total ?? 0) },
+    { label: "Returns", value: formatPKR(rRefunds._sum.total ?? 0) },
     { label: "Orders fulfilled", value: rFulfilled.toString() },
     { label: "Orders delivered", value: rDelivered.toString() },
   ];
