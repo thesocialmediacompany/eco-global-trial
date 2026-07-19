@@ -1,4 +1,5 @@
 import "server-only";
+import { formatDayMonthLong } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin-guard";
 
@@ -103,10 +104,7 @@ export async function getOrderTimeline(order: {
 export function groupByDay(entries: TimelineEntry[]) {
   const groups: { day: string; entries: TimelineEntry[] }[] = [];
   for (const e of entries) {
-    const day = new Intl.DateTimeFormat("en-PK", {
-      day: "numeric",
-      month: "long",
-    }).format(e.createdAt);
+    const day = formatDayMonthLong(e.createdAt);
     const last = groups[groups.length - 1];
     if (last && last.day === day) last.entries.push(e);
     else groups.push({ day, entries: [e] });

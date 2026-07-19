@@ -1,3 +1,4 @@
+import { formatDateTime as formatDate } from "@/lib/dates";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import {
@@ -24,14 +25,6 @@ import { deleteAbandoned, markRecovered, sendRecoveryEmail } from "./actions";
 
 const PAGE_SIZE = 50;
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 type Item = { title: string; variantTitle?: string; quantity: number; price: number };
 

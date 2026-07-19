@@ -1,12 +1,10 @@
+import { formatDate } from "@/lib/dates";
 import Link from "next/link";
 import { Star, Check, Undo2, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { approveReview, unapproveReview, deleteReview } from "./actions";
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", { day: "numeric", month: "short", year: "numeric" }).format(d);
-}
 
 export default async function ReviewsPage() {
   const reviews = await prisma.review.findMany({

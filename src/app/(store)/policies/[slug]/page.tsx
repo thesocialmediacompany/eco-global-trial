@@ -1,3 +1,4 @@
+import { STORE_TIME_ZONE } from "@/lib/dates";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageBanner } from "@/components/store/PageBanner";
@@ -54,6 +55,7 @@ export default async function PolicyPage({
   if (!policy) notFound();
 
   const updated = new Intl.DateTimeFormat("en-PK", {
+    timeZone: STORE_TIME_ZONE,
     month: "long",
     year: "numeric",
   }).format(policy.updatedAt);

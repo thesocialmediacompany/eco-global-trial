@@ -1,14 +1,8 @@
+import { formatDateTime as formatDate } from "@/lib/dates";
 import { Mail, Trash2, Download, Check, X } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { deleteSubscriber, toggleSubscriber } from "./actions";
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(d);
-}
 
 export default async function SubscribersPage() {
   const [subs, reminders] = await Promise.all([

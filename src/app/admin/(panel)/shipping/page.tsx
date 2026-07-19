@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/dates";
 import Link from "next/link";
 import { Truck, Check, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -10,9 +11,6 @@ import {
   deleteShippingRate,
 } from "./actions";
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", { day: "numeric", month: "short", year: "numeric" }).format(d);
-}
 
 const inputCls =
   "w-full rounded-lg border border-purple-100 bg-white px-3 py-2 text-sm text-purple-900 outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-100";

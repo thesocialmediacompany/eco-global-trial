@@ -1,3 +1,4 @@
+import { formatLongDate } from "@/lib/dates";
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
@@ -36,10 +37,7 @@ export async function getRelatedPosts(excludeSlug: string, take = 3) {
   });
 }
 
+
 export function formatPostDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(d);
+  return formatLongDate(d);
 }

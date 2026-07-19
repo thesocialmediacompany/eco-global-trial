@@ -1,3 +1,4 @@
+import { formatTime as time } from "@/lib/dates";
 import {
   CheckCircle2,
   CreditCard,
@@ -26,12 +27,6 @@ const ICONS: Record<string, typeof Package> = {
   comment: MessageSquare,
 };
 
-function time(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 export function OrderTimeline({ entries }: { entries: TimelineEntry[] }) {
   if (entries.length === 0) {

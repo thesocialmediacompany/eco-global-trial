@@ -1,3 +1,4 @@
+import { formatDateTime as formatDate } from "@/lib/dates";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
@@ -5,15 +6,6 @@ import { getFeaturedProducts } from "@/lib/products";
 import { CampaignComposer } from "@/components/admin/CampaignComposer";
 import { sendCampaign, sendTestCampaign } from "./actions";
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ecoglobalfoods.com";
 

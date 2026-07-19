@@ -1,3 +1,4 @@
+import { pktDayKey, formatDayMonth } from "@/lib/dates";
 import Link from "next/link";
 import { ShoppingCart, Package, Users, TrendingUp, ArrowRight, AlertTriangle, BarChart3, Globe } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -7,21 +8,25 @@ import { getGA4Timeseries, ga4Configured } from "@/lib/ga4";
 
 const LOW_STOCK_THRESHOLD = 10;
 
+/**
+ * Bucket by the Pakistan calendar day. toISOString() would bucket by the UTC
+ * day, pushing every order after 7pm Karachi into the next day's bar.
+ */
 function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+  return pktDayKey(d);
 }
 
 function shortDay(iso: string) {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-PK", {
-    day: "numeric",
-    month: "short",
-  });
+  // The key is already a PKT calendar date; read it back at midday so the
+  // label can't slip a day when it's re-parsed.
+  return formatDayMonth(new Date(`${iso}T12:00:00+05:00`));
 }
 
 export default async function AdminDashboard() {
-  const since = new Date();
-  since.setDate(since.getDate() - 13); // 14-day window incl. today
-  since.setHours(0, 0, 0, 0);
+  // Start at Pakistan midnight 13 days ago (14-day window incl. today). Using
+  // the server's midnight would drop orders placed between 12am and 5am PKT on
+  // the earliest day, since that's still "yesterday" in UTC.
+  const since = new Date(`${pktDayKey(new Date(Date.now() - 13 * 86_400_000))}T00:00:00+05:00`);
 
   const [
     orderCount,
@@ -72,13 +77,8 @@ export default async function AdminDashboard() {
   // 14-day daily revenue buckets
   const days: { label: string; key: string; revenue: number }[] = [];
   for (let i = 0; i < 14; i++) {
-    const d = new Date(since);
-    d.setDate(since.getDate() + i);
-    days.push({
-      key: dayKey(d),
-      label: d.toLocaleDateString("en-PK", { day: "numeric", month: "short" }),
-      revenue: 0,
-    });
+    const key = dayKey(new Date(since.getTime() + i * 86_400_000));
+    days.push({ key, label: shortDay(key), revenue: 0 });
   }
   for (const o of windowOrders) {
     const k = dayKey(o.createdAt);

@@ -1,3 +1,4 @@
+import { formatDateTime as formatDate } from "@/lib/dates";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { Download, Plus, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
@@ -9,14 +10,6 @@ import { bulkFulfillOrders } from "./actions";
 
 const PAGE_SIZE = 50;
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 const tabs = [
   { key: "all", label: "All" },

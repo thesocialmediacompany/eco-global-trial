@@ -1,3 +1,4 @@
+import { formatLongDateTime as fullDateTime } from "@/lib/dates";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -43,15 +44,6 @@ import {
   addOrderComment,
 } from "../actions";
 
-function fullDateTime(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 export default async function OrderDetailPage({
   params,

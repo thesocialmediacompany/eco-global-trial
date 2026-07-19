@@ -1,3 +1,4 @@
+import { formatDateTime as formatDate } from "@/lib/dates";
 import Link from "next/link";
 import Image from "next/image";
 import { Check, X, Trash2, Camera, ChevronUp, ChevronDown } from "lucide-react";
@@ -7,14 +8,6 @@ import { approvePhoto, rejectPhoto, deletePhoto, movePhoto, reorderPhotos } from
 
 export const metadata = { title: "Customer photos" };
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-}
 
 const tabs = [
   { key: "pending", label: "Pending" },

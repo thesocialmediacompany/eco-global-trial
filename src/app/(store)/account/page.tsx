@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/dates";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -17,9 +18,6 @@ export const metadata: Metadata = {
   description: "Sign in to track your Eco Global Foods orders.",
 };
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("en-PK", { day: "numeric", month: "short", year: "numeric" }).format(d);
-}
 
 export default async function AccountPage() {
   const store = await cookies();
