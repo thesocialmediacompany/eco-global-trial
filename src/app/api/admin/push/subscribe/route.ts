@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { sendPushToOne } from "@/lib/push";
 
 /** Store a browser's push subscription so it can receive admin alerts. */
 export async function POST(req: NextRequest) {
@@ -27,5 +28,18 @@ export async function POST(req: NextRequest) {
     create: { endpoint, p256dh, auth, label: session.name ?? "" },
   });
 
-  return NextResponse.json({ ok: true });
+  // Confirm the whole chain the moment alerts are switched on: ping just this
+  // device. welcomeSent is false when the server has no VAPID key, which the UI
+  // surfaces so enabling alerts is never a silent dead end.
+  const welcomeSent = await sendPushToOne(
+    { endpoint, p256dh, auth },
+    {
+      title: "Order alerts are on",
+      body: "You'll get a ping here for every new order. 🌿",
+      url: "/admin/orders",
+      tag: "egf-welcome",
+    },
+  );
+
+  return NextResponse.json({ ok: true, welcomeSent });
 }

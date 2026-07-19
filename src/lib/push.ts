@@ -36,6 +36,24 @@ export interface PushPayload {
   tag?: string;
 }
 
+/** Send to a single subscription. Returns whether it actually went. */
+export async function sendPushToOne(
+  sub: { endpoint: string; p256dh: string; auth: string },
+  payload: PushPayload,
+): Promise<boolean> {
+  if (!ensureConfigured()) return false;
+  try {
+    await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      JSON.stringify(payload),
+    );
+    return true;
+  } catch (err) {
+    console.warn("[push] single send failed:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
 /** Send a notification to every subscribed admin device. */
 export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; pruned: number }> {
   if (!ensureConfigured()) return { sent: 0, pruned: 0 };

@@ -23,6 +23,8 @@ function urlBase64ToUint8Array(base64String: string) {
  */
 export function PushToggle() {
   const [state, setState] = useState<State>("busy");
+  /** Subscribed, but the server couldn't send the confirmation ping. */
+  const [noPing, setNoPing] = useState(false);
 
   useEffect(() => {
     const supported =
@@ -62,6 +64,8 @@ export function PushToggle() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sub),
       });
+      const data = await res.json().catch(() => ({}));
+      setNoPing(res.ok && data.welcomeSent === false);
       setState(res.ok ? "on" : "off");
     } catch {
       setState("off");
@@ -109,17 +113,29 @@ export function PushToggle() {
   }
 
   const on = state === "on";
+  const label = !on
+    ? "Enable order alerts on this device"
+    : noPing
+      ? "Alerts are on for this device, but the server couldn't send a confirmation ping — push may not be configured yet. Tap to turn off."
+      : "Order alerts on — tap to turn off";
+
   return (
     <button
       onClick={on ? disable : enable}
-      aria-label={on ? "Order alerts on — tap to turn off" : "Enable order alerts on this device"}
-      title={on ? "Order alerts on — tap to turn off" : "Enable order alerts on this device"}
+      aria-label={label}
+      title={label}
       className={`relative grid h-9 w-9 place-items-center rounded-lg transition-colors hover:bg-purple-50 ${
-        on ? "text-green-600" : "text-purple-900/70"
+        on ? (noPing ? "text-amber-500" : "text-green-600") : "text-purple-900/70"
       }`}
     >
       {on ? <BellRing className="h-[1.15rem] w-[1.15rem]" /> : <Bell className="h-[1.15rem] w-[1.15rem]" />}
-      {on && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-green-500" />}
+      {on && (
+        <span
+          className={`absolute right-1.5 top-1.5 h-2 w-2 rounded-full ${
+            noPing ? "bg-amber-500" : "bg-green-500"
+          }`}
+        />
+      )}
     </button>
   );
 }
