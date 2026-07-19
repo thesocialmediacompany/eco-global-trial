@@ -3,11 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { GRADIENTS } from "@/data/gradients";
 import { UploadField } from "@/components/admin/UploadField";
+import { SortableGrid } from "@/components/admin/SortableGrid";
 import {
   addGalleryImage,
   updateGalleryImage,
   deleteGalleryImage,
   moveGalleryImage,
+  reorderGalleryImages,
   addCatalog,
   updateCatalog,
   deleteCatalog,
@@ -55,7 +57,13 @@ export default async function MediaPage() {
         </h2>
 
         {gallery.length > 0 && (
-          <div className="mb-6 space-y-3">
+          <SortableGrid
+            // Remount once the server returns the new sequence, resetting local order.
+            key={gallery.map((g) => g.id).join(",")}
+            ids={gallery.map((g) => g.id)}
+            reorder={reorderGalleryImages}
+            className="mb-6 space-y-3"
+          >
             {gallery.map((g, i) => (
               <div key={g.id} className="rounded-xl border border-purple-100 p-3">
                 <div className="flex gap-3">
@@ -154,7 +162,7 @@ export default async function MediaPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </SortableGrid>
         )}
 
         <form action={addGalleryImage} className="rounded-xl border border-dashed border-purple-200 bg-cream/30 p-4">

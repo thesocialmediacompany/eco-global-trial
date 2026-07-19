@@ -46,9 +46,24 @@ export async function updateGalleryImage(id: string, formData: FormData) {
 }
 
 /**
+ * Persist a whole drag-and-drop sequence. `ids` arrive in display order and the
+ * gallery lists ascending, so position maps straight to sortOrder. Writing the
+ * full order in one transaction keeps a long drag correct, which pairwise
+ * swapping can't do.
+ */
+export async function reorderGalleryImages(ids: string[]) {
+  await requireOwner();
+  const clean = ids.filter(Boolean);
+  if (clean.length === 0) return;
+  await prisma.$transaction(
+    clean.map((id, i) => prisma.galleryImage.update({ where: { id }, data: { sortOrder: i } })),
+  );
+  revalidateAll();
+}
+
+/**
  * Move a gallery image one place earlier or later by swapping sortOrder with
- * its neighbour — so staff can arrange the gallery without working out what
- * numbers to type into the order box.
+ * its neighbour — kept alongside drag for phones, where dragging is awkward.
  */
 export async function moveGalleryImage(id: string, formData: FormData) {
   await requireOwner();

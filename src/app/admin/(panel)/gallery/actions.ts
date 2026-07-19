@@ -31,9 +31,28 @@ export async function approvePhoto(id: string) {
 }
 
 /**
+ * Persist a whole drag-and-drop sequence. `ids` arrive in display order, and
+ * the gallery reads highest-first, so the leading photo gets the largest value.
+ * Writing the full order in one transaction keeps a tile dragged across several
+ * positions correct, which pairwise swapping can't do.
+ */
+export async function reorderPhotos(ids: string[]) {
+  await getAdminSession();
+  const clean = ids.filter(Boolean);
+  if (clean.length === 0) return;
+  await prisma.$transaction(
+    clean.map((id, i) =>
+      prisma.communityPhoto.update({ where: { id }, data: { sortOrder: clean.length - i } }),
+    ),
+  );
+  refresh();
+}
+
+/**
  * Move an approved photo one place earlier or later on the public gallery, by
  * swapping sortOrder with its neighbour. The gallery reads highest-first, so
- * "up" means swapping with the next photo above it.
+ * "up" means swapping with the next photo above it. Kept alongside drag for
+ * phones, where dragging is awkward.
  */
 export async function movePhoto(id: string, formData: FormData) {
   await getAdminSession();

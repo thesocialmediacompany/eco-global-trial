@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Check, X, Trash2, Camera, ChevronUp, ChevronDown } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { approvePhoto, rejectPhoto, deletePhoto, movePhoto } from "./actions";
+import { SortableGrid } from "@/components/admin/SortableGrid";
+import { approvePhoto, rejectPhoto, deletePhoto, movePhoto, reorderPhotos } from "./actions";
 
 export const metadata = { title: "Customer photos" };
 
@@ -83,7 +84,14 @@ export default async function AdminGalleryPage({
           {status === "pending" ? "No photos waiting for review. 🎉" : `No ${status} photos.`}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <SortableGrid
+          // Remount once the server returns the new sequence, resetting local order.
+          key={photos.map((p) => p.id).join(",")}
+          ids={photos.map((p) => p.id)}
+          reorder={reorderPhotos}
+          disabled={status !== "approved"}
+          className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+        >
           {photos.map((p, i) => (
             <div key={p.id} className="overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm">
               <div className="relative aspect-square bg-cream">
@@ -161,7 +169,7 @@ export default async function AdminGalleryPage({
               </div>
             </div>
           ))}
-        </div>
+        </SortableGrid>
       )}
     </div>
   );
