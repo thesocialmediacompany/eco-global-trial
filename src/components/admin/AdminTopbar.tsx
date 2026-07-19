@@ -7,6 +7,7 @@ import { logout } from "@/app/admin/login/actions";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSearchBox } from "@/components/admin/AdminSearchBox";
 import { PushToggle } from "@/components/admin/PushToggle";
+import { RefreshButton } from "@/components/admin/RefreshButton";
 
 export function AdminTopbar({
   userName = "EGF Admin",
@@ -30,6 +31,7 @@ export function AdminTopbar({
       <AdminSearchBox />
 
       <div className="ml-auto flex items-center gap-2">
+        <RefreshButton />
         <PushToggle />
 
         <div className="relative">
