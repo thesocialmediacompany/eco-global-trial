@@ -23,6 +23,7 @@ import {
   HelpCircle,
   UploadCloud,
   BookText,
+  Camera,
   type LucideIcon,
 } from "lucide-react";
 import { isOwnerRole } from "@/lib/roles";
@@ -47,6 +48,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Collections", href: "/admin/collections", icon: FolderTree },
   { label: "Customers", href: "/admin/customers", icon: Users },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
+  { label: "Customer photos", href: "/admin/gallery", icon: Camera },
   { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
   { label: "Campaigns", href: "/admin/campaigns", icon: Send },
   { label: "Content", href: "/admin/content", icon: FileText },

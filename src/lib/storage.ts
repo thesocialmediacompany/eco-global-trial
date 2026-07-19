@@ -132,8 +132,47 @@ export async function createUploadUrl({
   return { uploadUrl, publicUrl: s3PublicUrl(key) };
 }
 
+/**
+ * Presigned POST for PUBLIC (customer) uploads to the community gallery.
+ *
+ * Unlike the admin PUT presign, this uses a POST policy so S3 itself enforces
+ * the size cap and image content-type — the browser can't lie about either.
+ * Files land under community/ with a random name (no overwrites), and nothing
+ * is shown publicly until an admin approves it.
+ */
+export async function createCommunityUploadPost(contentType: string): Promise<{
+  url: string;
+  fields: Record<string, string>;
+  publicUrl: string;
+} | null> {
+  if (!s3Configured()) return null;
+  const { createPresignedPost } = await import("@aws-sdk/s3-presigned-post");
+  const { randomUUID } = await import("node:crypto");
+  const ext = contentType.split("/")[1]?.replace(/[^a-z0-9]/gi, "") || "jpg";
+  const key = `community/${randomUUID()}.${ext}`;
+  const { url, fields } = await createPresignedPost(s3Client(), {
+    Bucket: process.env.S3_BUCKET!,
+    Key: key,
+    Conditions: [
+      ["content-length-range", 1, MAX_COMMUNITY_UPLOAD_BYTES],
+      ["starts-with", "$Content-Type", "image/"],
+    ],
+    Fields: { "Content-Type": contentType },
+    Expires: 120,
+  });
+  return { url, fields, publicUrl: s3PublicUrl(key) };
+}
+
+/** A URL is only a trusted community image if it lives in our own bucket. */
+export function isOwnCommunityUrl(url: string): boolean {
+  if (!url) return false;
+  const base = s3PublicUrl("community/");
+  return url.startsWith(base);
+}
+
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB (high-res product photos)
+export const MAX_COMMUNITY_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB for customer submissions
 
 export const ALLOWED_DOC_TYPES = ["application/pdf"];
 export const MAX_DOC_BYTES = 25 * 1024 * 1024; // 25 MB (catalogs / brochures)

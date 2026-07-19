@@ -305,6 +305,25 @@ model Order {
   updatedAt DateTime @updatedAt
 }
 
+/// A customer-submitted photo for the public community gallery. Held as
+/// "pending" until an admin approves it — nothing user-uploaded shows publicly
+/// unreviewed.
+model CommunityPhoto {
+  id       String @id @default(cuid())
+  imageUrl String
+  caption  String @default("")
+  name     String @default("") // who submitted it (free text)
+
+  /// pending | approved | rejected
+  status      String    @default("pending")
+  productSlug String    @default("") // optional: the product it features
+  moderatedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
 /// A browser/device that opted in to admin push notifications (the PWA).
 /// One row per device; keyed by the push endpoint the browser issues.
 model PushSubscription {
