@@ -26,7 +26,8 @@ export default async function GalleryPage() {
   try {
     photos = await prisma.communityPhoto.findMany({
       where: { status: "approved" },
-      orderBy: [{ moderatedAt: "desc" }, { createdAt: "desc" }],
+      // Staff-arranged order first (highest = leading); date breaks ties.
+      orderBy: [{ sortOrder: "desc" }, { moderatedAt: "desc" }],
       take: 90,
       select: { id: true, imageUrl: true, caption: true, name: true, productSlug: true },
     });

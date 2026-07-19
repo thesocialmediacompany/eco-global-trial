@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Check, X, Trash2, Camera } from "lucide-react";
+import { Check, X, Trash2, Camera, ChevronUp, ChevronDown } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { approvePhoto, rejectPhoto, deletePhoto } from "./actions";
+import { approvePhoto, rejectPhoto, deletePhoto, movePhoto } from "./actions";
 
 export const metadata = { title: "Customer photos" };
 
@@ -32,7 +32,12 @@ export default async function AdminGalleryPage({
   const [photos, pendingCount] = await Promise.all([
     prisma.communityPhoto.findMany({
       where: { status },
-      orderBy: { createdAt: "desc" },
+      // Approved photos list in the exact order the public gallery shows them,
+      // so arranging here matches what visitors see.
+      orderBy:
+        status === "approved"
+          ? [{ sortOrder: "desc" }, { moderatedAt: "desc" }]
+          : [{ createdAt: "desc" }],
       take: 120,
     }),
     prisma.communityPhoto.count({ where: { status: "pending" } }),
@@ -79,10 +84,42 @@ export default async function AdminGalleryPage({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {photos.map((p) => (
+          {photos.map((p, i) => (
             <div key={p.id} className="overflow-hidden rounded-xl border border-purple-100 bg-white shadow-sm">
               <div className="relative aspect-square bg-cream">
                 <Image src={p.imageUrl} alt={p.caption || "Submitted photo"} fill sizes="25vw" className="object-cover" />
+                {status === "approved" && (
+                  <>
+                    <span className="absolute left-1.5 top-1.5 rounded-md bg-purple-900/85 px-1.5 py-0.5 text-[0.6rem] font-semibold text-cream">
+                      #{i + 1}
+                    </span>
+                    {/* Arrange: swap places with the neighbouring photo. */}
+                    <div className="absolute right-1.5 top-1.5 flex flex-col gap-1">
+                      <form action={movePhoto.bind(null, p.id)}>
+                        <input type="hidden" name="dir" value="up" />
+                        <button
+                          disabled={i === 0}
+                          aria-label="Move earlier"
+                          title="Move earlier"
+                          className="grid h-6 w-6 place-items-center rounded bg-black/55 text-white disabled:opacity-25"
+                        >
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                      </form>
+                      <form action={movePhoto.bind(null, p.id)}>
+                        <input type="hidden" name="dir" value="down" />
+                        <button
+                          disabled={i === photos.length - 1}
+                          aria-label="Move later"
+                          title="Move later"
+                          className="grid h-6 w-6 place-items-center rounded bg-black/55 text-white disabled:opacity-25"
+                        >
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                      </form>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="p-3">
                 {p.caption ? (

@@ -319,9 +319,13 @@ model CommunityPhoto {
   productSlug String    @default("") // optional: the product it features
   moderatedAt DateTime?
 
+  /// Display order on the public gallery, highest first. Assigned on approval
+  /// so the newest approved photo lands at the top; staff can then rearrange.
+  sortOrder Int @default(0)
+
   createdAt DateTime @default(now())
 
-  @@index([status, createdAt])
+  @@index([status, sortOrder])
 }
 
 /// A browser/device that opted in to admin push notifications (the PWA).

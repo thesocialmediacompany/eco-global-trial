@@ -45,6 +45,33 @@ export async function updateGalleryImage(id: string, formData: FormData) {
   revalidateAll();
 }
 
+/**
+ * Move a gallery image one place earlier or later by swapping sortOrder with
+ * its neighbour — so staff can arrange the gallery without working out what
+ * numbers to type into the order box.
+ */
+export async function moveGalleryImage(id: string, formData: FormData) {
+  await requireOwner();
+  const dir = String(formData.get("dir") ?? "");
+  if (dir !== "up" && dir !== "down") return;
+
+  const image = await prisma.galleryImage.findUnique({ where: { id } });
+  if (!image) return;
+
+  // The gallery lists by sortOrder ascending, so "up" is the lower number.
+  const neighbour = await prisma.galleryImage.findFirst({
+    where: dir === "up" ? { sortOrder: { lt: image.sortOrder } } : { sortOrder: { gt: image.sortOrder } },
+    orderBy: { sortOrder: dir === "up" ? "desc" : "asc" },
+  });
+  if (!neighbour) return;
+
+  await prisma.$transaction([
+    prisma.galleryImage.update({ where: { id: image.id }, data: { sortOrder: neighbour.sortOrder } }),
+    prisma.galleryImage.update({ where: { id: neighbour.id }, data: { sortOrder: image.sortOrder } }),
+  ]);
+  revalidateAll();
+}
+
 export async function deleteGalleryImage(id: string) {
   await requireOwner();
   await prisma.galleryImage.delete({ where: { id } });

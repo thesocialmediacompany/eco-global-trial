@@ -1,4 +1,4 @@
-import { Trash2, Plus, Star, FileText, Images } from "lucide-react";
+import { Trash2, Plus, Star, FileText, Images, ChevronUp, ChevronDown } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { GRADIENTS } from "@/data/gradients";
@@ -7,6 +7,7 @@ import {
   addGalleryImage,
   updateGalleryImage,
   deleteGalleryImage,
+  moveGalleryImage,
   addCatalog,
   updateCatalog,
   deleteCatalog,
@@ -55,9 +56,36 @@ export default async function MediaPage() {
 
         {gallery.length > 0 && (
           <div className="mb-6 space-y-3">
-            {gallery.map((g) => (
+            {gallery.map((g, i) => (
               <div key={g.id} className="rounded-xl border border-purple-100 p-3">
                 <div className="flex gap-3">
+                  {/* arrange: swap places with the neighbouring image */}
+                  <div className="flex shrink-0 flex-col items-center justify-center gap-1">
+                    <form action={moveGalleryImage.bind(null, g.id)}>
+                      <input type="hidden" name="dir" value="up" />
+                      <button
+                        disabled={i === 0}
+                        aria-label="Move up"
+                        title="Move up"
+                        className="grid h-6 w-6 place-items-center rounded text-purple-900/50 hover:bg-purple-50 disabled:opacity-25"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                    </form>
+                    <span className="text-[0.65rem] font-semibold text-purple-900/40">{i + 1}</span>
+                    <form action={moveGalleryImage.bind(null, g.id)}>
+                      <input type="hidden" name="dir" value="down" />
+                      <button
+                        disabled={i === gallery.length - 1}
+                        aria-label="Move down"
+                        title="Move down"
+                        className="grid h-6 w-6 place-items-center rounded text-purple-900/50 hover:bg-purple-50 disabled:opacity-25"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </form>
+                  </div>
+
                   {/* thumbnail */}
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
                     {g.url ? (
