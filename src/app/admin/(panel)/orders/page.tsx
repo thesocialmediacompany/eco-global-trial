@@ -127,7 +127,7 @@ export default async function OrdersPage({
     ? { AND: [whereFor(tab, q), rangeFilter] }
     : whereFor(tab, q);
 
-  const [orders, matching, rOrders, rItems, rFulfilled, rDelivered, rRefunds] =
+  const [orders, matching, rOrders, rItems, rFulfilled, rDelivered, rSales] =
     await Promise.all([
       prisma.order.findMany({
         where: listWhere,
@@ -148,8 +148,15 @@ export default async function OrdersPage({
       prisma.order.count({
         where: { isDraft: false, deliveredAt: since ? { gte: since } : { not: null } },
       }),
+      // Sales for the range. Cancelled and refunded orders are money that
+      // never landed, so they're left out rather than inflating the figure.
       prisma.order.aggregate({
-        where: { isDraft: false, paymentStatus: "refunded", ...rangeFilter },
+        where: {
+          isDraft: false,
+          fulfillmentStatus: { not: "cancelled" },
+          paymentStatus: { not: "refunded" },
+          ...rangeFilter,
+        },
         _sum: { total: true },
       }),
     ]);
@@ -158,7 +165,7 @@ export default async function OrdersPage({
   const metrics = [
     { label: "Orders", value: rOrders.toString() },
     { label: "Items ordered", value: (rItems._sum.quantity ?? 0).toString() },
-    { label: "Returns", value: formatPKR(rRefunds._sum.total ?? 0) },
+    { label: "Sales", value: formatPKR(rSales._sum.total ?? 0) },
     { label: "Orders fulfilled", value: rFulfilled.toString() },
     { label: "Orders delivered", value: rDelivered.toString() },
   ];
