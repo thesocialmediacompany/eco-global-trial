@@ -6,7 +6,9 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const session = await verifySession(token);
 
-  const isLogin = pathname === "/admin/login";
+  // Both the password page and the OTP verify page must be reachable without a
+  // full session (the verify step runs on a short-lived pending cookie instead).
+  const isLogin = pathname === "/admin/login" || pathname === "/admin/login/verify";
 
   // Unauthenticated → bounce to login (preserve intended destination)
   if (!session && !isLogin) {

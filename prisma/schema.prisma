@@ -25,6 +25,12 @@ model StaffUser {
   passwordHash String
   role         String   @default("staff") // owner | staff
   createdAt    DateTime @default(now())
+
+  // Email OTP (2FA). The code is stored only as a bcrypt hash; cleared on
+  // successful verification. attempts locks the code after too many wrong tries.
+  otpHash      String?
+  otpExpiresAt DateTime?
+  otpAttempts  Int      @default(0)
 }
 
 /// A product category — Shopify "collection" equivalent.

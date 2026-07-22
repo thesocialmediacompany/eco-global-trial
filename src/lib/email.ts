@@ -174,6 +174,44 @@ export async function sendPasswordReset(
   });
 }
 
+/** Email a staff member their one-time admin login code. */
+export async function sendAdminOtp(
+  email: string,
+  code: string,
+  name?: string,
+): Promise<SendResult> {
+  const settings = await getSettings();
+  const first = (name ?? "").split(" ")[0] || "there";
+  const body = `
+    <p style="color:#2a0f28;font-size:15px;margin:0 0 16px;">
+      Hi ${escapeHtml(first)}, use this code to finish signing in to the ${escapeHtml(settings.storeName)} admin. It expires in 10 minutes.
+    </p>
+    <div style="text-align:center;margin:24px 0;">
+      <div style="display:inline-block;background:#f4fbef;border:1px solid #d9edcb;border-radius:14px;padding:16px 28px;font-size:34px;font-weight:700;letter-spacing:10px;color:#233f18;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+        ${escapeHtml(code)}
+      </div>
+    </div>
+    <p style="color:#99628d;font-size:13px;margin:0;">
+      If you didn't try to sign in, someone may have your password — change it and let the team know. Do not share this code with anyone.
+    </p>`;
+
+  return deliver({
+    to: email,
+    subject: `${code} is your admin login code`,
+    html: shell({
+      storeName: settings.storeName,
+      storeLegalName: settings.storeLegalName,
+      storePhone: settings.storePhone,
+      storeEmail: settings.storeEmail,
+      heading: "Your login code 🔐",
+      body,
+    }),
+    text:
+      `Your ${settings.storeName} admin login code is ${code}. It expires in 10 minutes.\n\n` +
+      `If you didn't try to sign in, change your password and tell the team. Never share this code.`,
+  });
+}
+
 /** Ask a customer to review the products from a delivered order. */
 export async function sendReviewRequest(orderId: string): Promise<SendResult> {
   const [order, settings] = await Promise.all([

@@ -9,8 +9,13 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; expired?: string; locked?: string }>;
 }) {
-  const { from } = await searchParams;
-  return <LoginForm from={from ?? "/admin"} />;
+  const { from, expired, locked } = await searchParams;
+  const notice = locked
+    ? "Too many wrong codes. Please sign in again to get a new one."
+    : expired
+      ? "Your code expired. Please sign in again to get a new one."
+      : undefined;
+  return <LoginForm from={from ?? "/admin"} notice={notice} />;
 }
