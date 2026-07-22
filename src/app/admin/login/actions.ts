@@ -89,6 +89,7 @@ export async function login(
     name: user.name,
     role: user.role,
     from,
+    otpTo: result.to,
   });
   store.set(PENDING_COOKIE, pending, { ...baseCookie, maxAge: pendingMaxAge });
   redirect("/admin/login/verify");

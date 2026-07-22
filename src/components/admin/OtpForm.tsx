@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { ShieldCheck } from "lucide-react";
 import { verifyLogin, resendCode, type VerifyState } from "@/app/admin/login/actions";
 
-export function OtpForm({ email }: { email: string }) {
+export function OtpForm({ sentTo }: { sentTo: string }) {
   const [state, formAction] = useActionState<VerifyState, FormData>(verifyLogin, {});
   const [resendState, resendAction] = useActionState<VerifyState, FormData>(
     resendCode,
@@ -13,7 +13,7 @@ export function OtpForm({ email }: { email: string }) {
   );
 
   // Mask the address a little: j***@gmail.com
-  const masked = email.replace(/^(.).*(@.*)$/, "$1***$2");
+  const masked = sentTo.replace(/^(.).*(@.*)$/, "$1***$2");
 
   return (
     <div className="grid min-h-screen place-items-center gradient-purple px-5">

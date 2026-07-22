@@ -2,7 +2,7 @@ import "server-only";
 import { randomInt } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { sendAdminOtp } from "@/lib/email";
+import { sendAdminOtp, notifyRecipient } from "@/lib/email";
 
 /**
  * Email one-time codes for admin 2FA.
@@ -21,7 +21,18 @@ export function generateOtp(): string {
   return randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
-/** Generate a fresh code for a user, persist its hash, and email it. */
+/**
+ * Resolve where admin login codes are sent. Codes go to the shared team inbox
+ * (the same `orderNotifyEmail` that new-order alerts use) so whoever's on the
+ * team can retrieve them, falling back to the staff member's own address if no
+ * team inbox is configured.
+ */
+export async function otpRecipientFor(userEmail: string): Promise<string> {
+  return (await notifyRecipient()) || userEmail;
+}
+
+/** Generate a fresh code for a user, persist its hash, and email it. Returns
+ * the send result plus the address it went to (for the "check your email" UI). */
 export async function issueOtp(user: { id: string; email: string; name: string }) {
   const code = generateOtp();
   const hash = await bcrypt.hash(code, 10);
@@ -33,9 +44,11 @@ export async function issueOtp(user: { id: string; email: string; name: string }
       otpAttempts: 0,
     },
   });
+  const to = await otpRecipientFor(user.email);
   // Best-effort: surface a delivery failure so the UI can tell the user rather
   // than leaving them staring at a code that never arrives.
-  return sendAdminOtp(user.email, code, user.name);
+  const result = await sendAdminOtp(to, code, user.name);
+  return { ...result, to };
 }
 
 type VerifyResult =

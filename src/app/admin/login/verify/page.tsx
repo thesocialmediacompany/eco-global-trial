@@ -16,5 +16,5 @@ export default async function VerifyPage() {
   const pending = await verifyPending(store.get(PENDING_COOKIE)?.value);
   if (!pending) redirect("/admin/login");
 
-  return <OtpForm email={pending.email} />;
+  return <OtpForm sentTo={pending.otpTo || pending.email} />;
 }

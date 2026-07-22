@@ -551,7 +551,7 @@ export async function sendOrderConfirmation(orderId: string): Promise<SendResult
 }
 
 /** Where staff order alerts go: the dedicated address, else the store email. */
-async function notifyRecipient(): Promise<string> {
+export async function notifyRecipient(): Promise<string> {
   const s = await getSettings();
   return (s.orderNotifyEmail || s.storeEmail || "").trim();
 }

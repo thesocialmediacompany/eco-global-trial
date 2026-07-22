@@ -23,9 +23,11 @@ export interface SessionPayload {
 }
 
 /** A half-authenticated login: password is verified, OTP is not yet. Carries
- * the intended destination so the redirect survives the second step. */
+ * the intended destination so the redirect survives the second step, and the
+ * address the code was emailed to so the verify screen can show it. */
 export interface PendingPayload extends SessionPayload {
   from: string;
+  otpTo: string;
 }
 
 function secretKey() {
