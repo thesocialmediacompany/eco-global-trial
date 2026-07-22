@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSaleProducts } from "@/lib/products";
+
+// ISR — see product/[slug]/page.tsx. Product saves revalidate "/sale".
+export const revalidate = 1800;
 import { ProductCard } from "@/components/ui/ProductCard";
 import { PageBanner } from "@/components/store/PageBanner";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";

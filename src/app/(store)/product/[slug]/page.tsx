@@ -4,6 +4,12 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Star, Check, ChevronRight, BadgeCheck, ChefHat, ArrowRight } from "lucide-react";
 import { formatPKR } from "@/lib/utils";
+
+// ISR: cache the rendered page at the CDN and re-query Neon at most once every
+// 30 min. Around-the-clock bot crawls then hit the edge instead of waking the
+// database on every request. Admin product saves call revalidatePath("/product
+// /[slug]", "page") so price/stock/new-product edits still appear immediately.
+export const revalidate = 1800;
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
 import { SITE_URL } from "@/lib/site-url";
 import { getApprovedReviews, getReviewStats } from "@/lib/reviews";

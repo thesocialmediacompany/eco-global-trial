@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Clock, ArrowRight } from "lucide-react";
 import { getPostBySlug, getRelatedPosts, formatPostDate } from "@/lib/posts";
 
+// ISR — see product/[slug]/page.tsx.
+export const revalidate = 1800;
+
 export async function generateMetadata({
   params,
 }: {

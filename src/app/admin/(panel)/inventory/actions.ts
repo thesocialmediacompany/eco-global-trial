@@ -30,5 +30,11 @@ export async function saveInventory(
 
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/products");
+  // Storefront catalog pages are ISR-cached, so refresh the stock badges now
+  // rather than after the cache window. (Checkout re-checks stock live, so this
+  // is about display accuracy, not oversell safety.)
+  revalidatePath("/shop");
+  revalidatePath("/product/[slug]", "page");
+  revalidatePath("/category/[slug]", "page");
   return { saved: clean.length };
 }

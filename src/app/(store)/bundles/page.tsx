@@ -3,6 +3,9 @@ import { getProductsByCollection } from "@/lib/products";
 import { PageCover } from "@/components/store/PageCover";
 import { ProductsGrid } from "@/components/store/ProductsGrid";
 
+// ISR — see product/[slug]/page.tsx.
+export const revalidate = 1800;
+
 export const metadata: Metadata = {
   title: "Bundles",
   description:

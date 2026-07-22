@@ -4,6 +4,21 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * The storefront now caches its catalog pages (ISR, ~30 min) so around-the-clock
+ * bot crawls don't wake the database on every hit. That means an admin edit
+ * would otherwise take up to the cache window to appear publicly — so bust every
+ * surface a product can show on the moment one is saved. The `"page"` type
+ * revalidates all instances of the dynamic route (fine for this catalog size).
+ */
+function revalidateStorefront() {
+  revalidatePath("/", "layout"); // home + featured + nav
+  revalidatePath("/shop");
+  revalidatePath("/sale");
+  revalidatePath("/product/[slug]", "page");
+  revalidatePath("/category/[slug]", "page");
+}
+
 interface VariantInput {
   id?: string;
   title: string;
@@ -90,6 +105,7 @@ export async function createProduct(formData: FormData) {
   });
 
   revalidatePath("/admin/products");
+  revalidateStorefront();
   redirect(`/admin/products/${product.id}`);
 }
 
@@ -114,10 +130,12 @@ export async function updateProduct(id: string, formData: FormData) {
 
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${id}`);
+  revalidateStorefront();
 }
 
 export async function deleteProduct(id: string) {
   await prisma.product.delete({ where: { id } });
   revalidatePath("/admin/products");
+  revalidateStorefront();
   redirect("/admin/products");
 }

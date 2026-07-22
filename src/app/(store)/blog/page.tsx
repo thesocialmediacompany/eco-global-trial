@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { getJournalPosts, formatPostDate } from "@/lib/posts";
+
+// ISR — see product/[slug]/page.tsx.
+export const revalidate = 1800;
 import { PageCover } from "@/components/store/PageCover";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 

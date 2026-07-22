@@ -5,6 +5,10 @@ import { getProductsByCollection } from "@/lib/products";
 import { PageCover } from "@/components/store/PageCover";
 import { ProductsGrid } from "@/components/store/ProductsGrid";
 
+// ISR — see product/[slug]/page.tsx. Admin product/collection saves revalidate
+// this path so category listings refresh immediately on edit.
+export const revalidate = 1800;
+
 export async function generateMetadata({
   params,
 }: {

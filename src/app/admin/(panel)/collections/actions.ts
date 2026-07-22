@@ -50,6 +50,8 @@ export async function updateCollection(id: string, formData: FormData) {
   revalidatePath("/admin/collections");
   revalidatePath(`/admin/collections/${id}`);
   revalidatePath("/shop");
+  // Category pages are ISR-cached — refresh them so edits show immediately.
+  revalidatePath("/category/[slug]", "page");
 }
 
 export async function deleteCollection(id: string) {
