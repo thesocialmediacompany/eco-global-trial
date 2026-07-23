@@ -49,8 +49,16 @@ function parseForm(formData: FormData) {
     variants = [];
   }
 
+  const primaryId = String(formData.get("collectionId") ?? "") || null;
+  // "Also appears in" checkboxes. Keep only real, distinct ids, and never the
+  // primary (that membership is already covered by collectionId).
+  const extraCollectionIds = [
+    ...new Set(formData.getAll("extraCollectionIds").map(String).filter(Boolean)),
+  ].filter((id) => id !== primaryId);
+
   return {
     title,
+    extraCollectionIds,
     fields: {
       title,
       tagline: String(formData.get("tagline") ?? ""),
@@ -83,7 +91,7 @@ function parseForm(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
-  const { title, fields, variants } = parseForm(formData);
+  const { title, fields, variants, extraCollectionIds } = parseForm(formData);
   if (!title) return;
 
   const product = await prisma.product.create({
@@ -101,6 +109,10 @@ export async function createProduct(formData: FormData) {
           }),
         ),
       },
+      // Additional collections this product also appears in.
+      collectionLinks: {
+        create: extraCollectionIds.map((collectionId) => ({ collectionId })),
+      },
     },
   });
 
@@ -110,7 +122,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const { fields, variants } = parseForm(formData);
+  const { fields, variants, extraCollectionIds } = parseForm(formData);
 
   await prisma.$transaction([
     prisma.product.update({ where: { id }, data: fields }),
@@ -125,6 +137,11 @@ export async function updateProduct(id: string, formData: FormData) {
         weightGrams: v.weightGrams ?? 0,
         sortOrder: i,
       })),
+    }),
+    // Same replace-and-recreate for the additional-collection links.
+    prisma.productCollection.deleteMany({ where: { productId: id } }),
+    prisma.productCollection.createMany({
+      data: extraCollectionIds.map((collectionId) => ({ productId: id, collectionId })),
     }),
   ]);
 

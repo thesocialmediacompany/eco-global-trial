@@ -13,7 +13,10 @@ export default async function EditProductPage({
   const [product, collections] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
-      include: { variants: { orderBy: { sortOrder: "asc" } } },
+      include: {
+        variants: { orderBy: { sortOrder: "asc" } },
+        collectionLinks: { select: { collectionId: true } },
+      },
     }),
     prisma.collection.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
@@ -26,6 +29,7 @@ export default async function EditProductPage({
     <ProductForm
       action={updateWithId}
       collections={collections.map((c) => ({ id: c.id, name: c.name }))}
+      extraCollectionIds={product.collectionLinks.map((l) => l.collectionId)}
       product={{
         id: product.id,
         title: product.title,

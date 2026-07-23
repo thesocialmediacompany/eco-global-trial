@@ -54,12 +54,15 @@ export function ProductForm({
   product,
   collections,
   defaultCollectionId,
+  extraCollectionIds = [],
 }: {
   action: (formData: FormData) => Promise<void>;
   product?: ProductData;
   collections: Collection[];
   /** Pre-selected collection for new products (e.g. the HORECA tab). */
   defaultCollectionId?: string;
+  /** Additional collections this product currently appears in (beyond primary). */
+  extraCollectionIds?: string[];
 }) {
   const router = useRouter();
   const isEdit = Boolean(product);
@@ -383,7 +386,7 @@ export function ProductForm({
           </Card>
 
           <Card title="Organization">
-            <Field label="Collection">
+            <Field label="Primary collection">
               <select
                 name="collectionId"
                 defaultValue={product?.collectionId ?? defaultCollectionId ?? ""}
@@ -396,6 +399,33 @@ export function ProductForm({
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-xs text-purple-900/50">
+                The main category — used for the breadcrumb and related products.
+              </p>
+            </Field>
+
+            <Field label="Also appears in">
+              <div className="max-h-44 space-y-1.5 overflow-y-auto rounded-lg border border-purple-200 bg-white p-2.5">
+                {collections.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-2 text-sm text-purple-900/80"
+                  >
+                    <input
+                      type="checkbox"
+                      name="extraCollectionIds"
+                      value={c.id}
+                      defaultChecked={extraCollectionIds.includes(c.id)}
+                      className="h-4 w-4 rounded accent-green-600"
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-purple-900/50">
+                Tick every extra collection this product should show in. The
+                primary one above is already included.
+              </p>
             </Field>
             <Field label="Vendor">
               <input

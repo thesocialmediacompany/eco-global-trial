@@ -50,10 +50,28 @@ model Collection {
   seoDescription String @default("")
   seoKeywords    String @default("") // comma-separated
 
-  products Product[]
+  products Product[] // products whose PRIMARY collection is this one
+  productLinks ProductCollection[] // products additionally linked to this one
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/**
+ * Join table letting a product appear in more than one collection. Holds the
+ * ADDITIONAL memberships beyond a product's primary `collectionId`; storefront
+ * queries match "primary OR a link here", so existing products keep showing in
+ * their primary collection with no backfill needed. Cascades on delete of
+ * either side so links never dangle.
+ */
+model ProductCollection {
+  productId    String
+  collectionId String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@index([collectionId])
 }
 
 /// A sellable product. Flavours are modelled as Variants (Shopify-style).
@@ -94,8 +112,14 @@ model Product {
   seoDescription String @default("")
   seoKeywords    String @default("")
 
+  // Primary collection: the product's canonical category (breadcrumb, URL,
+  // related products). A product can ALSO appear in other collections via the
+  // ProductCollection join below — membership is "primary OR any link".
   collection   Collection? @relation(fields: [collectionId], references: [id])
   collectionId String?
+
+  // Additional collections this product appears in (beyond its primary one).
+  collectionLinks ProductCollection[]
 
   variants   Variant[]
   orderItems OrderItem[]

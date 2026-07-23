@@ -74,6 +74,17 @@ export function toCardProduct(p: DbProductWithRels): Product & {
 
 const include = { variants: { orderBy: { sortOrder: "asc" } }, collection: true } as const;
 
+/**
+ * Match products that belong to a collection either as their primary collection
+ * or through an additional link. This is what makes a product show up in more
+ * than one collection.
+ */
+function inCollection(slug: string): Prisma.ProductWhereInput {
+  return {
+    OR: [{ collection: { slug } }, { collectionLinks: { some: { collection: { slug } } } }],
+  };
+}
+
 export async function getActiveProducts() {
   const rows = await prisma.product.findMany({
     where: { status: "active" },
@@ -107,7 +118,7 @@ export interface ShopFilters {
 export async function getShopProducts(opts: ShopFilters = {}) {
   const where: Prisma.ProductWhereInput = { status: "active" };
   if (opts.isNew) where.isNew = true;
-  if (opts.collection) where.collection = { slug: opts.collection };
+  if (opts.collection) where.OR = inCollection(opts.collection).OR;
   if (opts.minPrice != null || opts.maxPrice != null) {
     where.price = {};
     if (opts.minPrice != null) where.price.gte = opts.minPrice;
@@ -210,7 +221,7 @@ export async function getProductBySlug(slug: string) {
 
 export async function getProductsByCollection(collectionSlug: string) {
   const rows = await prisma.product.findMany({
-    where: { status: "active", collection: { slug: collectionSlug } },
+    where: { status: "active", ...inCollection(collectionSlug) },
     include,
     orderBy: { createdAt: "desc" },
   });
@@ -221,8 +232,8 @@ export async function getRelatedProducts(collectionSlug: string, excludeSlug: st
   const rows = await prisma.product.findMany({
     where: {
       status: "active",
-      collection: { slug: collectionSlug },
       slug: { not: excludeSlug },
+      ...inCollection(collectionSlug),
     },
     include,
     take,
