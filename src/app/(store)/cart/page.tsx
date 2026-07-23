@@ -74,8 +74,8 @@ export default function CartPage() {
                   </div>
                   <button
                     onClick={() => removeItem(it.productId, it.variantTitle)}
-                    aria-label="Remove"
-                    className="text-purple-900/30 hover:text-rose-600"
+                    aria-label={`Remove ${it.title}`}
+                    className="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-purple-900/45 transition-colors hover:bg-rose-50 hover:text-rose-600 active:bg-rose-100"
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>

@@ -119,10 +119,10 @@ export function CartDrawer() {
                           </div>
                           <button
                             onClick={() => removeItem(it.productId, it.variantTitle)}
-                            aria-label="Remove"
-                            className="text-purple-900/30 hover:text-rose-600"
+                            aria-label={`Remove ${it.title}`}
+                            className="-mr-1.5 -mt-1.5 grid h-10 w-10 shrink-0 place-items-center rounded-full text-purple-900/45 transition-colors hover:bg-rose-50 hover:text-rose-600 active:bg-rose-100"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-[1.15rem] w-[1.15rem]" />
                           </button>
                         </div>
                         <div className="mt-auto flex items-center justify-between">

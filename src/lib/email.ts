@@ -448,7 +448,9 @@ export async function sendShippingNotification(orderId: string): Promise<SendRes
 
   return deliver({
     to: order.email,
-    bcc: settings.storeEmail || undefined,
+    // Store's own copy goes to the configured order-notification inbox (so it
+    // follows the admin setting), not the public storeEmail.
+    bcc: (settings.orderNotifyEmail || settings.storeEmail) || undefined,
     subject: `Your Eco Global Foods order #${order.orderNumber} has shipped 🚚`,
     html: shell({
       storeName: settings.storeName,
@@ -543,7 +545,9 @@ export async function sendOrderConfirmation(orderId: string): Promise<SendResult
 
   return deliver({
     to: order.email,
-    bcc: settings.storeEmail || undefined,
+    // Store's own copy goes to the configured order-notification inbox (so it
+    // follows the admin setting), not the public storeEmail.
+    bcc: (settings.orderNotifyEmail || settings.storeEmail) || undefined,
     subject: `Your Eco Global Foods order #${order.orderNumber} 🌿`,
     html,
     text,
