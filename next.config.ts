@@ -39,6 +39,17 @@ const nextConfig: NextConfig = {
       { source: "/pages/faq", destination: "/faq", permanent: true },
       { source: "/blogs/:blog/:article", destination: "/blog/:article", permanent: true },
       { source: "/blogs/:blog", destination: "/blog", permanent: true },
+
+      // --- Product slugs corrected to match their real pack weight (the old
+      // slugs were frozen at an earlier size). 301 the old URLs to the new ones
+      // so indexed/shared links keep working and pass their ranking on. ---
+      { source: "/product/garlic-powder-500gm", destination: "/product/garlic-powder-1kg", permanent: true },
+      { source: "/product/ginger-powder-500gm", destination: "/product/ginger-powder-1kg", permanent: true },
+      { source: "/product/black-pepper-whole-200gm", destination: "/product/black-pepper-whole-1kg", permanent: true },
+      { source: "/product/red-chilli-whole-200gm", destination: "/product/red-chilli-whole-1kg", permanent: true },
+      { source: "/product/garam-masala-whole-500gm", destination: "/product/garam-masala-whole-1kg", permanent: true },
+      { source: "/product/garam-masala-powder-500gm", destination: "/product/garam-masala-powder-1kg", permanent: true },
+      { source: "/product/potato-starch-25kg", destination: "/product/potato-starch-10kg", permanent: true },
     ];
   },
 };
