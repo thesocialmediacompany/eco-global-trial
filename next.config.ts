@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
       { source: "/product/garam-masala-whole-500gm", destination: "/product/garam-masala-whole-1kg", permanent: true },
       { source: "/product/garam-masala-powder-500gm", destination: "/product/garam-masala-powder-1kg", permanent: true },
       { source: "/product/potato-starch-25kg", destination: "/product/potato-starch-10kg", permanent: true },
+
+      // --- Corrected misspelled product slugs. 301 the old typo URLs. ---
+      { source: "/product/chciken-powder-1-kg", destination: "/product/chicken-powder-1-kg", permanent: true },
+      { source: "/product/fried-chicken-merination-1-kg", destination: "/product/fried-chicken-marination-1-kg", permanent: true },
+      { source: "/product/flaxseed-whole-5kgkg", destination: "/product/flaxseed-whole-5kg", permanent: true },
     ];
   },
 };

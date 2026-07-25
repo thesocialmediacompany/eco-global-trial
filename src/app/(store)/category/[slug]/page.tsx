@@ -17,10 +17,23 @@ export async function generateMetadata({
   const { slug } = await params;
   const collection = await prisma.collection.findUnique({ where: { slug } });
   if (!collection) return { title: "Category not found" };
+  const title = collection.seoTitle || collection.name;
+  const description = collection.seoDescription || collection.tagline || undefined;
+  const url = `/category/${slug}`;
   return {
-    title: collection.seoTitle || collection.name,
-    description: collection.seoDescription || collection.tagline,
+    title,
+    description,
     keywords: collection.seoKeywords ? collection.seoKeywords.split(",") : undefined,
+    alternates: { canonical: url },
+    // Without this, shared category links fall back to the generic site preview.
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url,
+      siteName: "Eco Global Foods",
+    },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
