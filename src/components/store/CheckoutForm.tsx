@@ -13,9 +13,12 @@ import { TrustBadges } from "@/components/store/TrustBadges";
 
 interface Props {
   methods: PaymentMethod[];
+  /** Only show the discount-code field when at least one coupon is active, so
+   * customers are never invited to enter a code that can't work. */
+  couponsEnabled?: boolean;
 }
 
-export function CheckoutForm({ methods }: Props) {
+export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
   const router = useRouter();
   const { items, subtotal, totalWeight, shipping, clear } = useCart();
   const [pending, startTransition] = useTransition();
@@ -238,18 +241,17 @@ export function CheckoutForm({ methods }: Props) {
           ))}
         </div>
 
-        {/* discount */}
-        <div className="mt-5 flex gap-2">
-          <input
-            value={discountCode}
-            onChange={(e) => setDiscountCode(e.target.value)}
-            placeholder="Discount code"
-            className="flex-1 rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm uppercase text-purple-900 outline-none focus:border-purple-400"
-          />
-        </div>
-        <p className="mt-1 text-[0.7rem] text-purple-900/40">
-          Try WELCOME20, FREESHIP or EGF500. Applied at checkout.
-        </p>
+        {/* discount — shown only when a coupon is actually active */}
+        {couponsEnabled && (
+          <div className="mt-5 flex gap-2">
+            <input
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value)}
+              placeholder="Discount code"
+              className="flex-1 rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm uppercase text-purple-900 outline-none focus:border-purple-400"
+            />
+          </div>
+        )}
 
         <div className="mt-5 space-y-2 border-t border-purple-100 pt-4 text-sm">
           <div className="flex justify-between text-purple-900/70">

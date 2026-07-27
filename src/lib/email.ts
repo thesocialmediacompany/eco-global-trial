@@ -286,7 +286,6 @@ export async function sendNewsletterWelcome(email: string): Promise<SendResult> 
     </p>
     <p style="color:#5e3052;font-size:14px;margin:0 0 16px;">
       You'll be the first to hear about new products, recipes and special offers.
-      Keep an eye on your inbox for your welcome discount.
     </p>
     ${ctaButton(`${siteUrl}/shop`, "Start shopping")}`;
   return deliver({
