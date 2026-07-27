@@ -23,7 +23,13 @@ function parseNutrition(json: string): { label: string; value: string }[] {
 
 /** Map a Prisma product row to the storefront card/detail `Product` shape. */
 export function toCardProduct(p: DbProductWithRels): Product & {
-  variants: { title: string; price: number | null; inventoryQty: number; weightGrams: number }[];
+  variants: {
+    title: string;
+    price: number | null;
+    compareAtPrice: number | null;
+    inventoryQty: number;
+    weightGrams: number;
+  }[];
 } {
   return {
     id: p.id,
@@ -66,6 +72,7 @@ export function toCardProduct(p: DbProductWithRels): Product & {
     variants: p.variants.map((v) => ({
       title: v.title,
       price: v.price,
+      compareAtPrice: v.compareAtPrice,
       inventoryQty: v.inventoryQty,
       weightGrams: v.weightGrams,
     })),

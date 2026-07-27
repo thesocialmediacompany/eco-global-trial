@@ -234,6 +234,7 @@ export default async function ProductPage({
             slug={product.slug}
             title={product.name}
             basePrice={product.price}
+            compareAtPrice={product.compareAtPrice}
             emoji={product.emoji}
             gradient={product.gradient}
             imageUrl={product.imageUrl}

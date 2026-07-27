@@ -10,6 +10,7 @@ type Variant = {
   id?: string;
   title: string;
   price?: number | null;
+  compareAtPrice?: number | null;
   inventoryQty: number;
   weightGrams?: number;
 };
@@ -199,61 +200,79 @@ export function ProductForm({
               {variants.map((v, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[1fr_88px_80px_88px_auto] items-end gap-2"
+                  className="rounded-xl border border-purple-100 bg-purple-50/30 p-3"
                 >
-                  <Field label={i === 0 ? "Name" : ""}>
+                  {/* Name gets its own full-width row so long titles are readable */}
+                  <div className="flex items-center gap-2">
                     <input
                       value={v.title}
                       onChange={(e) => updateVariant(i, { title: e.target.value })}
-                      placeholder="e.g. Chocolate"
-                      className={inputCls}
+                      placeholder="Name — e.g. Chocolate or 500g"
+                      className={`${inputCls} flex-1`}
                     />
-                  </Field>
-                  <Field label={i === 0 ? "Price" : ""}>
-                    <input
-                      type="number"
-                      min={0}
-                      value={v.price ?? ""}
-                      onChange={(e) =>
-                        updateVariant(i, {
-                          price: e.target.value ? Number(e.target.value) : null,
-                        })
-                      }
-                      placeholder="Base"
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label={i === 0 ? "Stock" : ""}>
-                    <input
-                      type="number"
-                      min={0}
-                      value={v.inventoryQty}
-                      onChange={(e) =>
-                        updateVariant(i, { inventoryQty: Number(e.target.value) })
-                      }
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label={i === 0 ? "Weight (g)" : ""}>
-                    <input
-                      type="number"
-                      min={0}
-                      value={v.weightGrams ?? 0}
-                      onChange={(e) =>
-                        updateVariant(i, { weightGrams: Number(e.target.value) })
-                      }
-                      title="Net weight in grams (used for shipping)"
-                      className={inputCls}
-                    />
-                  </Field>
-                  <button
-                    type="button"
-                    onClick={() => removeVariant(i)}
-                    className="mb-1 grid h-9 w-9 place-items-center rounded-lg text-purple-900/40 hover:bg-rose-50 hover:text-rose-600"
-                    aria-label="Remove variant"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => removeVariant(i)}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-purple-900/40 hover:bg-rose-50 hover:text-rose-600"
+                      aria-label="Remove variant"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Field label="Price">
+                      <input
+                        type="number"
+                        min={0}
+                        value={v.price ?? ""}
+                        onChange={(e) =>
+                          updateVariant(i, {
+                            price: e.target.value ? Number(e.target.value) : null,
+                          })
+                        }
+                        placeholder="Base"
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="Compare at">
+                      <input
+                        type="number"
+                        min={0}
+                        value={v.compareAtPrice ?? ""}
+                        onChange={(e) =>
+                          updateVariant(i, {
+                            compareAtPrice: e.target.value ? Number(e.target.value) : null,
+                          })
+                        }
+                        placeholder="Was"
+                        title="Original price to show struck through (optional)"
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="Stock">
+                      <input
+                        type="number"
+                        min={0}
+                        value={v.inventoryQty}
+                        onChange={(e) =>
+                          updateVariant(i, { inventoryQty: Number(e.target.value) })
+                        }
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="Weight (g)">
+                      <input
+                        type="number"
+                        min={0}
+                        value={v.weightGrams ?? 0}
+                        onChange={(e) =>
+                          updateVariant(i, { weightGrams: Number(e.target.value) })
+                        }
+                        title="Net weight in grams (used for shipping)"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
                 </div>
               ))}
             </div>

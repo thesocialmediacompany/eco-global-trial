@@ -65,6 +65,7 @@ export default async function EditProductPage({
           id: v.id,
           title: v.title,
           price: v.price,
+          compareAtPrice: v.compareAtPrice,
           inventoryQty: v.inventoryQty,
           weightGrams: v.weightGrams,
         })),

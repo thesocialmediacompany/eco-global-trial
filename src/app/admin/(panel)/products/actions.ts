@@ -23,6 +23,7 @@ interface VariantInput {
   id?: string;
   title: string;
   price?: number | null;
+  compareAtPrice?: number | null;
   inventoryQty?: number;
   weightGrams?: number;
 }
@@ -103,6 +104,7 @@ export async function createProduct(formData: FormData) {
           (v, i) => ({
             title: v.title || "Default",
             price: v.price ?? null,
+            compareAtPrice: v.compareAtPrice ?? null,
             inventoryQty: v.inventoryQty ?? 0,
             weightGrams: v.weightGrams ?? 0,
             sortOrder: i,
@@ -133,6 +135,7 @@ export async function updateProduct(id: string, formData: FormData) {
         productId: id,
         title: v.title || "Default",
         price: v.price ?? null,
+        compareAtPrice: v.compareAtPrice ?? null,
         inventoryQty: v.inventoryQty ?? 0,
         weightGrams: v.weightGrams ?? 0,
         sortOrder: i,

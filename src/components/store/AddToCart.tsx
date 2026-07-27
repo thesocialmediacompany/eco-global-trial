@@ -10,6 +10,7 @@ import { paymentMethods } from "@/lib/payments";
 interface Variant {
   title: string;
   price: number | null;
+  compareAtPrice?: number | null;
   inventoryQty: number;
   weightGrams?: number;
 }
@@ -19,6 +20,8 @@ interface Props {
   slug: string;
   title: string;
   basePrice: number;
+  /** Product-level "was" price, used when the selected variant has none. */
+  compareAtPrice?: number | null;
   emoji: string;
   gradient: string;
   imageUrl?: string;
@@ -51,6 +54,7 @@ export function AddToCart({
   slug,
   title,
   basePrice,
+  compareAtPrice,
   emoji,
   gradient,
   imageUrl,
@@ -66,6 +70,9 @@ export function AddToCart({
 
   const variant = variants[selected];
   const price = variant?.price ?? basePrice;
+  // Variant's own "was" price wins; otherwise fall back to the product's.
+  const compareAt = variant?.compareAtPrice ?? compareAtPrice ?? null;
+  const onSale = compareAt != null && compareAt > price;
   const outOfStock = variant ? variant.inventoryQty <= 0 : false;
   const weight = variant?.weightGrams ?? 0;
   const per100 = weight > 0 ? Math.round((price / weight) * 100) : null;
@@ -111,6 +118,11 @@ export function AddToCart({
         <span className="font-display text-3xl font-semibold text-purple-900">
           {formatPKR(price)}
         </span>
+        {onSale && compareAt != null && (
+          <span className="text-lg text-purple-900/40 line-through">
+            {formatPKR(compareAt)}
+          </span>
+        )}
         {per100 && (
           <span className="text-sm text-purple-900/50">{formatPKR(per100)} / 100g</span>
         )}
