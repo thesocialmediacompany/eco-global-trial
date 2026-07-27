@@ -60,6 +60,8 @@ export interface Product {
   ingredients?: string;
   allergens?: string[];
   nutrition?: { label: string; value: string }[];
+  /** per-product frequently asked questions */
+  faqs?: { q: string; a: string }[];
   /** when this product is a bundle: the products inside it */
   bundleContents?: BundleContent[];
   seo: SeoMeta;

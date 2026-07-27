@@ -21,6 +21,7 @@ import { ReviewsSummary } from "@/components/store/ReviewsSummary";
 import { AddToCart } from "@/components/store/AddToCart";
 import { ProductGallery } from "@/components/store/ProductGallery";
 import { ProductDetailsTabs } from "@/components/store/ProductDetailsTabs";
+import { FaqAccordion } from "@/components/store/FaqAccordion";
 import { WishlistButton } from "@/components/store/WishlistButton";
 import { TrustBadges } from "@/components/store/TrustBadges";
 import { SubscribeSave } from "@/components/store/SubscribeSave";
@@ -160,6 +161,22 @@ export default async function ProductPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {product.faqs && product.faqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: product.faqs.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            }),
+          }}
+        />
+      )}
 
       {/* breadcrumb */}
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -293,6 +310,16 @@ export default async function ProductPage({
             </div>
           )}
         </div>
+
+        {/* Per-product FAQs */}
+        {product.faqs && product.faqs.length > 0 && (
+          <div className="mt-12 max-w-3xl">
+            <h2 className="mb-4 font-display text-2xl font-semibold text-purple-900">
+              Frequently asked questions
+            </h2>
+            <FaqAccordion items={product.faqs} />
+          </div>
+        )}
       </div>
 
       {/* bundle contents */}

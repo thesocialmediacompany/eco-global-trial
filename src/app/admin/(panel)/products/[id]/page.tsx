@@ -61,6 +61,14 @@ export default async function EditProductPage({
             return [];
           }
         })(),
+        faqs: (() => {
+          try {
+            const r = JSON.parse(product.faqJson || "[]");
+            return Array.isArray(r) ? r : [];
+          } catch {
+            return [];
+          }
+        })(),
         variants: product.variants.map((v) => ({
           id: v.id,
           title: v.title,

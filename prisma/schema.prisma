@@ -106,6 +106,7 @@ model Product {
   ingredients   String @default("") // free text
   allergens     String @default("") // comma-separated (e.g. "Nuts, Gluten")
   nutritionJson String @default("") // JSON array of { label, value } rows, per serving/100g
+  faqJson       String @default("") // JSON array of { q, a } product FAQs
 
   // SEO (per-product, as requested)
   seoTitle       String @default("")

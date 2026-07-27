@@ -41,6 +41,7 @@ type ProductData = {
   ingredients: string;
   allergens: string;
   nutrition: { label: string; value: string }[];
+  faqs: { q: string; a: string }[];
   variants: Variant[];
 };
 
@@ -99,6 +100,19 @@ export function ProductForm({
     setNutrition((rows) => rows.filter((_, idx) => idx !== i));
   }
 
+  const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(
+    product?.faqs?.length ? product.faqs : [],
+  );
+  function updateFaq(i: number, patch: Partial<{ q: string; a: string }>) {
+    setFaqs((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  }
+  function addFaq() {
+    setFaqs((rows) => [...rows, { q: "", a: "" }]);
+  }
+  function removeFaq(i: number) {
+    setFaqs((rows) => rows.filter((_, idx) => idx !== i));
+  }
+
   return (
     <form action={action} className="mx-auto max-w-5xl pb-24">
       {/* hidden serialized variants */}
@@ -109,6 +123,11 @@ export function ProductForm({
         type="hidden"
         name="nutritionJson"
         value={JSON.stringify(nutrition.filter((r) => r.label.trim() || r.value.trim()))}
+      />
+      <input
+        type="hidden"
+        name="faqJson"
+        value={JSON.stringify(faqs.filter((r) => r.q.trim() && r.a.trim()))}
       />
 
       {/* Top bar */}
@@ -343,6 +362,50 @@ export function ProductForm({
                 <Plus className="h-4 w-4" /> Add nutrition row
               </button>
             </div>
+          </Card>
+
+          {/* FAQs */}
+          <Card title="Product FAQs">
+            <p className="-mt-1 mb-3 text-xs text-purple-900/50">
+              Questions and answers shown on this product&apos;s page (and used for
+              Google&apos;s FAQ rich results). Leave empty to hide the section.
+            </p>
+            <div className="space-y-3">
+              {faqs.map((row, i) => (
+                <div key={i} className="rounded-xl border border-purple-100 bg-purple-50/30 p-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={row.q}
+                      onChange={(e) => updateFaq(i, { q: e.target.value })}
+                      placeholder="Question — e.g. Is this gluten free?"
+                      className={`${inputCls} flex-1`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFaq(i)}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-purple-900/40 hover:bg-rose-50 hover:text-rose-600"
+                      aria-label="Remove FAQ"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={row.a}
+                    onChange={(e) => updateFaq(i, { a: e.target.value })}
+                    placeholder="Answer"
+                    rows={2}
+                    className={`${inputCls} mt-2 w-full`}
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addFaq}
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800"
+            >
+              <Plus className="h-4 w-4" /> Add FAQ
+            </button>
           </Card>
 
           {/* SEO */}

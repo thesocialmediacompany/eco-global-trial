@@ -21,6 +21,20 @@ function parseNutrition(json: string): { label: string; value: string }[] {
   }
 }
 
+/** Safely parse the stored FAQ JSON into question/answer rows. */
+function parseFaqs(json: string): { q: string; a: string }[] {
+  if (!json) return [];
+  try {
+    const rows = JSON.parse(json);
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .filter((r) => r && typeof r.q === "string" && typeof r.a === "string" && r.q.trim() && r.a.trim())
+      .map((r) => ({ q: r.q, a: r.a }));
+  } catch {
+    return [];
+  }
+}
+
 /** Map a Prisma product row to the storefront card/detail `Product` shape. */
 export function toCardProduct(p: DbProductWithRels): Product & {
   variants: {
@@ -62,6 +76,7 @@ export function toCardProduct(p: DbProductWithRels): Product & {
       ? p.allergens.split(",").map((a) => a.trim()).filter(Boolean)
       : [],
     nutrition: parseNutrition(p.nutritionJson),
+    faqs: parseFaqs(p.faqJson),
     seo: {
       title: p.seoTitle || p.title,
       description: p.seoDescription || p.tagline,

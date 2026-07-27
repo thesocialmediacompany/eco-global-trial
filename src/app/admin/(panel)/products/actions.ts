@@ -86,6 +86,7 @@ function parseForm(formData: FormData) {
       ingredients: String(formData.get("ingredients") ?? ""),
       allergens: String(formData.get("allergens") ?? ""),
       nutritionJson: String(formData.get("nutritionJson") ?? ""),
+      faqJson: String(formData.get("faqJson") ?? ""),
     },
     variants,
   };
