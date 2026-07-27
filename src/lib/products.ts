@@ -271,13 +271,23 @@ export async function searchProducts(query: string) {
     where: {
       status: "active",
       OR: [
-        { title: { contains: q } },
-        { description: { contains: q } },
-        { badges: { contains: q } },
+        { title: { contains: q, mode: "insensitive" } },
+        { tagline: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { badges: { contains: q, mode: "insensitive" } },
       ],
     },
     include,
     orderBy: { createdAt: "desc" },
   });
-  return rows.map(toCardProduct);
+  // Rank name matches above products that merely mention the term in their body,
+  // so e.g. "garlic" shows Garlic Powder before items that just reference garlic.
+  const lc = q.toLowerCase();
+  return rows
+    .map(toCardProduct)
+    .sort(
+      (a, b) =>
+        (a.name.toLowerCase().includes(lc) ? 0 : 1) -
+        (b.name.toLowerCase().includes(lc) ? 0 : 1),
+    );
 }
