@@ -75,7 +75,6 @@ export function AddToCart({
   const onSale = compareAt != null && compareAt > price;
   const outOfStock = variant ? variant.inventoryQty <= 0 : false;
   const weight = variant?.weightGrams ?? 0;
-  const per100 = weight > 0 ? Math.round((price / weight) * 100) : null;
 
   // Show the sticky bar once the main buy box scrolls out of view.
   useEffect(() => {
@@ -122,9 +121,6 @@ export function AddToCart({
           <span className="text-lg text-purple-900/40 line-through">
             {formatPKR(compareAt)}
           </span>
-        )}
-        {per100 && (
-          <span className="text-sm text-purple-900/50">{formatPKR(per100)} / 100g</span>
         )}
         {variant && <StockBadge qty={variant.inventoryQty} />}
       </div>
