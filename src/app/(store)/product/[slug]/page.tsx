@@ -115,6 +115,10 @@ export default async function ProductPage({
   const productImages = [
     ...new Set([product.imageUrl, ...(product.images ?? [])].filter(Boolean)),
   ];
+  // Offers want a price-valid date; refreshed on each ISR regeneration.
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -128,7 +132,31 @@ export default async function ProductPage({
       url: productUrl,
       price: product.price,
       priceCurrency: "PKR",
-      availability: "https://schema.org/InStock",
+      priceValidUntil,
+      // Reflect real stock rather than always claiming InStock.
+      availability: product.inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "PK",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 30,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        // Represents the store's free-delivery offer (over the free-shipping
+        // threshold); checkout computes the exact weight-based amount.
+        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "PKR" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "PK" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 2, maxValue: 5, unitCode: "DAY" },
+        },
+      },
     },
     ...(product.rating
       ? {
