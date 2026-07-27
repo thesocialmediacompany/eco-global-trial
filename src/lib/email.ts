@@ -212,6 +212,56 @@ export async function sendAdminOtp(
   });
 }
 
+/** Thank a first-time customer with a single-use discount code for their next order. */
+export async function sendFirstOrderCoupon(
+  email: string,
+  code: string,
+  percent: number,
+  expiresAt: Date,
+  name?: string,
+): Promise<SendResult> {
+  const settings = await getSettings();
+  const first = (name ?? "").split(" ")[0] || "there";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ecoglobalfoods.com";
+  const expiry = new Intl.DateTimeFormat("en-PK", {
+    timeZone: "Asia/Karachi",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(expiresAt);
+  const body = `
+    <p style="color:#2a0f28;font-size:15px;margin:0 0 14px;">
+      Thank you for your first order, ${escapeHtml(first)}! 🌿 As a little welcome,
+      here's <strong>${percent}% off</strong> your next order.
+    </p>
+    <div style="text-align:center;margin:22px 0;">
+      <div style="display:inline-block;background:#f4fbef;border:1px dashed #7bbf5a;border-radius:14px;padding:14px 26px;font-size:26px;font-weight:700;letter-spacing:3px;color:#233f18;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+        ${escapeHtml(code)}
+      </div>
+    </div>
+    <p style="color:#5e3052;font-size:14px;margin:0 0 4px;">
+      Enter it in the discount box at checkout. One-time use, valid until <strong>${expiry}</strong>.
+    </p>
+    ${ctaButton(`${siteUrl}/shop`, "Shop again")}`;
+
+  return deliver({
+    to: email,
+    subject: `Here's ${percent}% off your next order 🎁`,
+    html: shell({
+      storeName: settings.storeName,
+      storeLegalName: settings.storeLegalName,
+      storePhone: settings.storePhone,
+      storeEmail: settings.storeEmail,
+      heading: "A treat for you 🎁",
+      sub: `${percent}% off your next order`,
+      body,
+    }),
+    text:
+      `Thank you for your first order! Here's ${percent}% off your next one.\n\n` +
+      `Code: ${code} (one-time use, valid until ${expiry}). Enter it at checkout.\n${siteUrl}/shop`,
+  });
+}
+
 /** Ask a customer to review the products from a delivered order. */
 export async function sendReviewRequest(orderId: string): Promise<SendResult> {
   const [order, settings] = await Promise.all([

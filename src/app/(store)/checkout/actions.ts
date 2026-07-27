@@ -2,12 +2,17 @@
 
 import { prisma } from "@/lib/prisma";
 import { initialPaymentStatus, type PaymentMethodId } from "@/lib/payments";
-import { sendOrderConfirmation, sendNewOrderStaffAlert } from "@/lib/email";
+import {
+  sendOrderConfirmation,
+  sendNewOrderStaffAlert,
+  sendFirstOrderCoupon,
+} from "@/lib/email";
 import { getShippingConfig } from "@/lib/shipping-config";
 import { computeShipping, bandForWeight } from "@/lib/shipping-rates";
 import { recordSystemOrderEvent } from "@/lib/order-events";
+import { createFirstOrderCoupon } from "@/lib/first-order-coupon";
 import { sendPushToAll } from "@/lib/push";
-import { formatPKR } from "@/lib/utils";
+import { formatPKR, LOOKS_LIKE_EMAIL } from "@/lib/utils";
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -262,6 +267,30 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     });
   } catch (e) {
     console.error("new-order push failed:", e);
+  }
+
+  // First-order thank-you: if this is the customer's first order and they left
+  // a real email, mint a single-use 5% coupon and email it for their next order.
+  if (customer.email && LOOKS_LIKE_EMAIL.test(customer.email)) {
+    try {
+      const orderCount = await prisma.order.count({
+        where: { customerId: customerRecord.id, isDraft: false },
+      });
+      if (orderCount === 1) {
+        const coupon = await createFirstOrderCoupon();
+        if (coupon) {
+          await sendFirstOrderCoupon(
+            customer.email,
+            coupon.code,
+            coupon.percent,
+            coupon.expiresAt,
+            customer.name,
+          );
+        }
+      }
+    } catch (e) {
+      console.error("first-order coupon failed:", e);
+    }
   }
 
   return { ok: true, orderNumber };
