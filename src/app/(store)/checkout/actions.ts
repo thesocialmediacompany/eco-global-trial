@@ -30,7 +30,9 @@ export type PlaceOrderResult =
 /** Validate a discount code against the (server-computed) subtotal. */
 async function resolveDiscount(code: string | undefined, subtotal: number) {
   if (!code) return { discount: 0, freeShipping: false, code: "" };
-  const d = await prisma.discount.findUnique({ where: { code: code.toUpperCase() } });
+  // Normalise the customer's input the same way the admin stores codes (trim +
+  // uppercase), so a stray space or lower-case letters still match.
+  const d = await prisma.discount.findUnique({ where: { code: code.trim().toUpperCase() } });
   if (!d || !d.active) return { discount: 0, freeShipping: false, code: "" };
   if (d.startsAt && d.startsAt > new Date()) return { discount: 0, freeShipping: false, code: "" };
   if (d.endsAt && d.endsAt < new Date()) return { discount: 0, freeShipping: false, code: "" };
