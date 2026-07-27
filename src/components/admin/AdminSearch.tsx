@@ -34,8 +34,16 @@ export function AdminSearch({
         defaultValue={defaultValue}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full rounded-lg border border-purple-100 bg-white py-2 pl-9 pr-3 text-sm text-purple-900 outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-100"
+        className="w-full rounded-lg border border-purple-100 bg-white py-2 pl-9 pr-[4.5rem] text-sm text-purple-900 outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-100"
       />
+      {/* Explicit submit so search works by tap on mobile / the installed PWA,
+          not only via the keyboard's return key. */}
+      <button
+        type="submit"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md gradient-purple-green px-3 py-1 text-xs font-semibold text-cream"
+      >
+        Search
+      </button>
     </form>
   );
 }

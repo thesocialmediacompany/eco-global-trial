@@ -61,12 +61,19 @@ function sinceFor(range: string, now = Date.now()): Date | null {
 }
 
 function whereFor(tab: string, q?: string): Prisma.OrderWhereInput {
+  // Phones are stored digits-only, but people type them with spaces/dashes
+  // ("0340 0239114"). Match on the digit-stripped query too so formatting
+  // doesn't cause a phone search to silently return nothing.
+  const qDigits = q ? q.replace(/\D/g, "") : "";
   const search: Prisma.OrderWhereInput | undefined = q
     ? {
         OR: [
           { customerName: { contains: q, mode: "insensitive" } },
           { email: { contains: q, mode: "insensitive" } },
           { phone: { contains: q, mode: "insensitive" } },
+          ...(qDigits.length >= 4 && qDigits !== q
+            ? [{ phone: { contains: qDigits } }]
+            : []),
           { tags: { contains: q, mode: "insensitive" } },
           { trackingNumber: { contains: q, mode: "insensitive" } },
           // numeric search by order number
