@@ -4,8 +4,43 @@ import { useRef, useState } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 
 /**
+ * Upload one file, preferring a presigned PUT straight to S3 (bypasses the app
+ * server, so large images don't hit the Lambda/WAF request-body limits). Falls
+ * back to the server-side route only when S3 isn't configured (local dev).
+ */
+async function uploadOne(file: File): Promise<string> {
+  const pres = await fetch("/api/admin/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: file.name, contentType: file.type }),
+  });
+  if (!pres.ok) {
+    const err = await pres.json().catch(() => ({}));
+    throw new Error(err.error || "Upload failed");
+  }
+  const info = await pres.json();
+  if (info.uploadUrl) {
+    const put = await fetch(info.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!put.ok) throw new Error(`S3 upload failed (${put.status})`);
+    return info.publicUrl as string;
+  }
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Upload failed");
+  }
+  return (await res.json()).url as string;
+}
+
+/**
  * Manages up to `max` cover images and serialises them into a hidden CSV field
- * the surrounding server-action form submits. Uploads to /api/admin/upload.
+ * the surrounding server-action form submits. Uploads presigned direct-to-S3.
  */
 export function MultiImageField({
   name,
@@ -32,15 +67,10 @@ export function MultiImageField({
     setBusy(true);
     setError("");
     try {
-      const fd = new FormData();
-      Array.from(files).slice(0, room).forEach((f) => fd.append("file", f));
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Upload failed");
-      }
-      const d = await res.json();
-      setImgs((v) => [...v, ...((d.urls as string[]) || [])].slice(0, max));
+      const chosen = Array.from(files).slice(0, room);
+      const urls: string[] = [];
+      for (const f of chosen) urls.push(await uploadOne(f));
+      setImgs((v) => [...v, ...urls].slice(0, max));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
