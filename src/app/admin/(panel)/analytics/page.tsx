@@ -51,8 +51,8 @@ function presetDays(range: string) {
 }
 
 // Pakistan midnight (UTC+5, no DST) for the "Today" range, so it means the
-// local calendar day rather than a rolling 24 hours.
-const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+// local calendar day rather than a rolling 24 hours. (PKT_OFFSET_MS is defined
+// above.)
 function startOfPktToday(now: Date) {
   const shifted = new Date(now.getTime() + PKT_OFFSET_MS);
   shifted.setUTCHours(0, 0, 0, 0);
