@@ -10,6 +10,10 @@ import {
   Monitor,
   MapPin,
   BarChart3,
+  Target,
+  Truck,
+  PackageCheck,
+  XCircle,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
@@ -42,6 +46,14 @@ function fmtShort(d: Date) {
     timeZone: "Asia/Karachi",
     day: "numeric",
     month: "short",
+  }).format(d);
+}
+
+function fmtHour(d: Date) {
+  return new Intl.DateTimeFormat("en-PK", {
+    timeZone: "Asia/Karachi",
+    hour: "numeric",
+    hour12: true,
   }).format(d);
 }
 
@@ -124,6 +136,9 @@ export default async function AnalyticsPage({
     prevItemsAgg,
     topProducts,
     byMethod,
+    fulfilledCount,
+    deliveredCount,
+    cancelledCount,
     ga4,
     topPages,
     devices,
@@ -150,6 +165,11 @@ export default async function AnalyticsPage({
       _count: { _all: true },
       _sum: { total: true },
     }),
+    // COD fulfilment funnel: of the orders PLACED in this window, how many
+    // reached each stage.
+    prisma.order.count({ where: { ...inWindow, fulfillmentStatus: "fulfilled" } }),
+    prisma.order.count({ where: { ...inWindow, deliveredAt: { not: null } } }),
+    prisma.order.count({ where: { ...inWindow, fulfillmentStatus: "cancelled" } }),
     getGA4Overview(pktDay(start), pktDay(end)),
     getGA4TopPages(pktDay(start), pktDay(end)),
     getGA4DeviceBreakdown(pktDay(start), pktDay(end)),
@@ -174,10 +194,17 @@ export default async function AnalyticsPage({
     { label: "Items sold", value: itemsSold.toString(), icon: Package, cur: itemsSold, prev: prevItems },
   ];
 
-  // Revenue trend: daily for short ranges, weekly / monthly for long ones.
+  // Traffic → sales conversion (needs GA4). "Of visitors, how many bought."
+  const conversionRate =
+    ga4 && ga4.sessions > 0 ? (orders / ga4.sessions) * 100 : null;
+  // COD fulfilment funnel + delivery rate.
+  const deliveryRate = orders > 0 ? Math.round((deliveredCount / orders) * 100) : 0;
+
+  // Revenue trend: hourly for Today, else daily / weekly / monthly.
+  const isToday = range === "today" && !custom;
+  const HOUR_MS = 60 * 60 * 1000;
   const days = Math.round(lenMs / DAY_MS);
-  const binDays = days <= 31 ? 1 : days <= 180 ? 7 : 30;
-  const binMs = binDays * DAY_MS;
+  const binMs = isToday ? HOUR_MS : (days <= 31 ? 1 : days <= 180 ? 7 : 30) * DAY_MS;
   const nBins = Math.max(1, Math.ceil(lenMs / binMs));
   const bins = Array.from({ length: nBins }, (_, i) => ({
     start: new Date(start.getTime() + i * binMs),
@@ -188,7 +215,8 @@ export default async function AnalyticsPage({
     bins[idx].revenue += r.total;
   }
   const maxBin = Math.max(1, ...bins.map((b) => b.revenue));
-  const binLabel = binDays === 1 ? "day" : binDays === 7 ? "week" : "month";
+  const binLabel = isToday ? "hour" : binMs === DAY_MS ? "day" : binMs === 7 * DAY_MS ? "week" : "month";
+  const fmtBin = isToday ? fmtHour : fmtShort;
 
   // Sales by city (normalised so "karachi"/"Karachi" merge).
   const cityMap = new Map<string, { orders: number; revenue: number }>();
@@ -270,6 +298,38 @@ export default async function AnalyticsPage({
         Sales counts the value of orders placed in the period (cash-on-delivery included).
       </p>
 
+      {/* COD fulfilment funnel */}
+      <div className="mt-6 rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
+            <Truck className="h-4 w-4 text-green-600" /> Fulfilment · {rangeLabel}
+          </h2>
+          <span className="text-sm">
+            <span className="text-purple-900/50">Delivery rate </span>
+            <span className="font-semibold text-purple-900">{deliveryRate}%</span>
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Placed", value: orders, icon: ShoppingCart, tone: "text-purple-900" },
+            { label: "Fulfilled", value: fulfilledCount, icon: PackageCheck, tone: "text-purple-900" },
+            { label: "Delivered", value: deliveredCount, icon: Truck, tone: "text-green-700" },
+            { label: "Cancelled", value: cancelledCount, icon: XCircle, tone: "text-rose-600" },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-purple-100 bg-cream/40 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wide text-purple-900/50">{s.label}</span>
+                <s.icon className="h-4 w-4 text-purple-900/30" />
+              </div>
+              <div className={`mt-1 font-display text-2xl font-semibold ${s.tone}`}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-purple-900/40">
+          Of orders placed in this period. Delivery rate climbs over time — recent orders may still be in transit (2–5 days).
+        </p>
+      </div>
+
       {/* Revenue trend */}
       <div className="mt-6 rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
@@ -288,14 +348,14 @@ export default async function AnalyticsPage({
                   <div
                     className="w-full rounded-t gradient-purple-green transition-all"
                     style={{ height: `${Math.max(2, (b.revenue / maxBin) * 100)}%` }}
-                    title={`${fmtShort(b.start)}: ${formatPKR(b.revenue)}`}
+                    title={`${fmtBin(b.start)}: ${formatPKR(b.revenue)}`}
                   />
                 </div>
               ))}
             </div>
             <div className="mt-2 flex justify-between text-[0.65rem] text-purple-900/40">
-              <span>{fmtShort(bins[0].start)}</span>
-              <span>{fmtShort(bins[bins.length - 1].start)}</span>
+              <span>{fmtBin(bins[0].start)}</span>
+              <span>{fmtBin(bins[bins.length - 1].start)}</span>
             </div>
           </>
         )}
@@ -310,10 +370,11 @@ export default async function AnalyticsPage({
               Google Analytics · {rangeLabel}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
             {[
               { label: "Users",        value: ga4.users.toLocaleString(),          icon: Users },
               { label: "Sessions",     value: ga4.sessions.toLocaleString(),       icon: TrendingUp },
+              { label: "Conversion",   value: conversionRate != null ? `${conversionRate.toFixed(1)}%` : "—", icon: Target },
               { label: "Page Views",   value: ga4.pageViews.toLocaleString(),      icon: Eye },
               { label: "Avg Duration", value: fmtDuration(ga4.avgSessionDuration), icon: Monitor },
               { label: "Bounce Rate",  value: `${ga4.bounceRate}%`,                icon: Globe },
