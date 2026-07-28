@@ -9,7 +9,6 @@ import {
   Globe,
   Monitor,
   MapPin,
-  BarChart3,
   Target,
   Truck,
   PackageCheck,
@@ -30,10 +29,20 @@ import {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
+// Google Analytics' primary accent (the blue of its overview graph).
+const GA_BLUE = "#1a73e8";
+
 function fmtDuration(secs: number) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}m ${s}s`;
+}
+
+/** Compact money for chart axes: Rs 12.5k / Rs 1.2M. */
+function fmtCompact(n: number) {
+  if (n >= 1_000_000) return `Rs ${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `Rs ${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+  return `Rs ${Math.round(n)}`;
 }
 
 /** The date a Date falls on in Pakistan, as YYYY-MM-DD (what GA4 wants). */
@@ -78,14 +87,69 @@ function titleCase(s: string) {
 /** ▲/▼ % vs the previous equal period. Everything here is "up = good". */
 function Delta({ cur, prev }: { cur: number; prev: number }) {
   if (prev <= 0) {
-    return cur > 0 ? <span className="text-xs font-semibold text-green-600">new</span> : null;
+    return cur > 0 ? <span className="text-xs font-semibold text-[#188038]">New</span> : null;
   }
   const pct = Math.round(((cur - prev) / prev) * 100);
   const up = pct >= 0;
   return (
-    <span className={`text-xs font-semibold ${up ? "text-green-600" : "text-rose-600"}`}>
+    <span className={`text-xs font-semibold ${up ? "text-[#188038]" : "text-[#d93025]"}`}>
       {up ? "▲" : "▼"} {Math.abs(pct)}%
     </span>
+  );
+}
+
+/**
+ * GA4-style area + line chart. Full-bleed SVG (distorts horizontally via
+ * preserveAspectRatio=none, but the stroke stays crisp with non-scaling-stroke),
+ * with three horizontal gridlines + value labels drawn as an HTML overlay so the
+ * text never distorts.
+ */
+function AreaChart({ values }: { values: number[] }) {
+  const W = 720;
+  const H = 240;
+  const padY = 6;
+  const max = Math.max(1, ...values);
+  const n = values.length;
+  const xAt = (i: number) => (n <= 1 ? W / 2 : (i / (n - 1)) * W);
+  const yAt = (v: number) => padY + (1 - v / max) * (H - 2 * padY);
+  const line = values.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(" ");
+  const area = `0,${H} ${line} ${W},${H}`;
+
+  return (
+    <div className="relative h-56 w-full">
+      {/* Gridlines + axis labels (HTML overlay, undistorted). */}
+      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+        {[max, max / 2, 0].map((v, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="w-14 shrink-0 text-right text-[0.65rem] tabular-nums text-slate-400">
+              {fmtCompact(v)}
+            </span>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+        ))}
+      </div>
+      {/* The chart itself, inset past the label gutter. */}
+      <div className="absolute inset-y-0 left-16 right-0">
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-full w-full">
+          <defs>
+            <linearGradient id="ga4-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={GA_BLUE} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={GA_BLUE} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon points={area} fill="url(#ga4-area)" />
+          <polyline
+            points={line}
+            fill="none"
+            stroke={GA_BLUE}
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -214,7 +278,6 @@ export default async function AnalyticsPage({
     const idx = Math.min(nBins - 1, Math.max(0, Math.floor((r.createdAt.getTime() - start.getTime()) / binMs)));
     bins[idx].revenue += r.total;
   }
-  const maxBin = Math.max(1, ...bins.map((b) => b.revenue));
   const binLabel = isToday ? "hour" : binMs === DAY_MS ? "day" : binMs === 7 * DAY_MS ? "week" : "month";
   const fmtBin = isToday ? fmtHour : fmtShort;
 
@@ -240,163 +303,118 @@ export default async function AnalyticsPage({
   const maxPageViews = Math.max(1, ...topPages.map((p) => p.views));
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl text-slate-700">
       {/* Header + range */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-semibold text-purple-900">Analytics</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analytics</h1>
+          <p className="mt-0.5 text-sm text-slate-500">{rangeLabel} · vs previous period</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
-          {presets.map((p) => (
-            <Link
-              key={p.value}
-              href={`?range=${p.value}`}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                range === p.value && !custom
-                  ? "bg-purple-900 text-white"
-                  : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-              }`}
-            >
-              {p.label}
-            </Link>
-          ))}
+          {presets.map((p) => {
+            const active = range === p.value && !custom;
+            return (
+              <Link
+                key={p.value}
+                href={`?range=${p.value}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  active
+                    ? "bg-[#1a73e8] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {p.label}
+              </Link>
+            );
+          })}
           <form method="GET" className="flex items-center gap-1">
             <input type="date" name="from" defaultValue={params.from ?? ""}
-              className="rounded-lg border border-purple-100 px-2 py-1 text-xs text-purple-900 outline-none focus:border-purple-300" />
-            <span className="text-xs text-purple-900/50">to</span>
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#1a73e8]" />
+            <span className="text-xs text-slate-400">to</span>
             <input type="date" name="to" defaultValue={params.to ?? ""}
-              className="rounded-lg border border-purple-100 px-2 py-1 text-xs text-purple-900 outline-none focus:border-purple-300" />
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#1a73e8]" />
             <button type="submit"
-              className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700">
+              className="rounded-lg bg-[#1a73e8] px-3 py-1 text-xs font-semibold text-white hover:bg-[#1765cc]">
               Apply
             </button>
           </form>
         </div>
       </div>
 
-      {/* Store stats — now scoped to the selected range */}
-      <div className="mb-2 flex items-center gap-2">
-        <ShoppingCart className="h-4 w-4 text-green-600" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-purple-900/50">
-          Store · {rangeLabel}
-        </span>
-      </div>
+      {/* Store scorecards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {storeStats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
+          <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-purple-900/50">{s.label}</span>
-              <s.icon className="h-4 w-4 text-green-600" />
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{s.label}</span>
+              <s.icon className="h-4 w-4 text-slate-300" />
             </div>
-            <div className="mt-2 font-display text-2xl font-semibold text-purple-900">{s.value}</div>
+            <div className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{s.value}</div>
             <div className="mt-1 flex items-center gap-1.5">
               <Delta cur={s.cur} prev={s.prev} />
-              <span className="text-xs text-purple-900/40">vs previous period</span>
+              <span className="text-xs text-slate-400">vs previous</span>
             </div>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs text-purple-900/40">
-        Sales counts the value of orders placed in the period (cash-on-delivery included).
-      </p>
 
-      {/* COD fulfilment funnel */}
-      <div className="mt-6 rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
-            <Truck className="h-4 w-4 text-green-600" /> Fulfilment · {rangeLabel}
-          </h2>
-          <span className="text-sm">
-            <span className="text-purple-900/50">Delivery rate </span>
-            <span className="font-semibold text-purple-900">{deliveryRate}%</span>
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "Placed", value: orders, icon: ShoppingCart, tone: "text-purple-900" },
-            { label: "Fulfilled", value: fulfilledCount, icon: PackageCheck, tone: "text-purple-900" },
-            { label: "Delivered", value: deliveredCount, icon: Truck, tone: "text-green-700" },
-            { label: "Cancelled", value: cancelledCount, icon: XCircle, tone: "text-rose-600" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-purple-100 bg-cream/40 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wide text-purple-900/50">{s.label}</span>
-                <s.icon className="h-4 w-4 text-purple-900/30" />
-              </div>
-              <div className={`mt-1 font-display text-2xl font-semibold ${s.tone}`}>{s.value}</div>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-xs text-purple-900/40">
-          Of orders placed in this period. Delivery rate climbs over time — recent orders may still be in transit (2–5 days).
-        </p>
-      </div>
-
-      {/* Revenue trend */}
-      <div className="mt-6 rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
-            <BarChart3 className="h-4 w-4 text-green-600" /> Revenue trend
-          </h2>
-          <span className="text-xs text-purple-900/50">per {binLabel} · {formatPKR(grossSales)} total</span>
+      {/* Revenue over time — the hero graph */}
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-medium text-slate-500">Sales over time</h2>
+            <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{formatPKR(grossSales)}</div>
+          </div>
+          <span className="text-xs text-slate-400">by {binLabel}</span>
         </div>
         {orders === 0 ? (
-          <p className="py-10 text-center text-sm text-purple-900/45">No orders in this period.</p>
+          <p className="py-14 text-center text-sm text-slate-400">No orders in this period.</p>
         ) : (
           <>
-            <div className="flex h-44 items-end gap-1">
-              {bins.map((b, i) => (
-                <div key={i} className="group relative flex h-full flex-1 flex-col items-center justify-end">
-                  <div
-                    className="w-full rounded-t gradient-purple-green transition-all"
-                    style={{ height: `${Math.max(2, (b.revenue / maxBin) * 100)}%` }}
-                    title={`${fmtBin(b.start)}: ${formatPKR(b.revenue)}`}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 flex justify-between text-[0.65rem] text-purple-900/40">
+            <AreaChart values={bins.map((b) => b.revenue)} />
+            <div className="mt-2 flex justify-between pl-16 text-[0.65rem] text-slate-400">
               <span>{fmtBin(bins[0].start)}</span>
+              {bins.length > 2 && <span>{fmtBin(bins[Math.floor((bins.length - 1) / 2)].start)}</span>}
               <span>{fmtBin(bins[bins.length - 1].start)}</span>
             </div>
           </>
         )}
       </div>
 
-      {/* GA4 */}
+      {/* Acquisition — Google Analytics traffic */}
+      <div className="mt-6 mb-3 flex items-center gap-2">
+        <Globe className="h-4 w-4 text-[#1a73e8]" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Acquisition · Google Analytics
+        </span>
+      </div>
       {ga4 ? (
-        <>
-          <div className="mt-6 mb-2 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-purple-400" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-purple-900/50">
-              Google Analytics · {rangeLabel}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
-            {[
-              { label: "Users",        value: ga4.users.toLocaleString(),          icon: Users },
-              { label: "Sessions",     value: ga4.sessions.toLocaleString(),       icon: TrendingUp },
-              { label: "Conversion",   value: conversionRate != null ? `${conversionRate.toFixed(1)}%` : "—", icon: Target },
-              { label: "Page Views",   value: ga4.pageViews.toLocaleString(),      icon: Eye },
-              { label: "Avg Duration", value: fmtDuration(ga4.avgSessionDuration), icon: Monitor },
-              { label: "Bounce Rate",  value: `${ga4.bounceRate}%`,                icon: Globe },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-purple-100 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium uppercase tracking-wide text-purple-900/50">{s.label}</span>
-                  <s.icon className="h-4 w-4 text-purple-400" />
-                </div>
-                <div className="mt-2 font-display text-2xl font-semibold text-purple-900">{s.value}</div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+          {[
+            { label: "Users",        value: ga4.users.toLocaleString(),          icon: Users },
+            { label: "Sessions",     value: ga4.sessions.toLocaleString(),       icon: TrendingUp },
+            { label: "Conversion",   value: conversionRate != null ? `${conversionRate.toFixed(1)}%` : "—", icon: Target },
+            { label: "Page Views",   value: ga4.pageViews.toLocaleString(),      icon: Eye },
+            { label: "Avg Duration", value: fmtDuration(ga4.avgSessionDuration), icon: Monitor },
+            { label: "Bounce Rate",  value: `${ga4.bounceRate}%`,                icon: Globe },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{s.label}</span>
+                <s.icon className="h-4 w-4 text-slate-300" />
               </div>
-            ))}
-          </div>
-        </>
+              <div className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{s.value}</div>
+            </div>
+          ))}
+        </div>
       ) : !ga4Configured() ? (
-        <p className="mt-6 rounded-xl border border-purple-100 bg-cream/50 px-4 py-3 text-sm text-purple-900/70">
+        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           Google Analytics isn&apos;t connected yet. Add <code>GA4_PROPERTY_ID</code>,{" "}
           <code>GA4_CLIENT_EMAIL</code> and <code>GA4_PRIVATE_KEY</code> in AWS Amplify
           (Hosting → Environment variables) and redeploy. Your store figures above are unaffected.
         </p>
       ) : (
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <p className="font-semibold">Google Analytics didn&apos;t return data.</p>
           {ga4Problem?.error && (
             <p className="mt-1.5">
@@ -414,54 +432,85 @@ export default async function AnalyticsPage({
         </div>
       )}
 
+      {/* COD fulfilment funnel */}
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-medium text-slate-500">
+            <Truck className="h-4 w-4 text-slate-400" /> Fulfilment
+          </h2>
+          <span className="text-sm">
+            <span className="text-slate-500">Delivery rate </span>
+            <span className="font-semibold text-slate-900">{deliveryRate}%</span>
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Placed", value: orders, icon: ShoppingCart, tone: "text-slate-900" },
+            { label: "Fulfilled", value: fulfilledCount, icon: PackageCheck, tone: "text-slate-900" },
+            { label: "Delivered", value: deliveredCount, icon: Truck, tone: "text-[#188038]" },
+            { label: "Cancelled", value: cancelledCount, icon: XCircle, tone: "text-[#d93025]" },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{s.label}</span>
+                <s.icon className="h-4 w-4 text-slate-300" />
+              </div>
+              <div className={`mt-1 text-2xl font-semibold tabular-nums ${s.tone}`}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-slate-400">
+          Of orders placed in this period. Delivery rate climbs over time — recent orders may still be in transit (2–5 days).
+        </p>
+      </div>
+
+      {/* Breakdown tables */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Top products */}
-        <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-5 font-display text-lg font-semibold text-purple-900">Top products</h2>
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-sm font-medium text-slate-500">Top products</h2>
           <div className="space-y-4">
             {topProducts.map((p) => (
               <div key={p.title}>
                 <div className="mb-1 flex justify-between text-sm">
-                  <span className="text-purple-900">{p.title}</span>
-                  <span className="text-purple-900/60">{p._sum.quantity} sold</span>
+                  <span className="text-slate-700">{p.title}</span>
+                  <span className="tabular-nums text-slate-500">{p._sum.quantity} sold</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-purple-100">
-                  <div className="h-full rounded-full gradient-purple-green"
-                    style={{ width: `${((p._sum.quantity ?? 0) / maxQty) * 100}%` }} />
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full" style={{ width: `${((p._sum.quantity ?? 0) / maxQty) * 100}%`, backgroundColor: GA_BLUE }} />
                 </div>
               </div>
             ))}
-            {topProducts.length === 0 && <p className="text-sm text-purple-900/50">No sales in this period.</p>}
+            {topProducts.length === 0 && <p className="text-sm text-slate-400">No sales in this period.</p>}
           </div>
         </div>
 
         {/* Sales by city */}
-        <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-5 flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
-            <MapPin className="h-4 w-4 text-green-600" /> Sales by city
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 flex items-center gap-2 text-sm font-medium text-slate-500">
+            <MapPin className="h-4 w-4 text-slate-400" /> Sales by city
           </h2>
           <div className="space-y-4">
             {cities.map((c) => (
               <div key={c.city}>
                 <div className="mb-1 flex justify-between text-sm">
-                  <span className="text-purple-900">{c.city}</span>
-                  <span className="text-purple-900/60">
+                  <span className="text-slate-700">{c.city}</span>
+                  <span className="tabular-nums text-slate-500">
                     {c.orders} order{c.orders === 1 ? "" : "s"} · {formatPKR(c.revenue)}
                   </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-purple-100">
-                  <div className="h-full rounded-full gradient-green"
-                    style={{ width: `${(c.revenue / maxCityRev) * 100}%` }} />
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxCityRev) * 100}%`, backgroundColor: GA_BLUE }} />
                 </div>
               </div>
             ))}
-            {cities.length === 0 && <p className="text-sm text-purple-900/50">No orders in this period.</p>}
+            {cities.length === 0 && <p className="text-sm text-slate-400">No orders in this period.</p>}
           </div>
         </div>
 
         {/* Payment methods */}
-        <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-5 font-display text-lg font-semibold text-purple-900">Orders by payment method</h2>
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-sm font-medium text-slate-500">Orders by payment method</h2>
           <div className="space-y-4">
             {byMethod.map((m) => {
               const label = getPaymentMethod(m.paymentMethod)?.label ?? m.paymentMethod;
@@ -469,35 +518,34 @@ export default async function AnalyticsPage({
               return (
                 <div key={m.paymentMethod}>
                   <div className="mb-1 flex justify-between text-sm">
-                    <span className="text-purple-900">{label}</span>
-                    <span className="text-purple-900/60">{m._count._all} · {formatPKR(m._sum.total ?? 0)}</span>
+                    <span className="text-slate-700">{label}</span>
+                    <span className="tabular-nums text-slate-500">{m._count._all} · {formatPKR(m._sum.total ?? 0)}</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-purple-100">
-                    <div className="h-full rounded-full gradient-green" style={{ width: `${pct}%` }} />
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: GA_BLUE }} />
                   </div>
                 </div>
               );
             })}
-            {byMethod.length === 0 && <p className="text-sm text-purple-900/50">No orders in this period.</p>}
+            {byMethod.length === 0 && <p className="text-sm text-slate-400">No orders in this period.</p>}
           </div>
         </div>
 
         {/* Top Pages (GA4) */}
         {topPages.length > 0 && (
-          <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 font-display text-lg font-semibold text-purple-900">
-              Top pages <span className="text-sm font-normal text-purple-900/40">(GA4)</span>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-sm font-medium text-slate-500">
+              Top pages <span className="font-normal text-slate-400">· Google Analytics</span>
             </h2>
             <div className="space-y-4">
               {topPages.map((p) => (
                 <div key={p.path}>
                   <div className="mb-1 flex justify-between text-sm">
-                    <span className="truncate text-purple-900">{p.path}</span>
-                    <span className="ml-2 shrink-0 text-purple-900/60">{p.views.toLocaleString()} views</span>
+                    <span className="truncate text-slate-700">{p.path}</span>
+                    <span className="ml-2 shrink-0 tabular-nums text-slate-500">{p.views.toLocaleString()} views</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-purple-100">
-                    <div className="h-full rounded-full bg-purple-400"
-                      style={{ width: `${(p.views / maxPageViews) * 100}%` }} />
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${(p.views / maxPageViews) * 100}%`, backgroundColor: GA_BLUE }} />
                   </div>
                 </div>
               ))}
@@ -507,9 +555,9 @@ export default async function AnalyticsPage({
 
         {/* Device breakdown (GA4) */}
         {devices.length > 0 && (
-          <div className="rounded-xl border border-purple-100 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 font-display text-lg font-semibold text-purple-900">
-              Device breakdown <span className="text-sm font-normal text-purple-900/40">(GA4)</span>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-sm font-medium text-slate-500">
+              Device breakdown <span className="font-normal text-slate-400">· Google Analytics</span>
             </h2>
             <div className="space-y-4">
               {devices.map((d) => {
@@ -517,11 +565,11 @@ export default async function AnalyticsPage({
                 return (
                   <div key={d.device}>
                     <div className="mb-1 flex justify-between text-sm">
-                      <span className="capitalize text-purple-900">{d.device}</span>
-                      <span className="text-purple-900/60">{pct}% · {d.sessions.toLocaleString()} sessions</span>
+                      <span className="capitalize text-slate-700">{d.device}</span>
+                      <span className="tabular-nums text-slate-500">{pct}% · {d.sessions.toLocaleString()} sessions</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-purple-100">
-                      <div className="h-full rounded-full gradient-green" style={{ width: `${pct}%` }} />
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: GA_BLUE }} />
                     </div>
                   </div>
                 );
