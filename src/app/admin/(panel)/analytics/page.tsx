@@ -50,6 +50,15 @@ function presetDays(range: string) {
   return m ? Number(m[1]) : 30;
 }
 
+// Pakistan midnight (UTC+5, no DST) for the "Today" range, so it means the
+// local calendar day rather than a rolling 24 hours.
+const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+function startOfPktToday(now: Date) {
+  const shifted = new Date(now.getTime() + PKT_OFFSET_MS);
+  shifted.setUTCHours(0, 0, 0, 0);
+  return new Date(shifted.getTime() - PKT_OFFSET_MS);
+}
+
 function titleCase(s: string) {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -78,6 +87,7 @@ export default async function AnalyticsPage({
 
   const range = params.range ?? "30daysAgo";
   const presets = [
+    { label: "Today",    value: "today"      },
     { label: "7 days",   value: "7daysAgo"   },
     { label: "30 days",  value: "30daysAgo"  },
     { label: "90 days",  value: "90daysAgo"  },
@@ -92,7 +102,9 @@ export default async function AnalyticsPage({
   const custom = Boolean(params.from && params.to);
   const start = custom
     ? new Date(`${params.from}T00:00:00+05:00`)
-    : new Date(now.getTime() - presetDays(range) * DAY_MS);
+    : range === "today"
+      ? startOfPktToday(now)
+      : new Date(now.getTime() - presetDays(range) * DAY_MS);
   const end = custom ? new Date(`${params.to}T23:59:59.999+05:00`) : now;
   const lenMs = Math.max(DAY_MS, end.getTime() - start.getTime());
   const prevStart = new Date(start.getTime() - lenMs);
