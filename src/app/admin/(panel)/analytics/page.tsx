@@ -13,6 +13,9 @@ import {
   Truck,
   PackageCheck,
   XCircle,
+  UserPlus,
+  Repeat,
+  RotateCcw,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
@@ -29,8 +32,9 @@ import {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
-// Google Analytics' primary accent (the blue of its overview graph).
-const GA_BLUE = "#1a73e8";
+// Eco Global Foods brand accents — the GA4 layout in our own palette.
+const ACCENT = "#5e3052"; // purple-600 (primary)
+const POSITIVE = "#3c6326"; // green-600 (up = good)
 
 function fmtDuration(secs: number) {
   const m = Math.floor(secs / 60);
@@ -87,12 +91,12 @@ function titleCase(s: string) {
 /** ▲/▼ % vs the previous equal period. Everything here is "up = good". */
 function Delta({ cur, prev }: { cur: number; prev: number }) {
   if (prev <= 0) {
-    return cur > 0 ? <span className="text-xs font-semibold text-[#188038]">New</span> : null;
+    return cur > 0 ? <span className="text-xs font-semibold text-[#3c6326]">New</span> : null;
   }
   const pct = Math.round(((cur - prev) / prev) * 100);
   const up = pct >= 0;
   return (
-    <span className={`text-xs font-semibold ${up ? "text-[#188038]" : "text-[#d93025]"}`}>
+    <span className={`text-xs font-semibold ${up ? "text-[#3c6326]" : "text-[#d93025]"}`}>
       {up ? "▲" : "▼"} {Math.abs(pct)}%
     </span>
   );
@@ -133,15 +137,15 @@ function AreaChart({ values }: { values: number[] }) {
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-full w-full">
           <defs>
             <linearGradient id="ga4-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={GA_BLUE} stopOpacity="0.18" />
-              <stop offset="100%" stopColor={GA_BLUE} stopOpacity="0" />
+              <stop offset="0%" stopColor={ACCENT} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
             </linearGradient>
           </defs>
           <polygon points={area} fill="url(#ga4-area)" />
           <polyline
             points={line}
             fill="none"
-            stroke={GA_BLUE}
+            stroke={ACCENT}
             strokeWidth="2.5"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -206,6 +210,9 @@ export default async function AnalyticsPage({
     ga4,
     topPages,
     devices,
+    custActive,
+    custFirst,
+    abandonedByStatus,
   ] = await Promise.all([
     // One read powers the totals, the trend chart and the city breakdown.
     prisma.order.findMany({
@@ -237,6 +244,30 @@ export default async function AnalyticsPage({
     getGA4Overview(pktDay(start), pktDay(end)),
     getGA4TopPages(pktDay(start), pktDay(end)),
     getGA4DeviceBreakdown(pktDay(start), pktDay(end)),
+    // New vs returning: customers who ordered in this window, with the revenue
+    // they brought. Paired with each customer's all-time first order (below) to
+    // decide which side they fall on.
+    prisma.order.groupBy({
+      by: ["customerId"],
+      where: { ...inWindow, customerId: { not: null } },
+      _count: { _all: true },
+      _sum: { total: true },
+    }),
+    // Every customer's first-ever (non-draft) order date, so a buyer counts as
+    // "new" only if that first order lands inside the window.
+    prisma.order.groupBy({
+      by: ["customerId"],
+      where: { isDraft: false, customerId: { not: null } },
+      _min: { createdAt: true },
+    }),
+    // Abandoned-cart recovery: carts abandoned in this window, split by whether
+    // they were later recovered, with the subtotal at stake on each side.
+    prisma.abandonedCheckout.groupBy({
+      by: ["recovered"],
+      where: { createdAt: { gte: start, lte: end } },
+      _count: { _all: true },
+      _sum: { subtotal: true },
+    }),
   ]);
 
   const ga4Problem = !ga4 && ga4Configured() ? await ga4Diagnose() : null;
@@ -263,6 +294,34 @@ export default async function AnalyticsPage({
     ga4 && ga4.sessions > 0 ? (orders / ga4.sessions) * 100 : null;
   // COD fulfilment funnel + delivery rate.
   const deliveryRate = orders > 0 ? Math.round((deliveredCount / orders) * 100) : 0;
+
+  // New vs returning customers. A customer is "new" when their all-time first
+  // order falls inside this window; anyone with an earlier order is "returning".
+  const firstOrderById = new Map(custFirst.map((c) => [c.customerId, c._min.createdAt]));
+  let newCust = 0, retCust = 0, newRev = 0, retRev = 0;
+  for (const c of custActive) {
+    const first = firstOrderById.get(c.customerId);
+    const isReturning = first != null && first < start;
+    if (isReturning) {
+      retCust += 1;
+      retRev += c._sum.total ?? 0;
+    } else {
+      newCust += 1;
+      newRev += c._sum.total ?? 0;
+    }
+  }
+  const activeCust = newCust + retCust;
+  const repeatRate = activeCust > 0 ? Math.round((retCust / activeCust) * 100) : 0;
+
+  // Abandoned-cart recovery snapshot.
+  const abRecoveredRow = abandonedByStatus.find((r) => r.recovered);
+  const abLostRow = abandonedByStatus.find((r) => !r.recovered);
+  const abRecovered = abRecoveredRow?._count._all ?? 0;
+  const abLost = abLostRow?._count._all ?? 0;
+  const abTotal = abRecovered + abLost;
+  const abRecoveredVal = abRecoveredRow?._sum.subtotal ?? 0;
+  const abLostVal = abLostRow?._sum.subtotal ?? 0;
+  const recoveryRate = abTotal > 0 ? Math.round((abRecovered / abTotal) * 100) : 0;
 
   // Revenue trend: hourly for Today, else daily / weekly / monthly.
   const isToday = range === "today" && !custom;
@@ -319,7 +378,7 @@ export default async function AnalyticsPage({
                 href={`?range=${p.value}`}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                   active
-                    ? "bg-[#1a73e8] text-white"
+                    ? "bg-[#5e3052] text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
@@ -329,12 +388,12 @@ export default async function AnalyticsPage({
           })}
           <form method="GET" className="flex items-center gap-1">
             <input type="date" name="from" defaultValue={params.from ?? ""}
-              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#1a73e8]" />
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#5e3052]" />
             <span className="text-xs text-slate-400">to</span>
             <input type="date" name="to" defaultValue={params.to ?? ""}
-              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#1a73e8]" />
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 outline-none focus:border-[#5e3052]" />
             <button type="submit"
-              className="rounded-lg bg-[#1a73e8] px-3 py-1 text-xs font-semibold text-white hover:bg-[#1765cc]">
+              className="rounded-lg bg-[#5e3052] px-3 py-1 text-xs font-semibold text-white hover:bg-[#4a2341]">
               Apply
             </button>
           </form>
@@ -383,7 +442,7 @@ export default async function AnalyticsPage({
 
       {/* Acquisition — Google Analytics traffic */}
       <div className="mt-6 mb-3 flex items-center gap-2">
-        <Globe className="h-4 w-4 text-[#1a73e8]" />
+        <Globe className="h-4 w-4 text-[#5e3052]" />
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Acquisition · Google Analytics
         </span>
@@ -447,7 +506,7 @@ export default async function AnalyticsPage({
           {[
             { label: "Placed", value: orders, icon: ShoppingCart, tone: "text-slate-900" },
             { label: "Fulfilled", value: fulfilledCount, icon: PackageCheck, tone: "text-slate-900" },
-            { label: "Delivered", value: deliveredCount, icon: Truck, tone: "text-[#188038]" },
+            { label: "Delivered", value: deliveredCount, icon: Truck, tone: "text-[#3c6326]" },
             { label: "Cancelled", value: cancelledCount, icon: XCircle, tone: "text-[#d93025]" },
           ].map((s) => (
             <div key={s.label} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -464,6 +523,101 @@ export default async function AnalyticsPage({
         </p>
       </div>
 
+      {/* Customer loyalty + cart recovery */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* New vs returning customers */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-sm font-medium text-slate-500">
+              <Users className="h-4 w-4 text-slate-400" /> Customers
+            </h2>
+            <span className="text-sm">
+              <span className="text-slate-500">Repeat rate </span>
+              <span className="font-semibold text-slate-900">{repeatRate}%</span>
+            </span>
+          </div>
+          {activeCust === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">No customers in this period.</p>
+          ) : (
+            <>
+              <div className="flex h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full" style={{ width: `${(retCust / activeCust) * 100}%`, backgroundColor: ACCENT }} />
+                <div className="h-full" style={{ width: `${(newCust / activeCust) * 100}%`, backgroundColor: "#bd8fb3" }} />
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: "#bd8fb3" }} />
+                    <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <UserPlus className="h-3.5 w-3.5" /> New
+                    </span>
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{newCust}</div>
+                  <div className="text-xs tabular-nums text-slate-500">{formatPKR(newRev)}</div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: ACCENT }} />
+                    <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <Repeat className="h-3.5 w-3.5" /> Returning
+                    </span>
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{retCust}</div>
+                  <div className="text-xs tabular-nums text-slate-500">{formatPKR(retRev)}</div>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-400">
+                Buyers with an order in this period. &ldquo;Returning&rdquo; had ordered before it began.
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Abandoned-cart recovery */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-sm font-medium text-slate-500">
+              <RotateCcw className="h-4 w-4 text-slate-400" /> Cart recovery
+            </h2>
+            <span className="text-sm">
+              <span className="text-slate-500">Recovery rate </span>
+              <span className="font-semibold text-slate-900">{recoveryRate}%</span>
+            </span>
+          </div>
+          {abTotal === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">No abandoned carts in this period.</p>
+          ) : (
+            <>
+              <div className="flex h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full" style={{ width: `${(abRecovered / abTotal) * 100}%`, backgroundColor: POSITIVE }} />
+                <div className="h-full" style={{ width: `${(abLost / abTotal) * 100}%`, backgroundColor: "#cbd5e1" }} />
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: POSITIVE }} />
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Recovered</span>
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{abRecovered}</div>
+                  <div className="text-xs tabular-nums text-slate-500">{formatPKR(abRecoveredVal)}</div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300" />
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Still lost</span>
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{abLost}</div>
+                  <div className="text-xs tabular-nums text-slate-500">{formatPKR(abLostVal)}</div>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-400">
+                Carts abandoned in this period. Recovery nudges send at 1h and 24h, then stop after 7 days.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Breakdown tables */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Top products */}
@@ -477,7 +631,7 @@ export default async function AnalyticsPage({
                   <span className="tabular-nums text-slate-500">{p._sum.quantity} sold</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full" style={{ width: `${((p._sum.quantity ?? 0) / maxQty) * 100}%`, backgroundColor: GA_BLUE }} />
+                  <div className="h-full rounded-full" style={{ width: `${((p._sum.quantity ?? 0) / maxQty) * 100}%`, backgroundColor: ACCENT }} />
                 </div>
               </div>
             ))}
@@ -500,7 +654,7 @@ export default async function AnalyticsPage({
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxCityRev) * 100}%`, backgroundColor: GA_BLUE }} />
+                  <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxCityRev) * 100}%`, backgroundColor: ACCENT }} />
                 </div>
               </div>
             ))}
@@ -522,7 +676,7 @@ export default async function AnalyticsPage({
                     <span className="tabular-nums text-slate-500">{m._count._all} · {formatPKR(m._sum.total ?? 0)}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: GA_BLUE }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: ACCENT }} />
                   </div>
                 </div>
               );
@@ -545,7 +699,7 @@ export default async function AnalyticsPage({
                     <span className="ml-2 shrink-0 tabular-nums text-slate-500">{p.views.toLocaleString()} views</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full" style={{ width: `${(p.views / maxPageViews) * 100}%`, backgroundColor: GA_BLUE }} />
+                    <div className="h-full rounded-full" style={{ width: `${(p.views / maxPageViews) * 100}%`, backgroundColor: ACCENT }} />
                   </div>
                 </div>
               ))}
@@ -569,7 +723,7 @@ export default async function AnalyticsPage({
                       <span className="tabular-nums text-slate-500">{pct}% · {d.sessions.toLocaleString()} sessions</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: GA_BLUE }} />
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: ACCENT }} />
                     </div>
                   </div>
                 );

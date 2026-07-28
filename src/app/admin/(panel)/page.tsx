@@ -4,9 +4,24 @@ import { ShoppingCart, Package, Users, TrendingUp, ArrowRight, AlertTriangle, Ba
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { TrendChart } from "@/components/admin/TrendChart";
 import { getGA4Timeseries, ga4Configured } from "@/lib/ga4";
 
 const LOW_STOCK_THRESHOLD = 10;
+
+/** Compact axis money: Rs 12.5k / Rs 1.2M. */
+function compactPKR(n: number) {
+  if (n >= 1_000_000) return `Rs ${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `Rs ${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+  return `Rs ${Math.round(n)}`;
+}
+
+/** Compact axis count: 1.2k / 3.4M. */
+function compactNum(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+  return `${Math.round(n)}`;
+}
 
 /**
  * Bucket by the Pakistan calendar day. toISOString() would bucket by the UTC
@@ -71,7 +86,6 @@ export default async function AdminDashboard() {
 
   const revenue = paidAgg._sum.total ?? 0;
 
-  const maxSessions = Math.max(1, ...traffic.map((d) => d.sessions));
   const totalSessions = traffic.reduce((s, d) => s + d.sessions, 0);
 
   // 14-day daily revenue buckets
@@ -85,7 +99,6 @@ export default async function AdminDashboard() {
     const bucket = days.find((d) => d.key === k);
     if (bucket) bucket.revenue += o.total;
   }
-  const maxRev = Math.max(1, ...days.map((d) => d.revenue));
   const windowTotal = days.reduce((s, d) => s + d.revenue, 0);
 
   const stats = [
@@ -140,21 +153,14 @@ export default async function AdminDashboard() {
             </h2>
             <span className="text-sm font-semibold text-purple-900">{formatPKR(windowTotal)}</span>
           </div>
-          {/* h-full on each bar wrapper gives the bar's percentage height a
-              definite parent to resolve against - without it (items-end stops
-              flex children stretching) every bar collapses to 0. */}
-          <div className="flex h-40 items-end gap-1.5">
-            {days.map((d) => (
-              <div key={d.key} className="group relative flex h-full flex-1 flex-col items-center justify-end">
-                <div
-                  className="w-full rounded-t gradient-purple-green transition-all"
-                  style={{ height: `${Math.max(2, (d.revenue / maxRev) * 100)}%` }}
-                  title={`${d.label}: ${formatPKR(d.revenue)}`}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex justify-between text-[0.65rem] text-purple-900/40">
+          <TrendChart
+            id="sales"
+            values={days.map((d) => d.revenue)}
+            labels={days.map((d) => d.label)}
+            format={compactPKR}
+            className="h-40"
+          />
+          <div className="mt-2 flex justify-between pl-14 text-[0.65rem] text-purple-900/40">
             <span>{days[0].label}</span>
             <span>{days[days.length - 1].label}</span>
           </div>
@@ -219,18 +225,15 @@ export default async function AdminDashboard() {
 
         {traffic.length > 0 ? (
           <>
-            <div className="flex h-32 items-end gap-1.5">
-              {traffic.map((d) => (
-                <div key={d.date} className="flex h-full flex-1 flex-col items-center justify-end">
-                  <div
-                    className="w-full rounded-t bg-purple-400 transition-all"
-                    style={{ height: `${Math.max(2, (d.sessions / maxSessions) * 100)}%` }}
-                    title={`${shortDay(d.date)}: ${d.sessions} sessions`}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 flex justify-between text-[0.65rem] text-purple-900/40">
+            <TrendChart
+              id="traffic"
+              values={traffic.map((d) => d.sessions)}
+              labels={traffic.map((d) => shortDay(d.date))}
+              format={compactNum}
+              color="#774068"
+              className="h-32"
+            />
+            <div className="mt-2 flex justify-between pl-14 text-[0.65rem] text-purple-900/40">
               <span>{shortDay(traffic[0].date)}</span>
               <span>{shortDay(traffic[traffic.length - 1].date)}</span>
             </div>
