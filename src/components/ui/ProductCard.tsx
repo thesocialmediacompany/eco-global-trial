@@ -139,7 +139,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-3 sm:p-5">
         <div className="mb-1 flex items-center gap-1 text-xs text-gold-500">
           {product.rating && (
             <>
@@ -150,7 +150,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        <h3 className="font-display text-lg font-semibold leading-snug text-purple-900">
+        <h3 className="font-display text-base font-semibold leading-snug text-purple-900 sm:text-lg">
           <Link
             href={`/product/${product.slug}`}
             className="before:absolute before:inset-0 before:z-10 before:content-[''] hover:text-purple-700"
@@ -166,13 +166,13 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
 
-        <div className="mt-auto flex items-end justify-between pt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-xl font-semibold text-purple-900">
+        <div className="mt-auto flex items-end justify-between pt-3 sm:pt-4">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="font-display text-lg font-semibold text-purple-900 sm:text-xl">
               {formatPKR(product.price)}
             </span>
             {product.compareAtPrice && (
-              <span className="text-sm text-purple-900/40 line-through">
+              <span className="text-xs text-purple-900/40 line-through sm:text-sm">
                 {formatPKR(product.compareAtPrice)}
               </span>
             )}
