@@ -150,7 +150,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        <h3 className="font-display text-base font-semibold leading-snug text-purple-900 sm:text-lg">
+        <h3 className="line-clamp-2 min-h-[2.75rem] font-display text-base font-semibold leading-snug text-purple-900 sm:min-h-[3.25rem] sm:text-lg">
           <Link
             href={`/product/${product.slug}`}
             className="before:absolute before:inset-0 before:z-10 before:content-[''] hover:text-purple-700"
