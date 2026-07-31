@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     "Find Eco Global Foods products on the shelves of leading retailers across Pakistan, including Al-Fatah, Imtiaz, Naheed, Carrefour and more.",
 };
 
+// Cache + rebuild at most every 30 min (stockist list rarely changes) so bot
+// traffic serves from CloudFront instead of running SSR compute each hit.
+export const revalidate = 1800;
+
 const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
 
 /** In-store display photos dropped into public/stores/photos. */

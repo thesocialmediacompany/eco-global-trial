@@ -13,6 +13,12 @@ import { getSettings } from "@/lib/settings";
 import { getPageHero } from "@/lib/page-hero";
 import { SITE_URL } from "@/lib/site-url";
 
+// Serve the homepage from cache and rebuild at most every 30 min, so the
+// constant crawler/customer traffic hits the CloudFront cache instead of
+// running SSR compute (and a DB read) on every request. Admin product/settings
+// saves already call revalidatePath("/"), so edits still show immediately.
+export const revalidate = 1800;
+
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
