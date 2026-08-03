@@ -1,4 +1,5 @@
 import { HelpCircle, FileText, Trash2, Plus } from "lucide-react";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { addFaq, updateFaq, deleteFaq, updatePolicy } from "./actions";
@@ -39,7 +40,7 @@ export default async function PagesAdmin() {
                 <label className="flex items-center gap-1.5 text-xs text-purple-900/70">
                   Order <input name="sortOrder" type="number" defaultValue={f.sortOrder} className={`${input} w-16`} />
                 </label>
-                <button className="ml-auto rounded-lg gradient-purple-green px-3.5 py-1.5 text-xs font-semibold text-cream">Save</button>
+                <SaveButton className="ml-auto rounded-lg gradient-purple-green px-3.5 py-1.5 text-xs font-semibold text-cream">Save</SaveButton>
                 <button formAction={deleteFaq.bind(null, f.id)} className="grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50" aria-label="Delete">
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -51,9 +52,9 @@ export default async function PagesAdmin() {
         <form action={addFaq} className="mt-3 rounded-lg border border-dashed border-purple-200 p-3">
           <input name="question" required placeholder="New question" className={`${input} mb-2`} />
           <textarea name="answer" required placeholder="Answer" rows={2} className={input} />
-          <button className="mt-2 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-1.5 text-xs font-semibold text-cream">
+          <SaveButton className="mt-2 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-1.5 text-xs font-semibold text-cream">
             <Plus className="h-4 w-4" /> Add question
-          </button>
+          </SaveButton>
         </form>
       </section>
 
@@ -83,9 +84,9 @@ export default async function PagesAdmin() {
                 <span className="mb-1 block text-[0.7rem] font-medium text-purple-900/60">Body</span>
                 <textarea name="body" defaultValue={p.body} rows={10} className={`${input} font-mono text-xs`} />
               </label>
-              <button className="mt-3 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+              <SaveButton className="mt-3 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
                 Save {p.title}
-              </button>
+              </SaveButton>
             </form>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import { Plus, Trash2, ChevronUp, ChevronDown, Info } from "lucide-react";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { ABOUT_GRIDS, ABOUT_ICON_KEYS, aboutIcon } from "@/lib/about-icons";
@@ -175,9 +176,9 @@ export default async function AdminAboutPage() {
                   <input name="year" placeholder="Year" className={input} />
                 )}
                 <input name="title" placeholder="New item title" className={input} required />
-                <button className="inline-flex items-center justify-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+                <SaveButton className="inline-flex items-center justify-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
                   <Plus className="h-4 w-4" /> Add
-                </button>
+                </SaveButton>
                 <textarea
                   name="body"
                   rows={2}

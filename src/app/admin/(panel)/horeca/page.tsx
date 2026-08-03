@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { Plus, Trash2, Building2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
@@ -70,9 +71,9 @@ export default async function HorecaAdminPage() {
               ))}
             </select>
           </label>
-          <button className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+          <SaveButton className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
             Add to HORECA
-          </button>
+          </SaveButton>
         </form>
       )}
 

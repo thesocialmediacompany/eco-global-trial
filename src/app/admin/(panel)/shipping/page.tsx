@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/dates";
+import { SaveButton } from "@/components/admin/SaveButton";
 import Link from "next/link";
 import { Truck, Check, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -163,13 +164,9 @@ export default async function ShippingPage() {
                 />
               </label>
               <div className="col-span-2 flex items-center justify-end gap-1 sm:col-span-1">
-                <button
-                  type="submit"
-                  className="rounded-md bg-purple-50 px-2.5 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-100"
-                  title="Save this rate"
-                >
+                <SaveButton className="rounded-md bg-purple-50 px-2.5 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-100">
                   Save
-                </button>
+                </SaveButton>
                 <button
                   type="submit"
                   formAction={deleteShippingRate}
@@ -203,13 +200,12 @@ export default async function ShippingPage() {
           <input name="maxGrams" type="number" min={0} placeholder="Max g" className={inputCls} />
           <input name="rate" type="number" min={0} placeholder="PKR" className={inputCls} />
           <span className="hidden sm:block" />
-          <button
-            type="submit"
-            className="col-span-2 inline-flex items-center justify-center gap-1 rounded-md gradient-purple-green px-3 py-2 text-xs font-semibold text-cream sm:col-span-1"
-            title="Add rate band"
+          <SaveButton
+            className="col-span-2 rounded-md gradient-purple-green px-3 py-2 text-xs font-semibold text-cream sm:col-span-1"
+            savedLabel="Added"
           >
             <Plus className="h-3.5 w-3.5" /> Add
-          </button>
+          </SaveButton>
         </form>
 
         {/* live preview of bands */}

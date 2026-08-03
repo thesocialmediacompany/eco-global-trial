@@ -1,4 +1,5 @@
 import { Tag, Trash2 } from "lucide-react";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { createDiscount, updateDiscount, deleteDiscount } from "./actions";
@@ -78,9 +79,9 @@ export default async function DiscountsPage() {
                   Active (running now)
                 </label>
                 <div className="flex items-center gap-2 sm:col-span-3">
-                  <button className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+                  <SaveButton className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
                     Save changes
-                  </button>
+                  </SaveButton>
                   <button
                     formAction={deleteDiscount.bind(null, d.id)}
                     className="grid h-9 w-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"
@@ -126,9 +127,9 @@ export default async function DiscountsPage() {
               <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-green-600" />
               Active immediately
             </label>
-            <button className="w-full rounded-lg gradient-purple-green py-2.5 text-sm font-semibold text-cream">
+            <SaveButton className="w-full rounded-lg gradient-purple-green py-2.5 text-sm font-semibold text-cream">
               Create discount
-            </button>
+            </SaveButton>
           </form>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Trash2, Plus, Navigation as NavIcon, GripVertical } from "lucide-react";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { requireOwner } from "@/lib/admin-guard";
 import { getAllNavLinks } from "@/lib/navigation";
 import { addNavLink, updateNavLink, deleteNavLink } from "./actions";
@@ -88,9 +89,9 @@ function MenuSection({
                 Mega
               </label>
             )}
-            <button className="mb-0.5 rounded-lg gradient-purple-green px-3 py-2 text-xs font-semibold text-cream">
+            <SaveButton className="mb-0.5 rounded-lg gradient-purple-green px-3 py-2 text-xs font-semibold text-cream">
               Save
-            </button>
+            </SaveButton>
             <button
               formAction={deleteNavLink.bind(null, r.id)}
               className="mb-0.5 grid h-9 w-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"
@@ -121,9 +122,9 @@ function MenuSection({
             <input type="checkbox" name="mega" className="h-4 w-4 accent-green-600" /> Mega
           </label>
         )}
-        <button className="mb-0.5 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-2 text-xs font-semibold text-cream">
+        <SaveButton className="mb-0.5 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-3.5 py-2 text-xs font-semibold text-cream">
           <Plus className="h-4 w-4" /> Add link
-        </button>
+        </SaveButton>
       </form>
     </section>
   );

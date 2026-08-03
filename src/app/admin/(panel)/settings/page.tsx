@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type, Mail, Palette, Sparkles, BookOpen, ShoppingBag, Info } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
@@ -18,9 +19,9 @@ export default async function SettingsPage() {
       <form action={updateSettings}>
         <div className="mb-6 flex items-center justify-between">
           <h1 className="font-display text-2xl font-semibold text-purple-900">Settings</h1>
-          <button className="rounded-lg gradient-purple-green px-5 py-2 text-sm font-semibold text-cream">
+          <SaveButton className="rounded-lg gradient-purple-green px-5 py-2 text-sm font-semibold text-cream">
             Save changes
-          </button>
+          </SaveButton>
         </div>
 
         <div className="space-y-6">
@@ -347,9 +348,9 @@ export default async function SettingsPage() {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button className="rounded-lg gradient-purple-green px-6 py-2.5 text-sm font-semibold text-cream">
+          <SaveButton className="rounded-lg gradient-purple-green px-6 py-2.5 text-sm font-semibold text-cream">
             Save changes
-          </button>
+          </SaveButton>
         </div>
       </form>
 

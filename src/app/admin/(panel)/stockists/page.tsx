@@ -1,4 +1,5 @@
 import { Store, Trash2, Plus } from "lucide-react";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-guard";
 import { UploadField } from "@/components/admin/UploadField";
@@ -65,7 +66,7 @@ export default async function StockistsPage() {
                   <input name="sortOrder" type="number" defaultValue={r.sortOrder} className={`${input} w-24`} />
                 </label>
                 <div className="flex items-center gap-2 sm:col-span-2">
-                  <button className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">Save</button>
+                  <SaveButton className="rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">Save</SaveButton>
                   <button
                     formAction={deleteStockist.bind(null, r.id)}
                     className="grid h-9 w-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"
@@ -104,9 +105,9 @@ export default async function StockistsPage() {
             Show on site
           </label>
         </div>
-        <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
+        <SaveButton className="mt-4 inline-flex items-center gap-1.5 rounded-lg gradient-purple-green px-4 py-2 text-sm font-semibold text-cream">
           <Plus className="h-4 w-4" /> Add stockist
-        </button>
+        </SaveButton>
       </form>
     </div>
   );

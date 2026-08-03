@@ -4,6 +4,7 @@ import { requireOwner } from "@/lib/admin-guard";
 import { HERO_PAGES } from "@/lib/page-hero";
 import { GRADIENTS } from "@/data/gradients";
 import { MultiImageField } from "@/components/admin/MultiImageField";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { savePageHero } from "./actions";
 
 export default async function PageCoversPage() {
@@ -89,9 +90,7 @@ export default async function PageCoversPage() {
               />
             </div>
 
-            <button className="mt-4 rounded-lg gradient-purple-green px-5 py-2 text-sm font-semibold text-cream">
-              Save {p.label} cover
-            </button>
+            <SaveButton savedLabel={`${p.label} cover saved`}>Save {p.label} cover</SaveButton>
           </form>
         );
       })}
