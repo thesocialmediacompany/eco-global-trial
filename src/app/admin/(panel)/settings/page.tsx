@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SaveButton } from "@/components/admin/SaveButton";
+import { ThemePicker } from "@/components/admin/ThemePicker";
 import { Store, CreditCard, Truck, Users, Megaphone, Share2, Code, LineChart, Type, Mail, Palette, Sparkles, BookOpen, ShoppingBag, Info } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
@@ -238,15 +239,11 @@ export default async function SettingsPage() {
 
           <Section icon={Palette} title="Brand colours">
             <p className="-mt-1 mb-3 text-xs text-purple-900/50">
-              Set your two brand anchor colours as hex codes (e.g. <code>#3b1538</code>
-              and <code>#233f18</code>). The site&apos;s gradients (hero, buttons,
-              category cards, banners) are regenerated from these. Leave both blank to
-              use the default purple &amp; green theme.
+              Pick a theme or your own two colours — the whole storefront (buttons, text,
+              borders, gradients, hero) is rebuilt from them. Choose <strong>Default</strong>
+              to keep the original purple &amp; green.
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Primary (purple) hex" name="brandPurple" value={s.brandPurple} />
-              <Field label="Secondary (green) hex" name="brandGreen" value={s.brandGreen} />
-            </div>
+            <ThemePicker primary={s.brandPurple} secondary={s.brandGreen} />
           </Section>
 
           <Section icon={CreditCard} title="Payment methods">
