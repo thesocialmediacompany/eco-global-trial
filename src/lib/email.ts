@@ -19,9 +19,7 @@ function buildTransport(s: StoreSettings) {
   const user = s.smtpUser || process.env.SMTP_USER;
   const pass = s.smtpPass || process.env.SMTP_PASS;
   const port = Number(s.smtpPort || process.env.SMTP_PORT) || 587;
- 
- console.log("SMTP_USER:", process.env.SMTP_USER);  
- console.log("SMTP_PASS length:", process.env.SMTP_PASS?.length);
+
   if (!host || !user || !pass) return null;
   return nodemailer.createTransport({
     host,  

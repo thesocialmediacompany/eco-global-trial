@@ -11,7 +11,11 @@ export function cn(...inputs: ClassValue[]) {
  * mailbox uses. The point is to reject half-typed input like "me@gmai" from
  * code that watches a field as the user types.
  */
-export const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Domain must be dot-separated labels (no empty labels), ending in a 2+ char
+// TLD — so half-typed input like "me@gmai" AND malformed addresses like
+// "x@mail..com" (which the old check let through, then failed to send and
+// turned the abandoned-cart cron red) are both rejected.
+export const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}$/;
 
 /** Format a number as Pakistani Rupees. */
 export function formatPKR(amount: number) {
