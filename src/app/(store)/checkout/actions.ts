@@ -13,6 +13,7 @@ import { recordSystemOrderEvent } from "@/lib/order-events";
 import { createFirstOrderCoupon } from "@/lib/first-order-coupon";
 import { sendPushToAll } from "@/lib/push";
 import { formatPKR, LOOKS_LIKE_EMAIL } from "@/lib/utils";
+import { isDeliveryCity, canonicalCity, isValidPakPhone } from "@/lib/cities";
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -63,6 +64,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (!customer.name || !customer.phone || !customer.address || !customer.city) {
     return { ok: false, error: "Please fill in all required fields." };
   }
+  // The courier rejects invalid phones and off-list cities at booking time,
+  // which leaves an order stuck as unfulfillable. Block those here so every
+  // placed order can actually be shipped.
+  if (!isValidPakPhone(customer.phone)) {
+    return { ok: false, error: "Please enter a valid mobile number, e.g. 03001234567." };
+  }
+  if (!isDeliveryCity(customer.city)) {
+    return { ok: false, error: "We can only deliver to listed cities — please pick your city from the suggestions." };
+  }
+  // Store the courier's canonical spelling so the city always matches at booking.
+  customer.city = canonicalCity(customer.city) ?? customer.city;
 
   // Recompute prices server-side (never trust client prices).
   const productIds = [...new Set(items.map((i) => i.productId))];

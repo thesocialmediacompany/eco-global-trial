@@ -1,4 +1,5 @@
 import "server-only";
+import { isDeliveryCity, canonicalCity } from "@/lib/cities";
 
 /**
  * Pluggable shipping layer. Callers (admin order actions) talk to this
@@ -96,6 +97,17 @@ export const zoomCod: ShippingProvider = {
       };
     }
 
+    // The courier only ships to cities on its list. Catch a bad city here with
+    // a clear, actionable message instead of a cryptic "Booking failed (HTTP 200)".
+    if (req.city && !isDeliveryCity(req.city)) {
+      return {
+        courier: "ZoomCOD",
+        trackingNumber: "",
+        status: "failed",
+        message: `Delivery city "${req.city}" isn't a courier-serviceable city. Edit the order's delivery city to a valid one, then try again.`,
+      };
+    }
+
     try {
       const res = await fetch(`${c.base}/CreateOrder.php`, {
         method: "POST",
@@ -107,7 +119,7 @@ export const zoomCod: ShippingProvider = {
           product: getProductForWeight(weightKg),
           service_type: getServiceTypeForWeight(weightKg),
           origin: c.origin,
-          destination: (req.city || "").toUpperCase().trim(),
+          destination: (canonicalCity(req.city) || req.city || "").toUpperCase().trim(),
           receiver_name: req.customerName,
           receiver_phone: req.phone,
           receiver_email: req.email || "",
@@ -121,23 +133,33 @@ export const zoomCod: ShippingProvider = {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-      const tracking = data?.tracking_no || data?.thirdparty_tracking_no || "";
+      // ZoomCOD returns a JSON object on success, but a bare JSON *string*
+      // (e.g. "Invalid Authentication Key Or Client Code!") on some errors —
+      // so read the raw text and cope with both, surfacing the real reason.
+      const raw = await res.text();
+      let data: unknown = {};
+      try { data = JSON.parse(raw); } catch { data = raw; }
+      const obj = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+      const apiMsg =
+        typeof data === "string"
+          ? data
+          : (obj.message as string) || (obj.error as string) || "";
+      const tracking = (obj.tracking_no as string) || (obj.thirdparty_tracking_no as string) || "";
       if (res.ok && tracking) {
         return {
           courier: "ZoomCOD",
           trackingNumber: String(tracking),
           status: "booked",
-          labelUrl: data?.invoice_link || "",
-          thirdParty: data?.thirdparty_name || "",
-          message: data?.message || "",
+          labelUrl: (obj.invoice_link as string) || "",
+          thirdParty: (obj.thirdparty_name as string) || "",
+          message: (obj.message as string) || "",
         };
       }
       return {
         courier: "ZoomCOD",
         trackingNumber: "",
         status: "failed",
-        message: data?.message || data?.error || `Booking failed (HTTP ${res.status})`,
+        message: apiMsg || `Booking failed (HTTP ${res.status})`,
       };
     } catch (e) {
       return {

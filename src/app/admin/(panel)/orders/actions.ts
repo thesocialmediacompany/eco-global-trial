@@ -15,6 +15,7 @@ import {
 import { recordOrderEvent } from "@/lib/order-events";
 import { getAdminSession } from "@/lib/admin-guard";
 import { formatPKR } from "@/lib/utils";
+import { isDeliveryCity, canonicalCity, isValidPakPhone } from "@/lib/cities";
 
 const FREE_SHIPPING_THRESHOLD = 7000;
 const FLAT_SHIPPING = 250;
@@ -272,6 +273,44 @@ export async function refundOrder(orderId: string) {
   await recordOrderEvent(orderId, "refund", `${formatPKR(order.total)} was refunded.`);
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+}
+
+export type DeliveryUpdateState = { ok: boolean; error?: string };
+
+/**
+ * Correct an order's delivery details (name / phone / address / city) so a
+ * mistyped city or phone can be fixed and the order re-fulfilled, instead of
+ * being stuck. Validates the phone and the courier city so we don't just
+ * re-save data the courier will reject again.
+ */
+export async function updateOrderDelivery(
+  orderId: string,
+  _prev: DeliveryUpdateState,
+  formData: FormData,
+): Promise<DeliveryUpdateState> {
+  const customerName = String(formData.get("customerName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+
+  if (!customerName || !phone || !address || !city) {
+    return { ok: false, error: "Name, phone, address and city are all required." };
+  }
+  if (!isValidPakPhone(phone)) {
+    return { ok: false, error: "Enter a valid mobile number, e.g. 03001234567." };
+  }
+  if (!isDeliveryCity(city)) {
+    return { ok: false, error: `"${city}" isn't a courier-serviceable city — pick one from the list.` };
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { customerName, phone, address, city: canonicalCity(city) ?? city },
+  });
+  await recordOrderEvent(orderId, "comment", "Delivery details were edited by staff.");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+  return { ok: true };
 }
 
 /** Staff note on the order (Shopify's Notes card). */

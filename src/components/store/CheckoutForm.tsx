@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Lock, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { formatPKR, formatWeight, LOOKS_LIKE_EMAIL } from "@/lib/utils";
+import { DELIVERY_CITIES, isDeliveryCity, isValidPakPhone } from "@/lib/cities";
 import type { PaymentMethod, PaymentMethodId } from "@/lib/payments";
 import { placeOrder } from "@/app/(store)/checkout/actions";
 import { TrustBadges } from "@/components/store/TrustBadges";
@@ -75,6 +76,16 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    // Catch the two fields the courier will reject before we even place the
+    // order, so the customer fixes them now rather than the order getting stuck.
+    if (!isValidPakPhone(form.phone)) {
+      setError("Please enter a valid mobile number, e.g. 03001234567.");
+      return;
+    }
+    if (!isDeliveryCity(form.city)) {
+      setError("Please pick your city from the suggestions — we can only deliver to listed cities.");
+      return;
+    }
     startTransition(async () => {
       const res = await placeOrder({
         items: items.map((i) => ({
@@ -152,7 +163,19 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
               required
               className="sm:col-span-2"
             />
-            <Input label="City *" value={form.city} onChange={(v) => set("city", v)} required />
+            <Input
+              label="City *"
+              value={form.city}
+              onChange={(v) => set("city", v)}
+              required
+              list="checkout-cities"
+              placeholder="Start typing your city…"
+            />
+            <datalist id="checkout-cities">
+              {DELIVERY_CITIES.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
           <div className="mt-4">
             <label className="mb-1.5 block text-xs font-medium text-purple-900/70">
@@ -311,6 +334,8 @@ function Input({
   required,
   type = "text",
   className = "",
+  list,
+  placeholder,
 }: {
   label: string;
   value: string;
@@ -318,6 +343,8 @@ function Input({
   required?: boolean;
   type?: string;
   className?: string;
+  list?: string;
+  placeholder?: string;
 }) {
   return (
     <label className={`block ${className}`}>
@@ -326,6 +353,9 @@ function Input({
         type={type}
         value={value}
         required={required}
+        list={list}
+        placeholder={placeholder}
+        autoComplete={list ? "off" : undefined}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
       />

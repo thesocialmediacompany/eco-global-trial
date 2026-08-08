@@ -39,10 +39,12 @@ import {
   cancelOrder,
   requestReview,
   updateOrderNote,
+  updateOrderDelivery,
   addOrderTag,
   removeOrderTag,
   addOrderComment,
 } from "../actions";
+import { EditDeliveryCard } from "@/components/admin/EditDeliveryCard";
 
 
 export default async function OrderDetailPage({
@@ -497,6 +499,14 @@ export default async function OrderDetailPage({
                 View map
               </a>
             )}
+
+            <EditDeliveryCard
+              customerName={order.customerName}
+              phone={order.phone}
+              address={order.address}
+              city={order.city}
+              action={updateOrderDelivery.bind(null, order.id)}
+            />
 
             <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-purple-900/40">
               Billing address
