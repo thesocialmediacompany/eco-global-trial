@@ -240,11 +240,27 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     );
   }
 
-  // Count the discount usage (powers the usage-limit condition).
+  // Count the discount usage (powers the usage-limit condition). For a
+  // limited code, increment ATOMICALLY only while under the limit — Postgres
+  // re-checks the WHERE against the row it locked, so two concurrent orders
+  // can't push usedCount past usageLimit (the second no-ops).
   if (code) {
-    await prisma.discount
-      .update({ where: { code }, data: { usedCount: { increment: 1 } } })
-      .catch(() => {});
+    try {
+      const d = await prisma.discount.findUnique({
+        where: { code },
+        select: { usageLimit: true },
+      });
+      if (d?.usageLimit == null) {
+        await prisma.discount.update({ where: { code }, data: { usedCount: { increment: 1 } } });
+      } else {
+        await prisma.discount.updateMany({
+          where: { code, usedCount: { lt: d.usageLimit } },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+    } catch {
+      /* usage counting is best-effort; never fail a placed order over it */
+    }
   }
 
   // Mark any abandoned checkout for this email as recovered.

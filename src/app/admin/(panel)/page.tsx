@@ -54,7 +54,7 @@ export default async function AdminDashboard() {
     topItems,
     traffic,
   ] = await Promise.all([
-    prisma.order.count(),
+    prisma.order.count({ where: { isDraft: false } }),
     prisma.product.count(),
     prisma.customer.count(),
     prisma.order.aggregate({ _sum: { total: true }, where: { paymentStatus: "paid" } }),
@@ -75,6 +75,9 @@ export default async function AdminDashboard() {
     }),
     prisma.orderItem.groupBy({
       by: ["productId", "title"],
+      // Only count real sales — exclude draft and cancelled orders so a draft
+      // or cancelled line can't rank a never-sold product as a top seller.
+      where: { order: { isDraft: false, fulfillmentStatus: { not: "cancelled" } } },
       _sum: { quantity: true },
       orderBy: { _sum: { quantity: "desc" } },
       take: 5,

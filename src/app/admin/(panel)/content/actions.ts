@@ -37,8 +37,15 @@ function parse(formData: FormData) {
 export async function createPost(formData: FormData) {
   const { title, data } = parse(formData);
   if (!title) return;
+  // slug is @unique — two posts that slugify the same would 500. Find a free one.
+  const base = slugify(title) || `post-${Date.now()}`;
+  let slug = base;
+  for (let i = 2; i < 100; i++) {
+    if (!(await prisma.post.findUnique({ where: { slug }, select: { id: true } }))) break;
+    slug = `${base}-${i}`;
+  }
   const post = await prisma.post.create({
-    data: { ...data, slug: slugify(title) || `post-${Date.now()}` },
+    data: { ...data, slug },
   });
   revalidatePath("/admin/content");
   revalidatePath("/blog");

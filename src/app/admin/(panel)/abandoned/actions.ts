@@ -23,6 +23,9 @@ export async function markRecovered(id: string) {
 export async function sendRecoveryEmail(id: string) {
   const cart = await prisma.abandonedCheckout.findUnique({ where: { id } });
   if (!cart || cart.recovered) return;
+  // Both nudges already went out — don't let repeated clicks re-spam the customer
+  // (the automatic sweep caps at recoveryCount < 2; the manual path must too).
+  if (cart.recoveryCount >= 2) return;
 
   const stage = cart.recoveryCount === 0 ? 1 : 2;
 

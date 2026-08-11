@@ -113,7 +113,7 @@ export async function sendCampaign(formData: FormData) {
 
   await prisma.campaign.update({
     where: { id: campaign.id },
-    data: { status: "sent", sentCount: sent || subs.length, sentAt: new Date() },
+    data: { status: "sent", sentCount: sent, sentAt: new Date() },
   });
 
   revalidatePath("/admin/campaigns");

@@ -221,12 +221,16 @@ export async function getGA4Timeseries(days = 14): Promise<GA4Day[]> {
       found.set(iso, parseInt(row.metricValues?.[0]?.value ?? "0"));
     }
 
+    // GA4 keys dates in the property's timezone (Asia/Karachi), so build the
+    // output day keys in PKT too — a UTC key would miss the current day's bar
+    // during 00:00–05:00 PKT (when UTC is still on the previous date).
+    const pktKey = (d: Date) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(d);
     const out: GA4Day[] = [];
     const today = new Date();
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const iso = d.toISOString().slice(0, 10);
+      const d = new Date(today.getTime() - i * 86_400_000);
+      const iso = pktKey(d);
       out.push({ date: iso, sessions: found.get(iso) ?? 0 });
     }
     return out;

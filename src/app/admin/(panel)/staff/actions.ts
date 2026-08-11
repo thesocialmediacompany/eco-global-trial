@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/admin-guard";
 
 export async function addStaff(formData: FormData) {
+  await requireOwner();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
   const role = String(formData.get("role") ?? "staff");
@@ -21,12 +23,14 @@ export async function addStaff(formData: FormData) {
 }
 
 export async function updateStaffRole(id: string, formData: FormData) {
+  await requireOwner();
   const role = String(formData.get("role") ?? "staff");
   await prisma.staffUser.update({ where: { id }, data: { role } });
   revalidatePath("/admin/staff");
 }
 
 export async function resetStaffPassword(id: string, formData: FormData) {
+  await requireOwner();
   const password = String(formData.get("password") ?? "");
   if (password.length < 6) return;
   await prisma.staffUser.update({
@@ -37,6 +41,7 @@ export async function resetStaffPassword(id: string, formData: FormData) {
 }
 
 export async function deleteStaff(id: string) {
+  await requireOwner();
   const count = await prisma.staffUser.count();
   if (count <= 1) return; // never remove the last account
   await prisma.staffUser.delete({ where: { id } });

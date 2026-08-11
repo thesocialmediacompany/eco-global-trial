@@ -36,6 +36,17 @@ function slugify(s: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+/** A slug guaranteed not to collide (slug is @unique — a clash would 500). */
+async function uniqueProductSlug(title: string): Promise<string> {
+  const base = slugify(title) || `product-${Date.now()}`;
+  let slug = base;
+  for (let i = 2; i < 100; i++) {
+    if (!(await prisma.product.findUnique({ where: { slug }, select: { id: true } }))) return slug;
+    slug = `${base}-${i}`;
+  }
+  return `${base}-${Date.now()}`;
+}
+
 /** Parse the shared product form fields into a Prisma-ready object. */
 function parseForm(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -99,7 +110,7 @@ export async function createProduct(formData: FormData) {
   const product = await prisma.product.create({
     data: {
       ...fields,
-      slug: slugify(title) || `product-${Date.now()}`,
+      slug: await uniqueProductSlug(title),
       variants: {
         create: (variants.length ? variants : [{ title: "Default" }]).map(
           (v, i) => ({
@@ -127,20 +138,34 @@ export async function createProduct(formData: FormData) {
 export async function updateProduct(id: string, formData: FormData) {
   const { fields, variants, extraCollectionIds } = parseForm(formData);
 
+  // The variant sync is a delete-and-recreate, but the product form doesn't
+  // carry `sku` or `available`, so recreating blindly would wipe every SKU and
+  // flip out-of-stock variants back to available. Preserve those by title.
+  const existingVariants = await prisma.variant.findMany({
+    where: { productId: id },
+    select: { title: true, sku: true, available: true },
+  });
+  const preserved = new Map(existingVariants.map((v) => [v.title, v]));
+
   await prisma.$transaction([
     prisma.product.update({ where: { id }, data: fields }),
     // Simplest reliable sync: replace variants for this product.
     prisma.variant.deleteMany({ where: { productId: id } }),
     prisma.variant.createMany({
-      data: (variants.length ? variants : [{ title: "Default" }]).map((v, i) => ({
-        productId: id,
-        title: v.title || "Default",
-        price: v.price ?? null,
-        compareAtPrice: v.compareAtPrice ?? null,
-        inventoryQty: v.inventoryQty ?? 0,
-        weightGrams: v.weightGrams ?? 0,
-        sortOrder: i,
-      })),
+      data: (variants.length ? variants : [{ title: "Default" }]).map((v, i) => {
+        const keep = preserved.get(v.title || "Default");
+        return {
+          productId: id,
+          title: v.title || "Default",
+          price: v.price ?? null,
+          compareAtPrice: v.compareAtPrice ?? null,
+          inventoryQty: v.inventoryQty ?? 0,
+          weightGrams: v.weightGrams ?? 0,
+          sku: keep?.sku ?? "",
+          available: keep?.available ?? true,
+          sortOrder: i,
+        };
+      }),
     }),
     // Same replace-and-recreate for the additional-collection links.
     prisma.productCollection.deleteMany({ where: { productId: id } }),

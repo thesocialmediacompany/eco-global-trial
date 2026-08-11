@@ -38,7 +38,14 @@ export default async function AdminSearchPage({
     );
   }
 
-  const orderNum = Number(term.replace(/^#/, ""));
+  // Only treat the term as an order number when it's a plain integer within the
+  // Int column's range. A phone number like "03001234567" parses to a number
+  // that isn't NaN but overflows Postgres int4 and would crash the query.
+  const orderNumRaw = term.replace(/^#/, "");
+  const orderNum =
+    /^\d+$/.test(orderNumRaw) && Number(orderNumRaw) <= 2147483647
+      ? Number(orderNumRaw)
+      : NaN;
   const [products, customers, orders] = await Promise.all([
     prisma.product.findMany({
       where: {

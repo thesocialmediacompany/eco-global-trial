@@ -133,6 +133,11 @@ export async function updateBundle(id: string, input: BundleInput): Promise<Bund
   revalidatePath("/admin/bundles");
   revalidatePath(`/admin/bundles/${id}`);
   revalidatePath("/bundles");
+  // A bundle is also a Product with its own ISR-cached storefront pages — bust
+  // them so a price/contents change shows immediately, not up to 30 min later.
+  revalidatePath("/product/[slug]", "page");
+  revalidatePath("/shop");
+  revalidatePath("/sale");
   return { ok: true, id };
 }
 

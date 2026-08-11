@@ -12,7 +12,15 @@ export interface CustomerSession {
 }
 
 function key() {
-  const secret = process.env.AUTH_SECRET || "egf-dev-secret-change-in-production";
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    // Don't sign/verify customer sessions with a public default in production —
+    // fail closed rather than let anyone forge another customer's session.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET is not set — refusing to use a default session secret.");
+    }
+    return new TextEncoder().encode("egf-dev-secret-change-in-production");
+  }
   return new TextEncoder().encode(secret);
 }
 

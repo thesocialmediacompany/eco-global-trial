@@ -86,6 +86,24 @@ export async function createManualOrder(
     },
   });
 
+  // A non-draft manual order is a real sale — decrement stock so inventory
+  // stays in sync with storefront orders and a later cancel restocks correctly.
+  if (!(input.isDraft ?? false)) {
+    await Promise.all(
+      lineItems.map(async (l) => {
+        const v = await prisma.variant.findFirst({
+          where: { productId: l.productId, title: l.variantTitle },
+        });
+        if (v) {
+          await prisma.variant.update({
+            where: { id: v.id },
+            data: { inventoryQty: { decrement: l.quantity } },
+          });
+        }
+      }),
+    );
+  }
+
   const staff = (await getAdminSession())?.name ?? "Staff";
   await recordOrderEvent(
     order.id,
@@ -101,6 +119,29 @@ export async function createManualOrder(
 
 /** Convert a draft order into a placed order. */
 export async function placeDraftOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order || !order.isDraft) return; // only place an actual draft, once
+
+  // It's a real order now — decrement stock so it matches storefront orders
+  // (and so cancelling it later restocks correctly).
+  await Promise.all(
+    order.items.map(async (it) => {
+      if (!it.productId) return;
+      const v = await prisma.variant.findFirst({
+        where: { productId: it.productId, title: it.variantTitle },
+      });
+      if (v) {
+        await prisma.variant.update({
+          where: { id: v.id },
+          data: { inventoryQty: { decrement: it.quantity } },
+        });
+      }
+    }),
+  );
+
   await prisma.order.update({ where: { id: orderId }, data: { isDraft: false } });
   await recordOrderEvent(orderId, "placed", "Draft order was marked as placed.");
   revalidatePath("/admin/orders");
@@ -442,10 +483,15 @@ export async function bookZoomCOD(orderId: string) {
   });
   if (!order) return;
 
-  // Guard: already booked — prevent duplicate bookings
-  if (order.trackingNumber) {
-    return;
-  }
+  // Guard against duplicate bookings (double-click, or two staff on the order).
+  // Fast path, then an ATOMIC claim: only one caller can flip trackingNumber
+  // from "" to the sentinel, so the same order can never be booked twice.
+  if (order.trackingNumber) return;
+  const claim = await prisma.order.updateMany({
+    where: { id: orderId, trackingNumber: "" },
+    data: { trackingNumber: "BOOKING" },
+  });
+  if (claim.count === 0) return; // another request already claimed this order
 
   // Compute total weight from all line items
 
@@ -510,6 +556,8 @@ export async function bookZoomCOD(orderId: string) {
       console.error("shipping email failed:", e),
     );
   } else {
+    // Release the claim so staff can fix the data and retry the booking.
+    await prisma.order.update({ where: { id: orderId }, data: { trackingNumber: "" } });
     console.error("[ZoomCOD] Booking failed:", result.message);
     await recordOrderEvent(orderId, "courier", `ZoomCOD booking failed: ${result.message}`);
   }

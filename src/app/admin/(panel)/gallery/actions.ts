@@ -14,7 +14,7 @@ function refresh() {
  * newest approval leads the gallery; staff can rearrange from there.
  */
 export async function approvePhoto(id: string) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   const top = await prisma.communityPhoto.aggregate({
     where: { status: "approved" },
     _max: { sortOrder: true },
@@ -37,7 +37,7 @@ export async function approvePhoto(id: string) {
  * positions correct, which pairwise swapping can't do.
  */
 export async function reorderPhotos(ids: string[]) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   const clean = ids.filter(Boolean);
   if (clean.length === 0) return;
   await prisma.$transaction(
@@ -55,7 +55,7 @@ export async function reorderPhotos(ids: string[]) {
  * phones, where dragging is awkward.
  */
 export async function movePhoto(id: string, formData: FormData) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   const dir = String(formData.get("dir") ?? "");
   if (dir !== "up" && dir !== "down") return;
 
@@ -80,7 +80,7 @@ export async function movePhoto(id: string, formData: FormData) {
 
 /** Hide a photo without deleting it (keeps a record of what was declined). */
 export async function rejectPhoto(id: string) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   await prisma.communityPhoto.update({
     where: { id },
     data: { status: "rejected", moderatedAt: new Date() },
@@ -90,14 +90,14 @@ export async function rejectPhoto(id: string) {
 
 /** Remove a photo entirely. */
 export async function deletePhoto(id: string) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   await prisma.communityPhoto.delete({ where: { id } });
   refresh();
 }
 
 /** Attach the photo to a product so it links there from the gallery. */
 export async function tagPhotoProduct(id: string, formData: FormData) {
-  await getAdminSession();
+  if (!(await getAdminSession())) return;
   const productSlug = String(formData.get("productSlug") ?? "").trim();
   await prisma.communityPhoto.update({ where: { id }, data: { productSlug } });
   refresh();

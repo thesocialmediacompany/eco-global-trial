@@ -31,7 +31,16 @@ export interface PendingPayload extends SessionPayload {
 }
 
 function secretKey() {
-  const secret = process.env.AUTH_SECRET || "egf-dev-secret-change-in-production";
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    // Never sign/verify admin sessions with a public, source-visible key in
+    // production — a missing AUTH_SECRET would let anyone forge an owner cookie.
+    // Fail closed instead (no one can log in until the env var is set).
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET is not set — refusing to use a default admin session secret.");
+    }
+    return new TextEncoder().encode("egf-dev-secret-change-in-production");
+  }
   return new TextEncoder().encode(secret);
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { defaultSettings, type SettingKey } from "@/lib/settings-defaults";
+import { requireOwner } from "@/lib/admin-guard";
 
 const editableKeys: SettingKey[] = [
   "storeName",
@@ -109,6 +110,7 @@ const toggleKeys: SettingKey[] = [
 ];
 
 export async function updateSettings(formData: FormData) {
+  await requireOwner();
   for (const key of editableKeys) {
     let value: string;
     if (toggleKeys.includes(key)) {
@@ -128,6 +130,7 @@ export async function updateSettings(formData: FormData) {
 
 /** Save the SMTP fields from the form, then send a test email to verify them. */
 export async function sendSettingsTestEmail(formData: FormData) {
+  await requireOwner();
   const to = String(formData.get("testEmailTo") ?? "").trim();
   if (!to) return;
 
