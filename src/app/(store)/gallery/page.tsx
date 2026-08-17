@@ -5,7 +5,9 @@ import { Camera } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { GallerySubmit } from "@/components/site/GallerySubmit";
 
-export const revalidate = 60;
+// 30 min: community photos change rarely, so re-querying every minute just
+// wakes the database for no benefit.
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "Community Gallery | Eco Global Foods",

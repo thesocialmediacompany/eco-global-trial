@@ -5,10 +5,12 @@ name: Abandoned checkout recovery
 
 on:
   schedule:
-    # Hourly. The first nudge is due 1h after a cart is abandoned, so a cart
-    # waits at most ~2h for it. GitHub queues scheduled runs under load, which
-    # is fine here: nothing expires, it just sends on the next pass.
-    - cron: "17 * * * *"
+    # Every 3 hours. The first nudge is due 1h after a cart is abandoned, so a
+    # cart waits at most ~4h for it — fine for recovery, and it lets the Neon
+    # database scale to zero between sweeps instead of being woken hourly.
+    # GitHub queues scheduled runs under load, which is fine here: nothing
+    # expires, it just sends on the next pass.
+    - cron: "17 */3 * * *"
   workflow_dispatch: # lets you trigger a sweep by hand from the Actions tab
 
 jobs:
