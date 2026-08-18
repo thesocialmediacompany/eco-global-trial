@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   // on the Lambda SSR runtime.
   serverExternalPackages: ["@react-pdf/renderer", "web-push"],
   images: {
+    // Cache optimized images for 30 days. Without this the default is ~60s, so
+    // Amplify re-runs its image optimizer (compute + a re-fetch of the source)
+    // for the same product photos over and over as crawlers/visitors hit pages.
+    // Safe to cache long: a changed photo is uploaded under a new S3 URL, so it
+    // never serves a stale image.
+    minimumCacheTTL: 2_592_000,
     remotePatterns: [
       // Real product photography served from the Shopify CDN.
       { protocol: "https", hostname: "cdn.shopify.com" },
