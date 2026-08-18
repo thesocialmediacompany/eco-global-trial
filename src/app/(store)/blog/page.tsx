@@ -4,7 +4,7 @@ import { ArrowRight, Clock } from "lucide-react";
 import { getJournalPosts, formatPostDate } from "@/lib/posts";
 
 // ISR — see product/[slug]/page.tsx.
-export const revalidate = 1800;
+export const revalidate = 10800;
 import { PageCover } from "@/components/store/PageCover";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 

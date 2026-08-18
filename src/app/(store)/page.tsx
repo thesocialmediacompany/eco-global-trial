@@ -17,7 +17,7 @@ import { SITE_URL } from "@/lib/site-url";
 // constant crawler/customer traffic hits the CloudFront cache instead of
 // running SSR compute (and a DB read) on every request. Admin product/settings
 // saves already call revalidatePath("/"), so edits still show immediately.
-export const revalidate = 1800;
+export const revalidate = 10800;
 
 const orgJsonLd = {
   "@context": "https://schema.org",

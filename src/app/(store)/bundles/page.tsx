@@ -4,7 +4,7 @@ import { PageCover } from "@/components/store/PageCover";
 import { ProductsGrid } from "@/components/store/ProductsGrid";
 
 // ISR — see product/[slug]/page.tsx.
-export const revalidate = 1800;
+export const revalidate = 10800;
 
 export const metadata: Metadata = {
   title: "Bundles",

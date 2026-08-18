@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 // Cache + rebuild at most every 30 min (stockist list rarely changes) so bot
 // traffic serves from CloudFront instead of running SSR compute each hit.
-export const revalidate = 1800;
+export const revalidate = 10800;
 
 const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
 
