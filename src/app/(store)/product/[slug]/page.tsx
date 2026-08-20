@@ -9,7 +9,7 @@ import { formatPKR } from "@/lib/utils";
 // 30 min. Around-the-clock bot crawls then hit the edge instead of waking the
 // database on every request. Admin product saves call revalidatePath("/product
 // /[slug]", "page") so price/stock/new-product edits still appear immediately.
-export const revalidate = 1800;
+export const revalidate = 10800;
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
 import { SITE_URL } from "@/lib/site-url";
 import { getApprovedReviews, getReviewStats } from "@/lib/reviews";

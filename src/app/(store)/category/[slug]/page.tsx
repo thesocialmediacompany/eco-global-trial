@@ -7,7 +7,7 @@ import { ProductsGrid } from "@/components/store/ProductsGrid";
 
 // ISR — see product/[slug]/page.tsx. Admin product/collection saves revalidate
 // this path so category listings refresh immediately on edit.
-export const revalidate = 1800;
+export const revalidate = 10800;
 
 export async function generateMetadata({
   params,
