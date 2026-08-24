@@ -13,6 +13,7 @@ import {
   sendReviewRequest,
 } from "@/lib/email";
 import { recordOrderEvent } from "@/lib/order-events";
+import { CANCEL_REASONS } from "@/lib/order-cancel-reasons";
 import { getAdminSession } from "@/lib/admin-guard";
 import { formatPKR } from "@/lib/utils";
 import { isDeliveryCity, canonicalCity, isValidPakPhone } from "@/lib/cities";
@@ -400,7 +401,12 @@ export async function addOrderComment(orderId: string, formData: FormData) {
  * Cancel an order: mark it cancelled and return its items to stock. Restocking
  * runs only on the first cancel (guarded by current status) so it can't double.
  */
-export async function cancelOrder(orderId: string) {
+export async function cancelOrder(orderId: string, formData?: FormData) {
+  // Shopify-style remarks: a reason category + an optional free-text note.
+  const reasonKey = String(formData?.get("reason") ?? "").trim();
+  const cancelReason = reasonKey in CANCEL_REASONS ? reasonKey : "";
+  const cancelNote = String(formData?.get("note") ?? "").trim().slice(0, 500);
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true },
@@ -429,16 +435,17 @@ export async function cancelOrder(orderId: string) {
   await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },
-      data: { fulfillmentStatus: "cancelled" },
+      data: { fulfillmentStatus: "cancelled", cancelReason, cancelNote },
     }),
     ...restockOps,
   ]);
 
   const restocked = restockOps.length;
+  const reasonLabel = cancelReason ? CANCEL_REASONS[cancelReason] : "";
   await recordOrderEvent(
     orderId,
     "cancel",
-    `Order was cancelled${restocked ? ` and ${restocked} line${restocked === 1 ? "" : "s"} returned to stock` : ""}.`,
+    `Order was cancelled${reasonLabel ? ` — ${reasonLabel}` : ""}${cancelNote ? `: "${cancelNote}"` : ""}${restocked ? ` · ${restocked} line${restocked === 1 ? "" : "s"} returned to stock` : ""}.`,
   );
 
   // If a ZoomCOD shipment was booked, cancel it too (best-effort).

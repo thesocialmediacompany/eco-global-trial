@@ -107,6 +107,26 @@ function inCollection(slug: string): Prisma.ProductWhereInput {
   };
 }
 
+/**
+ * Collections hidden from general browsing — the shop "All Products" grid, new
+ * arrivals, sale, and the homepage featured row. Products in these collections
+ * only appear on their own category page (e.g. /category/horeca). HORECA holds
+ * bulk / B2B packs that would otherwise clutter the retail range.
+ */
+const HIDDEN_COLLECTION_SLUGS = ["horeca"];
+
+/** WHERE fragment that excludes any product in a hidden collection. */
+function excludeHidden(): Prisma.ProductWhereInput {
+  return {
+    NOT: {
+      OR: HIDDEN_COLLECTION_SLUGS.flatMap((slug) => [
+        { collection: { slug } },
+        { collectionLinks: { some: { collection: { slug } } } },
+      ]),
+    },
+  };
+}
+
 export async function getActiveProducts() {
   const rows = await prisma.product.findMany({
     where: { status: "active" },
@@ -118,7 +138,7 @@ export async function getActiveProducts() {
 
 export async function getNewArrivals() {
   const rows = await prisma.product.findMany({
-    where: { status: "active", isNew: true },
+    where: { status: "active", isNew: true, ...excludeHidden() },
     include,
     orderBy: { createdAt: "desc" },
   });
@@ -141,6 +161,12 @@ export async function getShopProducts(opts: ShopFilters = {}) {
   const where: Prisma.ProductWhereInput = { status: "active" };
   if (opts.isNew) where.isNew = true;
   if (opts.collection) where.OR = inCollection(opts.collection).OR;
+  // Hide bulk/B2B collections (HORECA) from "All Products" and from any other
+  // category view — they're only reachable via their own category page. When
+  // the shopper explicitly opens a hidden collection, show it as normal.
+  if (!opts.collection || !HIDDEN_COLLECTION_SLUGS.includes(opts.collection)) {
+    where.NOT = excludeHidden().NOT;
+  }
   if (opts.minPrice != null || opts.maxPrice != null) {
     where.price = {};
     if (opts.minPrice != null) where.price.gte = opts.minPrice;
@@ -176,7 +202,7 @@ export async function getPriceRange() {
 /** Products hand-picked for the homepage. Falls back to new arrivals if none set. */
 export async function getFeaturedProducts(take = 8) {
   const rows = await prisma.product.findMany({
-    where: { status: "active", isFeatured: true },
+    where: { status: "active", isFeatured: true, ...excludeHidden() },
     include,
     orderBy: { createdAt: "desc" },
     take,
@@ -184,7 +210,7 @@ export async function getFeaturedProducts(take = 8) {
   if (rows.length > 0) return rows.map(toCardProduct);
   // graceful fallback so the homepage is never empty
   const fallback = await prisma.product.findMany({
-    where: { status: "active", isNew: true },
+    where: { status: "active", isNew: true, ...excludeHidden() },
     include,
     orderBy: { createdAt: "desc" },
     take,
@@ -198,7 +224,7 @@ export async function getFeaturedProducts(take = 8) {
  */
 export async function getSaleProducts(take?: number) {
   const rows = await prisma.product.findMany({
-    where: { status: "active", compareAtPrice: { not: null } },
+    where: { status: "active", compareAtPrice: { not: null }, ...excludeHidden() },
     include,
     orderBy: { createdAt: "desc" },
   });

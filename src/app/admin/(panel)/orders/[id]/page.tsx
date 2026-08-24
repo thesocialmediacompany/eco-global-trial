@@ -12,6 +12,7 @@ import {
   Truck,
   MessageCircle,
   Printer,
+  Ban,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPKR } from "@/lib/utils";
@@ -21,7 +22,6 @@ import { getOrderTimeline } from "@/lib/order-events";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { OrderTimeline } from "@/components/admin/OrderTimeline";
 import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { OrderNotesCard } from "@/components/admin/OrderNotesCard";
 import { OrderTagsCard } from "@/components/admin/OrderTagsCard";
 import {
@@ -45,6 +45,8 @@ import {
   addOrderComment,
 } from "../actions";
 import { EditDeliveryCard } from "@/components/admin/EditDeliveryCard";
+import { CancelOrderDialog } from "@/components/admin/CancelOrderDialog";
+import { CANCEL_REASONS } from "@/lib/order-cancel-reasons";
 
 
 export default async function OrderDetailPage({
@@ -166,15 +168,12 @@ export default async function OrderDetailPage({
             </form>
           )}
           {canCancel && (
-            <ConfirmSubmitButton
+            <CancelOrderDialog
               action={cancelAction}
-              confirmMessage={`Cancel order #${order.orderNumber}? This returns its items to stock${
-                order.courier ? " and cancels the courier booking" : ""
-              }. This can't be undone.`}
-              className="rounded-lg border border-rose-200 bg-white px-3.5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
-            >
-              Cancel order
-            </ConfirmSubmitButton>
+              orderNumber={order.orderNumber}
+              hasCourier={Boolean(order.courier)}
+              reasons={CANCEL_REASONS}
+            />
           )}
           <Link
             href={`/admin/orders/${order.id}/packing-slip`}
@@ -207,6 +206,23 @@ export default async function OrderDetailPage({
           </div>
         </div>
       </div>
+
+      {isCancelled && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+          <Ban className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+          <div className="text-sm">
+            <p className="font-semibold text-rose-800">
+              Order cancelled
+              {order.cancelReason
+                ? ` — ${CANCEL_REASONS[order.cancelReason] ?? order.cancelReason}`
+                : ""}
+            </p>
+            {order.cancelNote && (
+              <p className="mt-0.5 text-rose-700/80">{order.cancelNote}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         {/* Main column */}

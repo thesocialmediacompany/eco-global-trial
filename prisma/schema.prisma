@@ -329,6 +329,11 @@ model Order {
   tags String @default("")
 
   note   String       @default("")
+
+  // Cancellation metadata (Shopify-style): captured when staff cancel an order.
+  cancelReason String @default("") // reason category: customer | unavailable | fraud | declined | other
+  cancelNote   String @default("") // optional free-text note shown on the order
+
   items  OrderItem[]
   events OrderEvent[]
 
