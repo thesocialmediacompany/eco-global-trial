@@ -11,6 +11,7 @@ export function CartDrawer() {
   const {
     items,
     subtotal,
+    multiBuySavings,
     shipping,
     freeShippingRemaining,
     isOpen,
@@ -19,9 +20,11 @@ export function CartDrawer() {
     removeItem,
   } = useCart();
 
+  // Free-shipping progress tracks the discounted total (matches checkout).
+  const discounted = subtotal - multiBuySavings;
   const remaining = freeShippingRemaining;
-  const threshold = subtotal + remaining;
-  const progress = threshold > 0 ? Math.min(100, (subtotal / threshold) * 100) : 100;
+  const threshold = discounted + remaining;
+  const progress = threshold > 0 ? Math.min(100, (discounted / threshold) * 100) : 100;
 
   return (
     <AnimatePresence>
@@ -164,6 +167,12 @@ export function CartDrawer() {
                     <span>Subtotal</span>
                     <span className="text-purple-900">{formatPKR(subtotal)}</span>
                   </div>
+                  {multiBuySavings > 0 && (
+                    <div className="mb-1 flex items-center justify-between text-sm font-medium text-green-700">
+                      <span>Multi-buy savings</span>
+                      <span>− {formatPKR(multiBuySavings)}</span>
+                    </div>
+                  )}
                   <div className="mb-3 flex items-center justify-between text-sm text-purple-900/70">
                     <span>Shipping</span>
                     <span className="text-purple-900">

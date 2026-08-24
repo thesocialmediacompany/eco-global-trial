@@ -8,7 +8,8 @@ import { useCart } from "@/lib/cart";
 import { formatPKR, formatWeight } from "@/lib/utils";
 
 export default function CartPage() {
-  const { items, subtotal, totalWeight, shipping, updateQty, removeItem } = useCart();
+  const { items, subtotal, multiBuySavings, totalWeight, shipping, updateQty, removeItem } =
+    useCart();
 
   if (items.length === 0) {
     return (
@@ -119,6 +120,12 @@ export default function CartPage() {
               <span>Subtotal</span>
               <span className="text-purple-900">{formatPKR(subtotal)}</span>
             </div>
+            {multiBuySavings > 0 && (
+              <div className="flex justify-between font-medium text-green-700">
+                <span>Multi-buy savings</span>
+                <span>− {formatPKR(multiBuySavings)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-purple-900/70">
               <span>
                 Shipping
@@ -134,7 +141,7 @@ export default function CartPage() {
             </div>
             <div className="mt-2 flex justify-between border-t border-purple-100 pt-3 font-display text-lg font-semibold text-purple-900">
               <span>Total</span>
-              <span>{formatPKR(subtotal + shipping)}</span>
+              <span>{formatPKR(subtotal - multiBuySavings + shipping)}</span>
             </div>
           </div>
           <Link

@@ -6,6 +6,7 @@ import { Minus, Plus, ShoppingBag, Check, Truck, BadgeCheck, Clock, PackageX } f
 import { useCart } from "@/lib/cart";
 import { formatPKR } from "@/lib/utils";
 import { paymentMethods } from "@/lib/payments";
+import { QTY_DISCOUNT_ROWS, qtyDiscountRate, qtyDiscountAmount } from "@/lib/quantity-discount";
 
 interface Variant {
   title: string;
@@ -75,6 +76,9 @@ export function AddToCart({
   const onSale = compareAt != null && compareAt > price;
   const outOfStock = variant ? variant.inventoryQty <= 0 : false;
   const weight = variant?.weightGrams ?? 0;
+  // Automatic multi-buy discount preview for the current quantity.
+  const savingsPct = Math.round(qtyDiscountRate(qty) * 1000) / 10;
+  const lineSavings = qtyDiscountAmount(price, qty);
 
   // Show the sticky bar once the main buy box scrolls out of view.
   useEffect(() => {
@@ -194,6 +198,35 @@ export function AddToCart({
           )}
         </motion.button>
       </div>
+
+      {/* multi-buy offer: buy more of this item, save more */}
+      {!outOfStock && (
+        <div className="rounded-2xl border border-green-200 bg-green-50/60 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-green-800">
+            <BadgeCheck className="h-4 w-4" /> Buy more, save more
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {QTY_DISCOUNT_ROWS.map((r) => (
+              <span
+                key={r.qty}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  qty >= r.qty
+                    ? "border-green-600 bg-green-600 text-white"
+                    : "border-green-200 bg-white text-green-800"
+                }`}
+              >
+                Buy {r.qty}
+                {r.qty === 4 ? "+" : ""} → {r.label} off
+              </span>
+            ))}
+          </div>
+          {savingsPct > 0 && (
+            <p className="mt-2.5 text-sm font-medium text-green-800">
+              You&apos;re saving {savingsPct}% ({formatPKR(lineSavings)}) on {qty} of this item.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* out-of-stock explainer so the disabled button has a clear reason */}
       {outOfStock && (

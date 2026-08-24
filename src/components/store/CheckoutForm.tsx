@@ -21,7 +21,7 @@ interface Props {
 
 export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
   const router = useRouter();
-  const { items, subtotal, totalWeight, shipping, clear } = useCart();
+  const { items, subtotal, multiBuySavings, totalWeight, shipping, clear } = useCart();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [method, setMethod] = useState<PaymentMethodId>(methods[0]?.id ?? "cod");
@@ -36,7 +36,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
     note: "",
   });
 
-  const total = subtotal + shipping;
+  const total = subtotal - multiBuySavings + shipping;
 
   /*
    * Capture the in-progress checkout so we can follow up if it's never placed.
@@ -281,6 +281,12 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
             <span>Subtotal</span>
             <span className="text-purple-900">{formatPKR(subtotal)}</span>
           </div>
+          {multiBuySavings > 0 && (
+            <div className="flex justify-between font-medium text-green-700">
+              <span>Multi-buy savings</span>
+              <span>− {formatPKR(multiBuySavings)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-purple-900/70">
             <span>
               Shipping
