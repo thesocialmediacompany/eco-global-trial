@@ -16,7 +16,7 @@ export function ReviewsSummary({
   }));
 
   return (
-    <div className="grid gap-6 rounded-2xl border border-purple-100 bg-white p-6 sm:grid-cols-[auto_1fr] sm:items-center">
+    <div className="grid gap-6 rounded-[1.4rem] bg-white p-6 shadow-soft sm:grid-cols-[auto_1fr] sm:items-center">
       {/* average */}
       <div className="text-center sm:pr-6">
         <div className="font-display text-5xl font-semibold text-purple-900">{average}</div>
@@ -36,7 +36,7 @@ export function ReviewsSummary({
       </div>
 
       {/* distribution */}
-      <div className="space-y-1.5 sm:border-l sm:border-purple-100 sm:pl-6">
+      <div className="space-y-1.5 sm:border-l sm:border-purple-900/5 sm:pl-6">
         {dist.map(({ star, n }) => (
           <div key={star} className="flex items-center gap-2 text-xs text-purple-900/60">
             <span className="flex w-7 items-center gap-0.5">

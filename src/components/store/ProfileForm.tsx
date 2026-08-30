@@ -13,7 +13,7 @@ export function ProfileForm({
   const [state, action] = useActionState<AuthState, FormData>(updateProfile, {});
 
   return (
-    <form action={action} className="space-y-4 rounded-2xl border border-purple-100 bg-white p-6 sm:p-8">
+    <form action={action} className="space-y-4 rounded-[1.4rem] bg-white p-6 shadow-soft sm:p-8">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name">
           <input name="name" required defaultValue={defaults.name} className={input} />
@@ -56,4 +56,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";

@@ -75,7 +75,7 @@ export function GallerySubmit() {
 
   if (phase === "done") {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center">
+      <div className="rounded-[1.4rem] border border-green-200 bg-green-50 p-6 text-center">
         <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />
         <p className="mt-2 font-display text-lg font-semibold text-purple-900">Thank you! 🌿</p>
         <p className="mt-1 text-sm text-purple-900/70">
@@ -95,7 +95,7 @@ export function GallerySubmit() {
     return (
       <button
         onClick={() => setPhase("form")}
-        className="inline-flex items-center gap-2 rounded-full gradient-purple-green px-5 py-2.5 text-sm font-semibold text-cream shadow-sm"
+        className="inline-flex items-center gap-2 rounded-full gradient-purple-green px-5 py-2.5 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
       >
         <Camera className="h-4 w-4" /> Share your photo
       </button>
@@ -103,7 +103,7 @@ export function GallerySubmit() {
   }
 
   return (
-    <div className="relative rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+    <div className="relative rounded-[1.4rem] bg-white p-6 shadow-soft">
       <button
         onClick={reset}
         aria-label="Close"
@@ -130,7 +130,7 @@ export function GallerySubmit() {
 
       <div className="mt-4">
         {preview ? (
-          <div className="relative h-44 w-44 overflow-hidden rounded-xl border border-purple-100">
+          <div className="relative h-44 w-44 overflow-hidden rounded-[1.1rem] ring-ink">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Your photo" className="h-full w-full object-cover" />
             {phase === "uploading" && (
@@ -142,7 +142,7 @@ export function GallerySubmit() {
         ) : (
           <button
             onClick={() => fileInput.current?.click()}
-            className="grid h-44 w-44 place-items-center rounded-xl border-2 border-dashed border-purple-200 text-purple-900/40 transition hover:border-purple-400"
+            className="grid h-44 w-44 place-items-center rounded-[1.1rem] border-2 border-dashed border-purple-900/15 text-purple-900/40 transition hover:border-purple-400"
           >
             <span className="flex flex-col items-center gap-1 text-sm">
               <Camera className="h-6 w-6" /> Choose a photo
@@ -165,14 +165,14 @@ export function GallerySubmit() {
             onChange={(e) => setCaption(e.target.value)}
             maxLength={280}
             placeholder="Add a caption (optional) — how do you use it?"
-            className="w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-400"
+            className="w-full rounded-xl bg-white px-3 py-2 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
           />
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={60}
             placeholder="Your name (optional)"
-            className="w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-400"
+            className="w-full rounded-xl bg-white px-3 py-2 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
           />
           <button
             onClick={submit}

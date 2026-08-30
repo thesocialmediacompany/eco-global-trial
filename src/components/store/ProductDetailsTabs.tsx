@@ -32,7 +32,7 @@ export function ProductDetailsTabs({
   const [open, setOpen] = useState<string | null>("desc");
 
   return (
-    <div className="divide-y divide-purple-100 rounded-2xl border border-purple-100 bg-white">
+    <div className="divide-y divide-purple-900/5 rounded-[1.4rem] bg-white shadow-soft-sm">
       {sections.map((s) => {
         const isOpen = open === s.key;
         const paras = s.body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
@@ -86,7 +86,7 @@ export function ProductDetailsTabs({
                           <p className="mb-1.5 font-semibold text-purple-900">
                             Nutrition facts
                           </p>
-                          <table className="w-full overflow-hidden rounded-lg border border-purple-100 text-sm">
+                          <table className="w-full overflow-hidden rounded-xl text-sm ring-ink">
                             <tbody>
                               {nutrition.map((row, i) => (
                                 <tr

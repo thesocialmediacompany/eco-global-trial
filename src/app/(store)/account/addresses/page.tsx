@@ -31,12 +31,12 @@ export default async function AddressesPage() {
             {/* list */}
             <div className="space-y-3">
               {addresses.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-purple-200 bg-white/60 py-12 text-center text-purple-900/55">
+                <div className="rounded-[1.4rem] border border-dashed border-purple-900/15 bg-white/60 py-12 text-center text-purple-900/55">
                   No saved addresses yet.
                 </div>
               )}
               {addresses.map((a) => (
-                <div key={a.id} className="rounded-2xl border border-purple-100 bg-white p-5">
+                <div key={a.id} className="rounded-[1.4rem] bg-white p-5 shadow-soft">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-5 w-5 text-green-600" />
@@ -85,7 +85,7 @@ export default async function AddressesPage() {
             </div>
 
             {/* add form */}
-            <form action={addAddress} className="h-fit space-y-3 rounded-2xl border border-purple-100 bg-white p-5">
+            <form action={addAddress} className="h-fit space-y-3 rounded-[1.4rem] bg-white p-5 shadow-soft">
               <h2 className="font-display text-base font-semibold text-purple-900">Add address</h2>
               <input name="label" placeholder="Label (e.g. Home)" defaultValue="Home" className={input} />
               <input name="name" required placeholder="Full name *" className={input} />
@@ -108,4 +108,4 @@ export default async function AddressesPage() {
 }
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";

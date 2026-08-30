@@ -28,7 +28,7 @@ export default async function RecipesPage() {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           {recipes.length === 0 ? (
-            <div className="grid place-items-center rounded-3xl border border-dashed border-purple-200 bg-white/50 py-20 text-center">
+            <div className="grid place-items-center rounded-[1.75rem] border border-dashed border-purple-900/15 bg-white/50 py-20 text-center">
               <ChefHat className="h-10 w-10 text-purple-300" />
               <p className="mt-3 text-purple-900/60">Fresh recipes are coming soon.</p>
             </div>
@@ -41,7 +41,7 @@ export default async function RecipesPage() {
                 <RevealItem key={post.id}>
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-3xl border border-purple-100 bg-white shadow-sm transition hover:shadow-xl hover:shadow-purple-900/10"
+                    className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-soft transition-all hover:-translate-y-1 hover:shadow-soft-lg"
                   >
                     <div className={`grid aspect-[16/10] place-items-center text-6xl ${post.gradient}`}>
                       {post.coverEmoji}

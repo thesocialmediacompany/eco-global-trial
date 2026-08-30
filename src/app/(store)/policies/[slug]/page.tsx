@@ -66,7 +66,7 @@ export default async function PolicyPage({
       <section className="py-16 sm:py-24">
         <article className="mx-auto max-w-3xl px-5 lg:px-8">
           <PolicyBody body={policy.body} />
-          <p className="mt-10 border-t border-purple-100 pt-6 text-sm text-purple-900/40">
+          <p className="mt-10 border-t border-purple-900/5 pt-6 text-sm text-purple-900/40">
             Last updated: {updated} · Eco Global Foods (SMC-PVT) Ltd.
           </p>
         </article>

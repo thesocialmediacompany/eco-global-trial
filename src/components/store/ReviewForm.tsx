@@ -14,7 +14,7 @@ export function ReviewForm({ action }: { action: Action }) {
 
   if (state.ok) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center">
+      <div className="rounded-[1.4rem] border border-green-200 bg-green-50 p-6 text-center">
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-green-100">
           <Check className="h-6 w-6 text-green-600" />
         </div>
@@ -27,7 +27,7 @@ export function ReviewForm({ action }: { action: Action }) {
   }
 
   return (
-    <form action={formAction} className="rounded-2xl border border-purple-100 bg-white p-6">
+    <form action={formAction} className="rounded-[1.4rem] bg-white p-6 shadow-soft">
       <h3 className="font-display text-lg font-semibold text-purple-900">Write a review</h3>
       <input type="hidden" name="rating" value={rating} />
 
@@ -83,4 +83,4 @@ function Submit() {
 }
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";

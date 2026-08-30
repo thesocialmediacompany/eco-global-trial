@@ -19,7 +19,7 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
         return (
           <div
             key={i}
-            className="overflow-hidden rounded-2xl border border-purple-100 bg-white"
+            className="overflow-hidden rounded-[1.4rem] bg-white shadow-soft"
           >
             <button
               onClick={() => setOpen(isOpen ? null : i)}

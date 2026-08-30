@@ -1,4 +1,5 @@
 import { Hero } from "@/components/home/Hero";
+import { HeroCarousel, type Poster } from "@/components/home/HeroCarousel";
 import { ValueTicker } from "@/components/home/ValueTicker";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { SpecialOffers } from "@/components/home/SpecialOffers";
@@ -10,6 +11,7 @@ import { StockedAt } from "@/components/home/StockedAt";
 import { WhyOrderOnline } from "@/components/home/WhyOrderOnline";
 import { Newsletter } from "@/components/home/Newsletter";
 import { getSettings } from "@/lib/settings";
+import { getFeaturedProducts, getCategoryThumbs } from "@/lib/products";
 import { getPageHero } from "@/lib/page-hero";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -81,7 +83,80 @@ const localBusinessJsonLd = {
 };
 
 export default async function Home() {
-  const [s, homeCover] = await Promise.all([getSettings(), getPageHero("home")]);
+  const [s, homeCover, featured, categoryThumbs] = await Promise.all([
+    getSettings(),
+    getPageHero("home"),
+    getFeaturedProducts(8),
+    getCategoryThumbs(),
+  ]);
+  const heroProducts = featured.slice(0, 8).map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    imageUrl: p.imageUrl,
+    emoji: p.emoji,
+    gradient: p.gradient,
+  }));
+
+  // Three rotating hero posters (first is admin-editable via Settings).
+  const heroPosters: Poster[] = [
+    {
+      badge: s.heroBadge,
+      title: s.heroTitle,
+      subtitle: s.heroSubtitle,
+      shopHref: "#new-range",
+      starburst: ["100%", "Natural"],
+      template: "rays",
+      base: "#ffe28a",
+      accent: "#ffce4a",
+      packs: [
+        { src: "/hero/oats.png", name: "Steel-Cut Oats", href: "/product/rolled-oats" },
+        { src: "/hero/beetroot.png", name: "Beetroot Powder", href: "/product/eco-beetroot-powder" },
+        { src: "/hero/flaxseed.png", name: "Whole Flaxseed", href: "/product/eco-flaxseed-whole" },
+      ],
+      annotations: [
+        { label: "Wholesome!", side: "left" },
+        { label: "Real Food", side: "right" },
+      ],
+    },
+    {
+      badge: "Breakfast, sorted",
+      title: "Power Up Mornings",
+      subtitle: "Wholegrain oats, granola & cereals — fibre-rich fuel for a busy day.",
+      shopHref: "/category/oats-family",
+      starburst: ["Hi", "Fibre"],
+      template: "dots",
+      base: "#ffd9c0",
+      accent: "rgba(198,86,59,0.26)",
+      packs: [
+        { src: "/cutouts/granola-chocolate-cereals.png", name: "Chocolate Granola", href: "/product/granola-chocolate-cereals" },
+        { src: "/cutouts/eco-steel-cut-oats.png", name: "Steel-Cut Oats", href: "/product/eco-steel-cut-oats" },
+        { src: "/cutouts/muesli-swiss-style.png", name: "Swiss Muesli", href: "/product/muesli-swiss-style" },
+      ],
+      annotations: [
+        { label: "Filling!", side: "left" },
+        { label: "No Sugar", side: "right" },
+      ],
+    },
+    {
+      badge: "Pure & authentic",
+      title: "Real Spice, Real Taste",
+      subtitle: "Pure spices & masalas — no artificial colours, no fillers, just flavour.",
+      shopHref: "/category/spices-spices",
+      starburst: ["100%", "Pure"],
+      template: "blobs",
+      base: "linear-gradient(160deg,#cdeacb 0%,#f9edcb 100%)",
+      accent: "#9bd36a",
+      packs: [
+        { src: "/cutouts/eco-red-chilli-powder.png", name: "Red Chilli Powder", href: "/product/eco-red-chilli-powder" },
+        { src: "/cutouts/eco-turmeric-powder.png", name: "Turmeric Powder", href: "/product/eco-turmeric-powder" },
+        { src: "/cutouts/paprika-powder.png", name: "Paprika Powder", href: "/product/paprika-powder" },
+      ],
+      annotations: [
+        { label: "Aromatic!", side: "left" },
+        { label: "No Fillers", side: "right" },
+      ],
+    },
+  ];
   return (
     <>
       <script
@@ -96,11 +171,15 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-      <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} cover={homeCover} />
+      {homeCover?.mode === "slider" ? (
+        <Hero badge={s.heroBadge} title={s.heroTitle} subtitle={s.heroSubtitle} cover={homeCover} products={heroProducts} />
+      ) : (
+        <HeroCarousel posters={heroPosters} />
+      )}
+      <CategoryGrid thumbs={categoryThumbs} />
       <ValueTicker values={s.valueTicker.split("|").map((t) => t.trim()).filter(Boolean)} />
       <FeaturedProducts />
       <SpecialOffers />
-      <CategoryGrid />
       <BrandStory s={s} />
       <KitchenBand />
       <WhyUs s={s} />

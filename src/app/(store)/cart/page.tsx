@@ -24,7 +24,7 @@ export default function CartPage() {
           </p>
           <Link
             href="/shop"
-            className="mt-6 inline-flex items-center gap-2 rounded-full gradient-purple-green px-7 py-3.5 text-sm font-semibold text-cream"
+            className="mt-6 inline-flex items-center gap-2 rounded-full gradient-purple-green px-7 py-3.5 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
           >
             <ShoppingBag className="h-4 w-4" /> Start shopping
           </Link>
@@ -46,11 +46,11 @@ export default function CartPage() {
             <motion.div
               key={`${it.productId}-${it.variantTitle}`}
               layout
-              className="flex gap-4 rounded-2xl border border-purple-100 bg-white p-4"
+              className="flex gap-4 rounded-[1.4rem] bg-white p-4 shadow-soft-sm"
             >
               <Link
                 href={`/product/${it.slug}`}
-                className={`relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-xl text-4xl ${
+                className={`relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-[1.1rem] text-4xl ${
                   it.imageUrl ? "bg-white" : it.gradient
                 }`}
               >
@@ -111,7 +111,7 @@ export default function CartPage() {
         </div>
 
         {/* summary */}
-        <div className="h-fit rounded-2xl border border-purple-100 bg-white p-6 lg:sticky lg:top-24">
+        <div className="h-fit rounded-[1.4rem] bg-white p-6 shadow-soft lg:sticky lg:top-24">
           <h2 className="font-display text-xl font-semibold text-purple-900">
             Order summary
           </h2>
@@ -139,14 +139,14 @@ export default function CartPage() {
                 {shipping === 0 ? "Free" : formatPKR(shipping)}
               </span>
             </div>
-            <div className="mt-2 flex justify-between border-t border-purple-100 pt-3 font-display text-lg font-semibold text-purple-900">
+            <div className="mt-2 flex justify-between border-t border-purple-900/5 pt-3 font-display text-lg font-semibold text-purple-900">
               <span>Total</span>
               <span>{formatPKR(subtotal - multiBuySavings + shipping)}</span>
             </div>
           </div>
           <Link
             href="/checkout"
-            className="mt-6 flex items-center justify-center gap-2 rounded-full gradient-purple-green py-3.5 text-sm font-semibold text-cream transition hover:opacity-95"
+            className="mt-6 flex items-center justify-center gap-2 rounded-full gradient-purple-green py-3.5 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
           >
             Proceed to checkout <ArrowRight className="h-4 w-4" />
           </Link>

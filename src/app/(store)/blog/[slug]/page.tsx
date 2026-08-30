@@ -111,7 +111,7 @@ export default async function BlogPostPage({
               <Link
                 key={p.id}
                 href={`/blog/${p.slug}`}
-                className="group rounded-2xl border border-purple-100 bg-white p-5 transition hover:shadow-sm"
+                className="group rounded-[1.4rem] bg-white p-5 shadow-soft-sm transition-all hover:-translate-y-0.5 hover:shadow-soft"
               >
                 <div className="text-3xl">{p.coverEmoji}</div>
                 <h3 className="mt-3 font-display text-base font-semibold leading-tight text-purple-900 group-hover:text-purple-700">

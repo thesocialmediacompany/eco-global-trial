@@ -219,6 +219,32 @@ export async function getFeaturedProducts(take = 8) {
 }
 
 /**
+ * One representative product photo per collection slug, for the homepage
+ * category "plates". Prefers a featured/newer product that actually has an
+ * image. Returns a { slug: imageUrl } map; slugs with no usable photo are
+ * simply absent (the grid then falls back to the emoji).
+ */
+export async function getCategoryThumbs(): Promise<Record<string, string>> {
+  const cols = await prisma.collection.findMany({
+    select: {
+      slug: true,
+      products: {
+        where: { status: "active" },
+        select: { imageUrl: true },
+        orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+        take: 8,
+      },
+    },
+  });
+  const map: Record<string, string> = {};
+  for (const c of cols) {
+    const img = c.products.find((p) => p.imageUrl)?.imageUrl;
+    if (img) map[c.slug] = img;
+  }
+  return map;
+}
+
+/**
  * Products with a genuine discount (a compare-at price above the current price).
  * Prisma can't compare two columns in `where`, so we filter in memory.
  */

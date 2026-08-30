@@ -41,6 +41,24 @@ export default async function AboutPage() {
         description="A Lahore based food manufacturer, making honest food the right way since 1999."
       />
 
+      {/* brand story video */}
+      <section className="relative pt-12 sm:pt-16">
+        <div className="mx-auto max-w-4xl px-5 lg:px-8">
+          <Reveal>
+            <div className="relative aspect-video overflow-hidden rounded-[1.75rem] bg-purple-950 shadow-soft-lg ring-ink">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/kUlFXR0Vad0?start=12&rel=0"
+                title="Eco Global Foods — Our Story"
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* about */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 lg:grid-cols-2 lg:gap-16 lg:px-8">
@@ -48,7 +66,7 @@ export default async function AboutPage() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] gradient-purple-green p-1">
               <div className="grid h-full w-full place-items-center rounded-[1.8rem] bg-purple-950/20">
                 <span className="text-[8rem]">🏭</span>
-                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-cream/95 px-5 py-2 font-display text-sm font-semibold text-purple-900 shadow-lg">
+                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-cream/95 px-5 py-2 font-display text-sm font-semibold text-purple-900 shadow-soft">
                   {settings.aboutBadge}
                 </span>
               </div>
@@ -127,7 +145,7 @@ export default async function AboutPage() {
               const Icon = aboutIcon(c.icon);
               return (
               <RevealItem key={c.id}>
-                <div className="h-full rounded-3xl border border-purple-100 bg-white p-6 text-center">
+                <div className="h-full rounded-[1.75rem] bg-white p-6 text-center shadow-soft-sm">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl gradient-purple-green text-cream">
                     <Icon className="h-7 w-7" />
                   </span>
@@ -161,7 +179,7 @@ export default async function AboutPage() {
               const Icon = aboutIcon(q.icon);
               return (
               <RevealItem key={q.id}>
-                <div className="h-full rounded-3xl border border-purple-100 bg-white p-7">
+                <div className="h-full rounded-[1.75rem] bg-white p-7 shadow-soft">
                   <span className="grid h-12 w-12 place-items-center rounded-xl bg-green-100 text-green-700">
                     <Icon className="h-6 w-6" />
                   </span>
@@ -191,7 +209,7 @@ export default async function AboutPage() {
               const Icon = aboutIcon(v.icon);
               return (
               <RevealItem key={v.id}>
-                <div className="h-full rounded-3xl border border-purple-100 bg-white p-7">
+                <div className="h-full rounded-[1.75rem] bg-white p-7 shadow-soft">
                   <span className="grid h-14 w-14 place-items-center rounded-2xl gradient-purple-green text-cream">
                     <Icon className="h-7 w-7" />
                   </span>
@@ -226,7 +244,7 @@ export default async function AboutPage() {
                 const Icon = aboutIcon(p.icon);
                 return (
                   <RevealItem key={p.id}>
-                    <div className="h-full rounded-3xl border border-purple-100 bg-white p-7 text-center">
+                    <div className="h-full rounded-[1.75rem] bg-white p-7 text-center shadow-soft">
                       <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-purple-100 text-purple-700">
                         <Icon className="h-7 w-7" />
                       </span>
@@ -260,7 +278,7 @@ export default async function AboutPage() {
                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full gradient-purple-green text-xs font-bold text-cream">
                       {t.year}
                     </span>
-                    {i < timeline.length - 1 && <span className="mt-1 w-px flex-1 bg-purple-200" />}
+                    {i < timeline.length - 1 && <span className="mt-1 w-px flex-1 bg-purple-900/10" />}
                   </div>
                   <div className="pb-2">
                     <h3 className="font-display text-lg font-semibold text-purple-900">{t.title}</h3>

@@ -79,7 +79,7 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search for granola, oats, protein bars…"
-          className="w-full rounded-full border border-purple-200 bg-white py-3.5 pl-12 pr-28 text-sm text-purple-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+          className="w-full rounded-full bg-white py-3.5 pl-12 pr-28 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
         />
         <button
           type="submit"
@@ -90,7 +90,7 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
       </form>
 
       {open && results.length > 0 && (
-        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-xl">
+        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-[1.4rem] bg-white shadow-soft-lg">
           {results.map((r) => (
             <button
               key={r.slug}
@@ -114,7 +114,7 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
           ))}
           <button
             onClick={() => go(q)}
-            className="block w-full border-t border-purple-100 px-4 py-2.5 text-left text-sm font-medium text-green-700 hover:bg-cream/60"
+            className="block w-full border-t border-purple-900/5 px-4 py-2.5 text-left text-sm font-medium text-green-700 hover:bg-cream/60"
           >
             See all results for &ldquo;{q}&rdquo;
           </button>

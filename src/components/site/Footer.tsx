@@ -13,8 +13,18 @@ export async function Footer() {
     getNavLinks("footer_company"),
   ]);
   return (
-    <footer id="contact" className="bg-purple-950 text-cream/80">
-      <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+    <footer id="contact" className="relative bg-purple-950 text-cream/80">
+      {/* signature wavy divider from the cream page into the dark footer */}
+      <svg
+        aria-hidden
+        viewBox="0 0 1440 120"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 top-0 h-10 w-full text-cream sm:h-16"
+        fill="currentColor"
+      >
+        <path d="M0 72C300 106 520 106 780 54 1040 2 1240 2 1440 28V0H0Z" />
+      </svg>
+      <div className="relative mx-auto max-w-7xl px-5 pb-16 pt-24 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           {/* Brand */}
           <div>

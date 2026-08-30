@@ -56,8 +56,8 @@ export default async function OrderConfirmationPage({
       </p>
 
       {/* card */}
-      <div className="mt-10 overflow-hidden rounded-2xl border border-purple-100 bg-white text-left shadow-sm">
-        <div className="space-y-3 border-b border-purple-100 p-6">
+      <div className="mt-10 overflow-hidden rounded-[1.4rem] bg-white text-left shadow-soft">
+        <div className="space-y-3 border-b border-purple-900/5 p-6">
           {order.items.map((it) => (
             <div key={it.id} className="flex items-center justify-between text-sm">
               <span className="text-purple-900">
@@ -83,7 +83,7 @@ export default async function OrderConfirmationPage({
             label="Shipping"
             value={order.shipping === 0 ? "Free" : formatPKR(order.shipping)}
           />
-          <div className="flex justify-between border-t border-purple-100 pt-2 font-display text-lg font-semibold text-purple-900">
+          <div className="flex justify-between border-t border-purple-900/5 pt-2 font-display text-lg font-semibold text-purple-900">
             <span>Total</span>
             <span>{formatPKR(order.total)}</span>
           </div>
@@ -138,7 +138,7 @@ function Meta({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-purple-100 bg-white p-4">
+    <div className="rounded-xl bg-white p-4 shadow-soft-sm">
       <Icon className="mx-auto h-5 w-5 text-green-600" />
       <p className="mt-2 text-xs uppercase tracking-wide text-purple-900/40">{label}</p>
       <p className="text-sm font-medium text-purple-900">{value}</p>

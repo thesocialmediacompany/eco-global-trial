@@ -43,11 +43,11 @@ export function ProductCard({ product }: { product: Product }) {
     <motion.article
       whileHover={{ y: -8 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-purple-100 bg-white shadow-sm transition-shadow hover:shadow-xl hover:shadow-purple-900/10"
+      className="group relative flex flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-soft ring-ink transition-shadow hover:shadow-soft-lg"
     >
       {/* Pack art */}
       <div
-        className={`relative aspect-square overflow-hidden ${product.imageUrl ? "bg-white" : product.gradient}`}
+        className={`relative m-2 aspect-square overflow-hidden rounded-[1.4rem] ${product.imageUrl ? "bg-[radial-gradient(circle_at_50%_28%,#ffffff,var(--color-cream)_80%)]" : product.gradient}`}
       >
         {/* badges */}
         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
@@ -113,8 +113,8 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={quickAdd}
           whileTap={{ scale: 0.85 }}
           aria-label={`Add ${product.name} to cart`}
-          className={`absolute bottom-3 right-3 z-20 grid h-11 w-11 translate-y-2 place-items-center rounded-full opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 ${
-            added ? "bg-green-500 text-white opacity-100" : "bg-cream text-purple-900 hover:bg-white"
+          className={`absolute bottom-3 right-3 z-20 grid h-11 w-11 translate-y-2 place-items-center rounded-full opacity-0 shadow-soft transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 ${
+            added ? "bg-green-500 text-white opacity-100" : "bg-purple-600 text-cream hover:bg-purple-700"
           }`}
         >
           <AnimatePresence mode="wait" initial={false}>

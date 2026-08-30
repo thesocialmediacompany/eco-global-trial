@@ -6,18 +6,20 @@
 */
 
 @theme {
-  /* Brand - Deep Aubergine Purple (complementary harmony, premium/luxe) */
-  --color-purple-50: #f7f1f6;
-  --color-purple-100: #ecdce8;
-  --color-purple-200: #d9bbd2;
-  --color-purple-300: #bd8fb3;
-  --color-purple-400: #99628d;
-  --color-purple-500: #774068;
-  --color-purple-600: #5e3052;
-  --color-purple-700: #4a2341;
-  --color-purple-800: #3b1538;
-  --color-purple-900: #2a0f28;
-  --color-purple-950: #19081a;
+  /* Brand - Alpino-style grass green (primary: logo, headings, buttons).
+     The "purple" token names are retained but carry the green scale so the
+     whole site shifts cohesively without touching every component. */
+  --color-purple-50: #eef8e9;
+  --color-purple-100: #d6efc8;
+  --color-purple-200: #b3e099;
+  --color-purple-300: #8ccd68;
+  --color-purple-400: #69b441;
+  --color-purple-500: #4e9c33;
+  --color-purple-600: #3d8a2b;
+  --color-purple-700: #316f22;
+  --color-purple-800: #2a591e;
+  --color-purple-900: #21461a;
+  --color-purple-950: #122c0f;
 
   /* Brand - Deep Forest Green (complementary harmony) */
   --color-green-50: #f1f6ee;
@@ -32,21 +34,21 @@
   --color-green-900: #1a2f12;
   --color-green-950: #0f1d0a;
 
-  /* Accents */
-  --color-gold-300: #e7cf94;
-  --color-gold-400: #d4af52;
-  --color-gold-500: #c39a37;
-  --color-cream: #faf6ef;
-  --color-cream-dark: #f2ead9;
-  --color-ink: #1c1326;
+  /* Accents - Alpino sunny yellow + soft peach cream grounds */
+  --color-gold-300: #ffe08a;
+  --color-gold-400: #ffce4a;
+  --color-gold-500: #f6b81f;
+  --color-cream: #faeee4;
+  --color-cream-dark: #f3ddce;
+  --color-ink: #22331a;
 
   /* Semantic */
-  --color-background: #faf6ef;
-  --color-foreground: #1c1326;
+  --color-background: #faeee4;
+  --color-foreground: #22331a;
 
   /* Typography */
-  --font-display: var(--font-fraunces);
-  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-baloo);
+  --font-sans: var(--font-barlow);
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -67,20 +69,27 @@
   50% { transform: translateY(-14px); }
 }
 
+/* Gentle vertical bob for the value-ticker words; staggered per-word delays
+   turn the scrolling line into a travelling wave. */
+@keyframes tickerwave {
+  0%, 100% { transform: translateY(-3px); }
+  50% { transform: translateY(3px); }
+}
+
 :root {
-  --background: #faf6ef;
-  --foreground: #1c1326;
+  --background: #faeee4;
+  --foreground: #22331a;
 
   /* Brand gradient stops (overridable at runtime from admin Brand colours). */
-  --grad-p1: #19081a;
-  --grad-p2: #3b1538;
-  --grad-p3: #5e3052;
-  --grad-pg1: #19081a;
-  --grad-pg2: #3b1538;
-  --grad-pg3: #233f18;
-  --grad-g1: #0f1d0a;
-  --grad-g2: #233f18;
-  --grad-g3: #3c6326;
+  --grad-p1: #21461a;
+  --grad-p2: #316f22;
+  --grad-p3: #4e9c33;
+  --grad-pg1: #21461a;
+  --grad-pg2: #316f22;
+  --grad-pg3: #4e9c33;
+  --grad-g1: #122c0f;
+  --grad-g2: #21461a;
+  --grad-g3: #3d8a2b;
 }
 
 html {
@@ -99,7 +108,26 @@ body {
     text-wrap: balance;
   }
   .font-display {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-display), "Trebuchet MS", system-ui, sans-serif;
+  }
+  /* Hairline border in the brand ink, for subtle card edges. Declared BEFORE
+     the soft-shadow utilities so that when an element carries both (the common
+     card pattern `shadow-soft ring-ink`), the drop shadow wins the box-shadow
+     cascade and still renders — and the shadow utilities below fold the same
+     hairline into their own stack, so paired elements get shadow + edge. */
+  .ring-ink {
+    box-shadow: inset 0 0 0 1px rgba(34, 51, 26, 0.08);
+  }
+  /* Soft, premium shadows (green-tinted) used across the Alpino-style redesign.
+     Each includes the inset hairline so `shadow-soft` alone reads as a card. */
+  .shadow-soft {
+    box-shadow: inset 0 0 0 1px rgba(34, 51, 26, 0.08), 0 18px 40px -18px rgba(34, 51, 26, 0.22), 0 4px 12px -6px rgba(34, 51, 26, 0.1);
+  }
+  .shadow-soft-sm {
+    box-shadow: inset 0 0 0 1px rgba(34, 51, 26, 0.08), 0 10px 24px -12px rgba(34, 51, 26, 0.2);
+  }
+  .shadow-soft-lg {
+    box-shadow: inset 0 0 0 1px rgba(34, 51, 26, 0.08), 0 30px 60px -22px rgba(34, 51, 26, 0.28), 0 8px 18px -10px rgba(34, 51, 26, 0.12);
   }
   .gradient-purple {
     background-image: linear-gradient(135deg, var(--grad-p1) 0%, var(--grad-p2) 55%, var(--grad-p3) 100%);

@@ -13,7 +13,7 @@ export function ContactForm() {
 
   if (sent) {
     return (
-      <div className="grid place-items-center rounded-2xl border border-green-200 bg-green-50 p-10 text-center">
+      <div className="grid place-items-center rounded-[1.4rem] border border-green-200 bg-green-50 p-10 text-center">
         <div className="grid h-14 w-14 place-items-center rounded-full bg-green-100">
           <Check className="h-7 w-7 text-green-600" />
         </div>
@@ -33,7 +33,7 @@ export function ContactForm() {
         e.preventDefault();
         setSent(true);
       }}
-      className="space-y-4 rounded-2xl border border-purple-100 bg-white p-6 sm:p-8"
+      className="space-y-4 rounded-[1.4rem] bg-white p-6 shadow-soft sm:p-8"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name *">
@@ -81,7 +81,7 @@ export function ContactForm() {
 }
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

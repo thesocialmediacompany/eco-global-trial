@@ -1,6 +1,8 @@
 import { getFeaturedProducts } from "@/lib/products";
-import { ProductCard } from "@/components/ui/ProductCard";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+import { cutoutFor } from "@/lib/cutouts";
+import { FloatingProductCard } from "@/components/home/FloatingProductCard";
+import { ArchedHeading } from "@/components/home/ArchedHeading";
+import { WaveDivider } from "@/components/home/WaveDivider";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 export async function FeaturedProducts() {
@@ -8,36 +10,35 @@ export async function FeaturedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <section id="new-range" className="relative py-12 sm:py-16">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
-        <SectionHeading
-          eyebrow="Featured"
-          title="Top picks for you"
-          description="Hand-picked favourites from across the range. Good food that fits a busy day."
-        />
+    <section
+      id="new-range"
+      className="relative overflow-hidden bg-[linear-gradient(180deg,#dcefc6_0%,#eef3d2_50%,#fbedca_100%)] pt-12 pb-12 sm:pt-14 sm:pb-14"
+    >
+      {/* green value-ticker curves down into this gradient band */}
+      <WaveDivider edge="top" fillClass="text-purple-900" />
 
-        {/*
-          Mobile: horizontal snap-scroll carousel (cards ~78% wide so the next peeks).
-          Desktop (sm+): standard responsive grid.
-        */}
-        <RevealGroup
-          stagger={0.06}
-          className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mt-14 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 lg:grid-cols-4"
-        >
-          {products.map((product) => (
-            <RevealItem
-              key={product.id}
-              className="w-[78%] shrink-0 snap-start sm:w-auto sm:shrink"
-            >
-              <ProductCard product={product} />
-            </RevealItem>
-          ))}
-        </RevealGroup>
-
-        <p className="mt-2 text-center text-xs font-medium text-purple-900/40 sm:hidden">
-          Swipe to see more →
-        </p>
+      <div className="mx-auto max-w-3xl px-5">
+        <ArchedHeading text="Customer favourites" />
       </div>
+
+      {/* full-bleed, edge-to-edge slider of floating packs */}
+      <RevealGroup
+        stagger={0.05}
+        className="mt-2 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 pt-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mt-4 sm:gap-5 sm:px-6"
+      >
+        {products.map((product) => (
+          <RevealItem
+            key={product.id}
+            className="w-[62%] shrink-0 snap-start sm:w-[38%] lg:w-[23%] xl:w-[19%]"
+          >
+            <FloatingProductCard product={product} cutout={cutoutFor(product.slug)} />
+          </RevealItem>
+        ))}
+      </RevealGroup>
+
+      <p className="mt-1 text-center text-xs font-semibold text-purple-900/45">
+        Swipe to see more →
+      </p>
     </section>
   );
 }

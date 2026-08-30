@@ -41,7 +41,7 @@ export function WishlistButton({
       onClick={() => toggle(item)}
       aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
       className={cn(
-        "grid h-9 w-9 place-items-center rounded-full bg-cream/90 text-purple-900 shadow transition hover:bg-white",
+        "grid h-9 w-9 place-items-center rounded-full bg-cream/90 text-purple-900 shadow-soft transition hover:bg-white",
         className,
       )}
     >

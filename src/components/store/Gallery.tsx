@@ -26,7 +26,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
       {items.map((g, i) => (
         <RevealItem
           key={g.id}
-          className={`group relative overflow-hidden rounded-2xl border border-purple-100 shadow-sm ${
+          className={`group relative overflow-hidden rounded-[1.4rem] shadow-soft-sm ${
             // vary the aspect ratio a little for a lively, editorial layout
             i % 5 === 0 ? "row-span-2 aspect-[3/4] sm:aspect-[3/5]" : "aspect-square"
           }`}

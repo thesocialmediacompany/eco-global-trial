@@ -45,7 +45,7 @@ export default function WishlistPage() {
           <motion.div
             key={it.productId}
             layout
-            className="group relative overflow-hidden rounded-3xl border border-purple-100 bg-white shadow-sm"
+            className="group relative overflow-hidden rounded-[1.75rem] bg-white shadow-soft transition-all hover:-translate-y-1 hover:shadow-soft-lg"
           >
             <button
               onClick={() => remove(it.productId)}

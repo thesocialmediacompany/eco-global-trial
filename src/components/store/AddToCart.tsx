@@ -117,39 +117,52 @@ export function AddToCart({
   return (
     <div className="space-y-6" ref={buyRef}>
       {/* price + stock */}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-display text-3xl font-semibold text-purple-900">
-          {formatPKR(price)}
-        </span>
-        {onSale && compareAt != null && (
-          <span className="text-lg text-purple-900/40 line-through">
-            {formatPKR(compareAt)}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-display text-4xl font-bold text-purple-900">
+            {formatPKR(price)}
           </span>
+          {onSale && compareAt != null && (
+            <>
+              <span className="text-xl text-purple-900/40 line-through">
+                {formatPKR(compareAt)}
+              </span>
+              <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-soft-sm">
+                {Math.round(((compareAt - price) / compareAt) * 100)}% off
+              </span>
+            </>
+          )}
+          {variant && <StockBadge qty={variant.inventoryQty} />}
+        </div>
+        {onSale && compareAt != null && (
+          <p className="text-sm font-bold text-green-700">
+            You save {formatPKR(compareAt - price)}
+          </p>
         )}
-        {variant && <StockBadge qty={variant.inventoryQty} />}
+        <p className="text-xs text-purple-900/45">Inclusive of all taxes</p>
       </div>
 
       {/* flavour / size selector */}
       {variants.length > 1 && (
         <div>
-          <p className="mb-2 text-sm font-medium text-purple-900/70">
+          <p className="mb-2.5 text-xs font-bold uppercase tracking-wide text-purple-900/60">
             {/[0-9]+\s?(g|kg|ml)/i.test(variant?.title ?? "") ? "Size" : "Flavour"}:{" "}
             <span className="text-purple-900">{variant?.title}</span>
             {weight > 0 && (
               <span className="ml-1 text-purple-900/45">· {weight}g net</span>
             )}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {variants.map((v, i) => (
               <button
                 key={v.title}
                 onClick={() => setSelected(i)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-full px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${
                   i === selected
-                    ? "border-purple-600 bg-purple-600 text-cream"
+                    ? "bg-purple-700 text-cream shadow-soft"
                     : v.inventoryQty <= 0
-                      ? "border-purple-100 bg-purple-50/50 text-purple-900/40"
-                      : "border-purple-200 bg-white text-purple-900 hover:border-purple-400"
+                      ? "bg-purple-50 text-purple-900/40 ring-1 ring-purple-100"
+                      : "bg-white text-purple-900 shadow-soft-sm ring-ink hover:-translate-y-0.5 hover:shadow-soft"
                 }`}
               >
                 {v.title}
@@ -161,7 +174,7 @@ export function AddToCart({
 
       {/* qty + add */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center rounded-full border border-purple-200 bg-white">
+        <div className="flex items-center rounded-full bg-white shadow-soft-sm ring-ink">
           <button
             onClick={() => setQty((q) => Math.max(1, q - 1))}
             aria-label="Decrease quantity"
@@ -183,7 +196,7 @@ export function AddToCart({
           whileTap={{ scale: 0.97 }}
           onClick={handleAdd}
           disabled={outOfStock}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full gradient-purple-green px-8 py-3.5 text-sm font-semibold text-cream shadow-lg shadow-purple-900/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full gradient-purple-green px-8 py-4 text-base font-extrabold uppercase tracking-wide text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
         >
           {added ? (
             <>
@@ -201,7 +214,7 @@ export function AddToCart({
 
       {/* multi-buy offer: buy more of this item, save more */}
       {!outOfStock && (
-        <div className="rounded-2xl border border-green-200 bg-green-50/60 p-4">
+        <div className="rounded-[1.4rem] bg-green-50/70 p-4 ring-1 ring-green-600/15">
           <p className="flex items-center gap-2 text-sm font-semibold text-green-800">
             <BadgeCheck className="h-4 w-4" /> Buy more, save more
           </p>
@@ -241,7 +254,7 @@ export function AddToCart({
       )}
 
       {/* delivery reassurance */}
-      <div className="space-y-2.5 rounded-2xl border border-purple-100 bg-cream/40 p-4 text-sm text-purple-900/75">
+      <div className="space-y-2.5 rounded-[1.4rem] bg-cream/60 p-4 text-sm text-purple-900/75 ring-ink">
         <p className="flex items-center gap-2">
           <Truck className="h-4 w-4 text-green-600" />
           Free delivery on orders over {formatPKR(freeShippingThreshold)}
@@ -260,7 +273,7 @@ export function AddToCart({
             <span
               key={m.id}
               title={m.label}
-              className="grid h-7 min-w-9 place-items-center rounded-md border border-purple-100 bg-white px-1.5 text-base"
+              className="grid h-7 min-w-9 place-items-center rounded-lg bg-white px-1.5 text-base ring-ink"
             >
               {m.icon}
             </span>
@@ -276,7 +289,7 @@ export function AddToCart({
             animate={{ y: 0 }}
             exit={{ y: 80 }}
             transition={{ type: "spring", damping: 26, stiffness: 320 }}
-            className="fixed inset-x-0 bottom-0 z-40 border-t border-purple-100 bg-cream/95 backdrop-blur-xl"
+            className="fixed inset-x-0 bottom-0 z-40 bg-cream/95 shadow-[0_-10px_30px_-12px_rgba(34,51,26,.22)] backdrop-blur-xl"
           >
             <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 lg:px-8">
               <span

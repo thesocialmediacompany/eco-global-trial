@@ -32,8 +32,8 @@ export function ProductGallery({
   return (
     <div>
       <div
-        className={`group relative grid aspect-square place-items-center overflow-hidden rounded-[2rem] ${
-          current ? "bg-white" : gradient
+        className={`group relative grid aspect-square place-items-center overflow-hidden rounded-[2.25rem] shadow-soft ring-ink ${
+          current ? "bg-[radial-gradient(circle_at_50%_28%,#ffffff,var(--color-cream)_85%)]" : gradient
         }`}
       >
         <div className="absolute left-5 top-5 z-10 flex flex-col gap-2">
@@ -78,8 +78,8 @@ export function ProductGallery({
             <button
               key={src}
               onClick={() => setActive(i)}
-              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition ${
-                i === active ? "border-purple-500" : "border-purple-100 hover:border-purple-300"
+              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-[1.1rem] border-2 bg-white transition ${
+                i === active ? "border-purple-500" : "border-purple-900/10 hover:border-purple-300"
               }`}
             >
               <Image src={src} alt={`${name} ${i + 1}`} fill sizes="80px" className="object-cover" />
