@@ -11,7 +11,7 @@ export function ProductsGrid({
 }) {
   if (products.length === 0) {
     return (
-      <div className="grid place-items-center rounded-3xl border border-dashed border-purple-200 bg-white/50 py-20 text-center">
+      <div className="grid place-items-center rounded-[1.75rem] border border-dashed border-purple-900/15 bg-white/50 py-20 text-center">
         <span className="text-4xl">🧺</span>
         <p className="mt-3 text-purple-900/60">{empty}</p>
       </div>

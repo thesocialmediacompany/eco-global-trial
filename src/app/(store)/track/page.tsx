@@ -63,21 +63,21 @@ export default async function TrackOrderPage({
       {/* lookup form (GET → same page) */}
       <form
         method="get"
-        className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-2xl border border-purple-100 bg-white p-5 shadow-sm sm:flex-row"
+        className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-[1.4rem] bg-white p-5 shadow-soft sm:flex-row"
       >
         <input
           name="order"
           defaultValue={orderInput}
           required
           placeholder="Order number (e.g. 1042)"
-          className="flex-1 rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+          className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
         />
         <input
           name="contact"
           defaultValue={contactInput}
           required
           placeholder="Email or phone"
-          className="flex-1 rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+          className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
         />
         <button className="inline-flex items-center justify-center gap-2 rounded-xl gradient-purple-green px-5 py-2.5 text-sm font-semibold text-cream">
           <Search className="h-4 w-4" /> Track
@@ -99,8 +99,8 @@ export default async function TrackOrderPage({
             hasTracking={Boolean(order.trackingNumber)}
           />
 
-          <div className="mt-6 overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-purple-100 px-6 py-4">
+          <div className="mt-6 overflow-hidden rounded-[1.4rem] bg-white shadow-soft">
+            <div className="flex items-center justify-between border-b border-purple-900/5 px-6 py-4">
               <div>
                 <p className="font-display text-lg font-semibold text-purple-900">
                   Order #{order.orderNumber}
@@ -125,7 +125,7 @@ export default async function TrackOrderPage({
               )}
             </div>
 
-            <div className="space-y-2 border-b border-purple-100 p-6">
+            <div className="space-y-2 border-b border-purple-900/5 p-6">
               {order.items.map((it) => (
                 <div key={it.id} className="flex items-center justify-between text-sm">
                   <span className="text-purple-900">
@@ -185,7 +185,7 @@ function Timeline({
   ];
 
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-purple-100 bg-white px-6 py-5 shadow-sm">
+    <div className="flex items-center justify-between rounded-[1.4rem] bg-white px-6 py-5 shadow-soft">
       {steps.map((s, i) => (
         <div key={s.label} className="flex flex-1 items-center last:flex-none">
           <div className="flex flex-col items-center gap-1.5">
@@ -205,7 +205,7 @@ function Timeline({
           {i < steps.length - 1 && (
             <div
               className={`mx-1 h-0.5 flex-1 rounded ${
-                steps[i + 1].done ? "bg-green-400" : "bg-purple-100"
+                steps[i + 1].done ? "bg-green-400" : "bg-purple-900/10"
               }`}
             />
           )}

@@ -59,7 +59,7 @@ export default async function ShopPage({
           />
 
           {products.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-purple-200 bg-white/60 py-20 text-center text-purple-900/55">
+            <div className="rounded-[1.75rem] border border-dashed border-purple-900/15 bg-white/60 py-20 text-center text-purple-900/55">
               No products match these filters. Try widening your price range or clearing filters.
             </div>
           ) : (

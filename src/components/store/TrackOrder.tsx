@@ -23,7 +23,7 @@ export function TrackOrder() {
           value={num}
           onChange={(e) => setNum(e.target.value)}
           placeholder="Order number, e.g. 1001"
-          className="w-full rounded-full border border-purple-200 bg-white py-3.5 pl-12 pr-4 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+          className="w-full rounded-full bg-white py-3.5 pl-12 pr-4 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
         />
       </div>
       <button

@@ -70,7 +70,7 @@ export default async function AccountPage() {
             </h2>
 
             {orders.length === 0 ? (
-              <div className="grid place-items-center rounded-2xl border border-dashed border-purple-200 bg-white/60 py-16 text-center">
+              <div className="grid place-items-center rounded-[1.4rem] border border-dashed border-purple-900/15 bg-white/60 py-16 text-center">
                 <Package className="h-10 w-10 text-purple-300" />
                 <p className="mt-3 text-purple-900/60">No orders yet.</p>
                 <Link
@@ -81,10 +81,10 @@ export default async function AccountPage() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-purple-100 bg-white">
+              <div className="overflow-hidden rounded-[1.4rem] bg-white ring-ink">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-purple-100 text-left text-xs uppercase tracking-wide text-purple-900/50">
+                    <tr className="border-b border-purple-900/5 text-left text-xs uppercase tracking-wide text-purple-900/50">
                       <th className="px-5 py-3 font-medium">Order</th>
                       <th className="px-5 py-3 font-medium">Date</th>
                       <th className="px-5 py-3 font-medium">Status</th>
@@ -94,7 +94,7 @@ export default async function AccountPage() {
                   </thead>
                   <tbody>
                     {orders.map((o) => (
-                      <tr key={o.id} className="border-b border-purple-50 last:border-0">
+                      <tr key={o.id} className="border-b border-purple-900/5 last:border-0">
                         <td className="px-5 py-3">
                           <Link
                             href={`/order/${o.orderNumber}`}
@@ -139,7 +139,7 @@ export default async function AccountPage() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-md px-5 lg:px-8">
           <AccountAuth />
-          <div className="mt-8 rounded-2xl border border-purple-100 bg-white p-6">
+          <div className="mt-8 rounded-[1.4rem] bg-white p-6 shadow-soft">
             <h2 className="font-display text-base font-semibold text-purple-900">
               Track an order without signing in
             </h2>

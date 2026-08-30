@@ -28,7 +28,7 @@ export const defaultSettings = {
   currency: "PKR",
   // marketing - announcement bar messages, separated by "|"
   announcements:
-    "🌿 Free shipping on orders over Rs 7,000|✨ 20% off our newly launched range|🚚 Cash on Delivery across Pakistan|🏆 Natural, pure ingredients since 1999",
+    "🌿 Free shipping on orders over Rs 7,000|✨ New granola & oats range now in stock|🚚 Cash on Delivery across Pakistan|🏆 Natural, pure ingredients since 1999",
   // payment method toggles
   payCod: "true",
   payJazzcash: "true",
@@ -57,10 +57,12 @@ export const defaultSettings = {
   // Scrolling brand-words band under the hero (separate with "|").
   valueTicker:
     "Natural & Pure|No Artificial Flavours|High Protein|Whole Grains|Fibre Rich|Responsibly Sourced|Made in Pakistan|Since 1999",
-  newsletterOfferEnabled: "true",
-  newsletterHeading: "Get 20% off your first order",
+  // WELCOME20 retired — new members already get an automatic thank-you coupon
+  // by email after their first order, so the newsletter shows neutral copy.
+  newsletterOfferEnabled: "false",
+  newsletterHeading: "Join our newsletter",
   newsletterSubtext:
-    "Join our list for new products, recipes and offers. We will send your discount code straight away.",
+    "Be the first to hear about new products, recipes and offers.",
   stockistHeading: "Also available at leading stores",
   stockistSubtext:
     "Find Eco Global Foods on the shelves of Pakistan's most trusted supermarkets and pharmacies.",
@@ -99,8 +101,8 @@ export const defaultSettings = {
   whyOnlineP2Title: "Doorstep Cash on Delivery",
   whyOnlineP2Body:
     "Skip the trip. We deliver across Pakistan and you pay at your door, no card needed.",
-  whyOnlineP3Title: "Online-only welcome offer",
-  whyOnlineP3Body: "New here? Use code WELCOME20 at checkout for 20% off your first order.",
+  whyOnlineP3Title: "A thank-you on your first order",
+  whyOnlineP3Body: "New here? After your first order we'll email you a coupon for money off your next one.",
   // About page: intro long-form (separate paragraphs with a blank line)
   aboutEyebrow: "About",
   aboutHeading: "Wholesome choices for modern living",

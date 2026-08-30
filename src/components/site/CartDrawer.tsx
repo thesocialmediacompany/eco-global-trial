@@ -11,6 +11,7 @@ export function CartDrawer() {
   const {
     items,
     subtotal,
+    multiBuySavings,
     shipping,
     freeShippingRemaining,
     isOpen,
@@ -19,9 +20,11 @@ export function CartDrawer() {
     removeItem,
   } = useCart();
 
+  // Free-shipping progress tracks the discounted total (matches checkout).
+  const discounted = subtotal - multiBuySavings;
   const remaining = freeShippingRemaining;
-  const threshold = subtotal + remaining;
-  const progress = threshold > 0 ? Math.min(100, (subtotal / threshold) * 100) : 100;
+  const threshold = discounted + remaining;
+  const progress = threshold > 0 ? Math.min(100, (discounted / threshold) * 100) : 100;
 
   return (
     <AnimatePresence>
@@ -42,7 +45,7 @@ export function CartDrawer() {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
             {/* header */}
-            <div className="flex items-center justify-between border-b border-purple-100 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-purple-900/5 px-5 py-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-purple-900">
                 <ShoppingBag className="h-5 w-5" /> Your Cart
               </h2>
@@ -61,7 +64,7 @@ export function CartDrawer() {
                 <p className="text-purple-900/60">Your cart is empty.</p>
                 <button
                   onClick={closeCart}
-                  className="rounded-full gradient-purple-green px-6 py-3 text-sm font-semibold text-cream"
+                  className="rounded-full gradient-purple-green px-6 py-3 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
                 >
                   Continue shopping
                 </button>
@@ -69,7 +72,7 @@ export function CartDrawer() {
             ) : (
               <>
                 {/* free shipping bar */}
-                <div className="border-b border-purple-100 px-5 py-3">
+                <div className="border-b border-purple-900/5 px-5 py-3">
                   {remaining > 0 ? (
                     <p className="text-xs text-purple-900/70">
                       Add <strong>{formatPKR(remaining)}</strong> more for free shipping
@@ -92,10 +95,10 @@ export function CartDrawer() {
                   {items.map((it) => (
                     <div
                       key={`${it.productId}-${it.variantTitle}`}
-                      className="flex gap-3 rounded-2xl border border-purple-100 bg-white p-3"
+                      className="flex gap-3 rounded-[1.4rem] bg-white p-3 shadow-soft-sm"
                     >
                       <span
-                        className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl text-3xl ${
+                        className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[1.1rem] text-3xl ${
                           it.imageUrl ? "bg-white" : it.gradient
                         }`}
                       >
@@ -159,11 +162,17 @@ export function CartDrawer() {
                 </div>
 
                 {/* footer */}
-                <div className="border-t border-purple-100 bg-white p-5">
+                <div className="border-t border-purple-900/5 bg-white p-5">
                   <div className="mb-1 flex items-center justify-between text-sm text-purple-900/70">
                     <span>Subtotal</span>
                     <span className="text-purple-900">{formatPKR(subtotal)}</span>
                   </div>
+                  {multiBuySavings > 0 && (
+                    <div className="mb-1 flex items-center justify-between text-sm font-medium text-green-700">
+                      <span>Multi-buy savings</span>
+                      <span>− {formatPKR(multiBuySavings)}</span>
+                    </div>
+                  )}
                   <div className="mb-3 flex items-center justify-between text-sm text-purple-900/70">
                     <span>Shipping</span>
                     <span className="text-purple-900">
@@ -173,14 +182,14 @@ export function CartDrawer() {
                   <Link
                     href="/checkout"
                     onClick={closeCart}
-                    className="block rounded-full gradient-purple-green py-3.5 text-center text-sm font-semibold text-cream transition hover:opacity-95"
+                    className="block rounded-full gradient-purple-green py-3.5 text-center text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
                   >
                     Checkout
                   </Link>
                   <Link
                     href="/cart"
                     onClick={closeCart}
-                    className="mt-2 block rounded-full border border-purple-200 py-3 text-center text-sm font-semibold text-purple-900 transition hover:bg-purple-50"
+                    className="mt-2 block rounded-full bg-white py-3 text-center text-sm font-semibold text-purple-900 shadow-soft-sm transition-all hover:-translate-y-0.5 hover:shadow-soft"
                   >
                     View cart
                   </Link>

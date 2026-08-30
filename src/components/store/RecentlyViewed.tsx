@@ -52,10 +52,10 @@ export function RecentlyViewed({ current }: { current: ViewedItem }) {
           <Link
             key={it.slug}
             href={`/product/${it.slug}`}
-            className="group rounded-2xl border border-purple-100 bg-white p-3 transition hover:shadow-sm"
+            className="group rounded-[1.4rem] bg-white p-3 shadow-soft-sm transition-all hover:-translate-y-0.5 hover:shadow-soft"
           >
             <span
-              className={`relative grid aspect-square place-items-center overflow-hidden rounded-xl text-4xl ${
+              className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1.1rem] text-4xl ${
                 it.imageUrl ? "bg-white" : it.gradient
               }`}
             >

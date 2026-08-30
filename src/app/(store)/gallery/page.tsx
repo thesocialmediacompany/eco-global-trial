@@ -59,7 +59,7 @@ export default async function GalleryPage() {
 
       {/* Grid */}
       {photos.length === 0 ? (
-        <div className="mt-12 rounded-2xl border border-dashed border-purple-200 bg-white/60 py-20 text-center">
+        <div className="mt-12 rounded-[1.4rem] border border-dashed border-purple-900/15 bg-white/60 py-20 text-center">
           <p className="font-display text-lg font-semibold text-purple-900">No photos yet</p>
           <p className="mt-1 text-sm text-purple-900/60">
             Be the first to share how you enjoy Eco Global Foods.
@@ -69,7 +69,7 @@ export default async function GalleryPage() {
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {photos.map((p) => {
             const tile = (
-              <div className="group relative aspect-square overflow-hidden rounded-xl border border-purple-100 bg-cream">
+              <div className="group relative aspect-square overflow-hidden rounded-[1.1rem] bg-cream ring-ink">
                 <Image
                   src={p.imageUrl}
                   alt={p.caption || "Community photo"}

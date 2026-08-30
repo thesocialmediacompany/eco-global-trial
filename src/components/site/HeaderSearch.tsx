@@ -130,7 +130,7 @@ export function HeaderSearch() {
 
       {open && (
         <div
-          className={`z-50 rounded-2xl border border-purple-100 bg-white p-2 shadow-xl ${
+          className={`z-50 rounded-[1.4rem] bg-white p-2 shadow-soft-lg ${
             isMobile
               ? "fixed left-3 right-3"
               : "absolute right-0 top-full mt-2 w-[min(92vw,420px)]"
@@ -150,7 +150,7 @@ export function HeaderSearch() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search for granola, oats, protein bars…"
-              className="w-full rounded-full border border-purple-200 bg-cream/50 py-2.5 pl-9 pr-3 text-sm text-purple-900 outline-none transition focus:border-purple-400 focus:bg-white"
+              className="w-full rounded-full bg-cream/50 py-2.5 pl-9 pr-3 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:bg-white focus:shadow-soft"
             />
           </form>
 
@@ -181,7 +181,7 @@ export function HeaderSearch() {
                   ))}
                   <button
                     onClick={() => go(`/search?q=${encodeURIComponent(q.trim())}`)}
-                    className="mt-1 block w-full rounded-lg border-t border-purple-50 px-3 py-2 text-left text-sm font-medium text-green-700 hover:bg-cream/60"
+                    className="mt-1 block w-full rounded-lg border-t border-purple-900/5 px-3 py-2 text-left text-sm font-medium text-green-700 hover:bg-cream/60"
                   >
                     See all results for &ldquo;{q.trim()}&rdquo;
                   </button>

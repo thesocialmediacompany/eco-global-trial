@@ -33,7 +33,7 @@ export function PageBanner({ eyebrow, title, description, emoji }: Props) {
           </Reveal>
         )}
         <Reveal delay={0.05}>
-          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-6xl">
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-6xl">
             {title}
           </h1>
         </Reveal>
@@ -45,6 +45,17 @@ export function PageBanner({ eyebrow, title, description, emoji }: Props) {
           </Reveal>
         )}
       </div>
+
+      {/* signature wavy divider curving down into the page */}
+      <svg
+        aria-hidden
+        viewBox="0 0 1440 120"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 bottom-0 h-10 w-full text-cream sm:h-16"
+        fill="currentColor"
+      >
+        <path d="M0 48C300 14 520 14 780 66 1040 118 1240 118 1440 92V120H0Z" />
+      </svg>
     </section>
   );
 }

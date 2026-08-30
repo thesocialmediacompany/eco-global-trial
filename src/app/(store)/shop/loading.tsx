@@ -12,13 +12,13 @@ export default function ShopLoading() {
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           {/* controls placeholder */}
-          <div className="mb-8 h-24 animate-pulse rounded-2xl border border-purple-100 bg-white/70" />
+          <div className="mb-8 h-24 animate-pulse rounded-[1.4rem] bg-white/70 shadow-soft" />
 
           <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="overflow-hidden rounded-3xl border border-purple-100 bg-white shadow-sm"
+                className="overflow-hidden rounded-[1.75rem] bg-white shadow-soft"
               >
                 <div className="aspect-square animate-pulse bg-purple-100/50" />
                 <div className="space-y-3 p-3 sm:p-5">

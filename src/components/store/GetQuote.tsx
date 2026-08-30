@@ -29,7 +29,7 @@ export function GetQuote({ whatsappNumber }: { whatsappNumber: string }) {
     .join("\n");
 
   return (
-    <div className="overflow-hidden rounded-[2rem] gradient-purple-green p-1 shadow-2xl shadow-purple-900/20">
+    <div className="overflow-hidden rounded-[2rem] gradient-purple-green p-1 shadow-soft-lg">
       <div className="grid gap-8 rounded-[1.85rem] bg-purple-950/20 p-8 sm:p-10 lg:grid-cols-[1.1fr_1fr]">
         {/* pitch */}
         <div className="text-cream">
@@ -52,7 +52,7 @@ export function GetQuote({ whatsappNumber }: { whatsappNumber: string }) {
         </div>
 
         {/* form */}
-        <div className="space-y-3 rounded-2xl bg-cream p-6">
+        <div className="space-y-3 rounded-[1.4rem] bg-cream p-6">
           <input
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
@@ -95,4 +95,4 @@ export function GetQuote({ whatsappNumber }: { whatsappNumber: string }) {
 }
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";

@@ -28,7 +28,7 @@ export default async function SalePage() {
 
       <section className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
         {products.length === 0 ? (
-          <div className="mx-auto max-w-md rounded-3xl border border-purple-100 bg-cream/50 p-10 text-center">
+          <div className="mx-auto max-w-md rounded-[1.75rem] bg-cream/50 p-10 text-center shadow-soft">
             <p className="text-4xl">🛒</p>
             <h2 className="mt-4 font-display text-xl font-semibold text-purple-900">
               No active offers right now

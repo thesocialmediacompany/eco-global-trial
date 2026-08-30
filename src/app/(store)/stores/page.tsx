@@ -70,7 +70,7 @@ export default async function StoresPage() {
             return (
               <RevealItem
                 key={r.id}
-                className="flex h-28 items-center justify-center rounded-2xl border border-purple-100 bg-white px-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-md"
+                className="flex h-28 items-center justify-center rounded-[1.4rem] bg-white px-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg"
               >
                 {r.url ? (
                   <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center">
@@ -104,7 +104,7 @@ export default async function StoresPage() {
               {photos.map((src, i) => (
                 <RevealItem
                   key={src}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-purple-100 bg-cream shadow-sm"
+                  className="group relative aspect-[4/3] overflow-hidden rounded-[1.4rem] bg-cream shadow-soft"
                 >
                   <Image
                     src={src}
@@ -120,7 +120,7 @@ export default async function StoresPage() {
         )}
 
         {/* Call to action */}
-        <div className="mx-auto mt-16 max-w-2xl rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-50 to-green-50 p-8 text-center sm:p-10">
+        <div className="mx-auto mt-16 max-w-2xl rounded-[1.75rem] bg-gradient-to-br from-purple-50 to-green-50 p-8 text-center shadow-soft-lg sm:p-10">
           <MapPin className="mx-auto h-8 w-8 text-green-600" />
           <h2 className="mt-4 font-display text-2xl font-semibold text-purple-900">
             Can&apos;t find us nearby?
@@ -132,13 +132,13 @@ export default async function StoresPage() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/shop"
-              className="rounded-full gradient-purple-green px-6 py-3 text-sm font-semibold text-cream shadow-sm transition hover:opacity-95"
+              className="rounded-full gradient-purple-green px-6 py-3 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
             >
               Shop online
             </Link>
             <a
               href={`tel:${s.storePhoneRaw}`}
-              className="rounded-full border border-purple-200 bg-white px-6 py-3 text-sm font-semibold text-purple-900 transition hover:bg-purple-50"
+              className="rounded-full ring-ink bg-white px-6 py-3 text-sm font-semibold text-purple-900 transition hover:bg-purple-50"
             >
               Call {s.storePhone}
             </a>

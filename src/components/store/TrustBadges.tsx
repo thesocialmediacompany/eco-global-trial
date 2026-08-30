@@ -28,11 +28,11 @@ export function TrustBadges({ variant = "full" }: { variant?: "full" | "compact"
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 border-t border-purple-100 pt-6 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 border-t border-purple-900/5 pt-6 sm:grid-cols-3">
       {BADGES.map((b) => (
         <div
           key={b.label}
-          className="flex items-start gap-2.5 rounded-xl border border-purple-100 bg-white/60 p-3"
+          className="flex items-start gap-2.5 rounded-[1.1rem] bg-white/60 p-3 shadow-soft-sm"
         >
           <b.icon className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
           <span className="flex flex-col leading-tight">

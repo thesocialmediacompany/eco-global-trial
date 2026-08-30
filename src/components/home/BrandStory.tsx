@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/motion/Reveal";
+import { WaveDivider } from "@/components/home/WaveDivider";
 import type { StoreSettings } from "@/lib/settings-defaults";
 
 export function BrandStory({ s }: { s: StoreSettings }) {
@@ -11,12 +12,14 @@ export function BrandStory({ s }: { s: StoreSettings }) {
     { value: s.brandStoryStat3Value, label: s.brandStoryStat3Label },
   ];
   return (
-    <section id="story" className="relative overflow-hidden py-12 sm:py-16">
+    <section id="story" className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16">
+      {/* the rose offers band curves down into the story */}
+      <WaveDivider edge="top" fillClass="text-[#f6d3dc]" />
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:gap-16 lg:px-8">
         {/* Visual panel */}
         <Reveal direction="right">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] gradient-purple-green p-1 shadow-2xl shadow-purple-900/20">
-            <div className="relative grid h-full w-full place-items-center rounded-[1.8rem] bg-purple-950/20">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[2.5rem] gradient-purple-green p-1.5 shadow-soft-lg ring-ink">
+            <div className="relative grid h-full w-full place-items-center rounded-[2.1rem] bg-purple-950/20">
               <motion.div
                 className="text-[8rem]"
                 animate={{ y: [0, -18, 0], rotate: [0, 4, 0] }}
@@ -40,7 +43,7 @@ export function BrandStory({ s }: { s: StoreSettings }) {
                   {t.e}
                 </motion.span>
               ))}
-              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-cream/95 px-5 py-2 font-display text-sm font-semibold text-purple-900 shadow-lg">
+              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-cream/95 px-5 py-2 font-display text-sm font-semibold text-purple-900 shadow-soft-sm ring-ink">
                 Eco Global Foods (SMC-PVT) Ltd.
               </span>
             </div>
@@ -55,7 +58,7 @@ export function BrandStory({ s }: { s: StoreSettings }) {
             </span>
           </Reveal>
           <Reveal delay={0.05}>
-            <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-purple-900 sm:text-5xl">
+            <h2 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-purple-900 sm:text-5xl">
               {s.brandStoryTitle}
             </h2>
           </Reveal>
@@ -65,7 +68,7 @@ export function BrandStory({ s }: { s: StoreSettings }) {
             </p>
           </Reveal>
 
-          <div className="mt-10 grid grid-cols-3 gap-4 border-t border-purple-100 pt-8">
+          <div className="mt-10 grid grid-cols-3 gap-4 border-t border-purple-900/10 pt-8">
             {pillars.map((p, i) => (
               <Reveal key={p.value} delay={0.15 + i * 0.08}>
                 <div>

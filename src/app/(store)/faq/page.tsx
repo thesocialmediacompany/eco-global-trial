@@ -38,7 +38,7 @@ export default async function FaqPage() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-3xl px-5 lg:px-8">
           <FaqAccordion items={faqs} />
-          <div className="mt-12 rounded-2xl gradient-purple-green p-8 text-center text-cream">
+          <div className="mt-12 rounded-[1.4rem] gradient-purple-green p-8 text-center text-cream">
             <h2 className="font-display text-2xl font-semibold">Still have questions?</h2>
             <p className="mt-2 text-cream/80">Our team is happy to help.</p>
             <Link

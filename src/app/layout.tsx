@@ -1,17 +1,30 @@
 import type { Metadata } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Barlow, Baloo_2, Luckiest_Guy } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site-url";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Punchy all-caps display face reserved for the big hero headline.
+const heroFont = Luckiest_Guy({
+  variable: "--font-hero",
   subsets: ["latin"],
+  weight: ["400"],
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// Body/UI face — the same grotesque Alpino uses across its store.
+const barlow = Barlow({
+  variable: "--font-barlow",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+// Chunky rounded display face for headings — the closest free match to
+// Alpino's playful heading font.
+const baloo = Baloo_2({
+  variable: "--font-baloo",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -58,7 +71,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${jakarta.variable} h-full antialiased`}
+      className={`${barlow.variable} ${baloo.variable} ${heroFont.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-cream text-ink flex flex-col overflow-x-hidden">
         {children}

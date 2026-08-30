@@ -25,6 +25,11 @@ const fallbackNav: HeaderNavItem[] = [
 
 export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
   const nav = navLinks && navLinks.length > 0 ? navLinks : fallbackNav;
+  // Split the nav around the centred logo: earlier items sit to its left, the
+  // rest (e.g. Our Story / Blog / Contact) move to its right.
+  const mid = Math.ceil(nav.length / 2);
+  const leftNav = nav.slice(0, mid);
+  const rightNav = nav.slice(mid);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -71,6 +76,57 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
     };
   }, [megaOpen]);
 
+  const renderNavItem = (item: HeaderNavItem) => (
+    <div
+      key={item.href}
+      ref={item.mega ? megaWrapRef : undefined}
+      className="relative"
+      onMouseEnter={() => item.mega && setMegaOpen(true)}
+      onMouseLeave={() => item.mega && setMegaOpen(false)}
+    >
+      <Link
+        href={item.href}
+        className="group relative flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-purple-900/80 transition-colors hover:text-purple-900"
+      >
+        {item.label}
+        {item.mega && <ChevronDown className="h-3.5 w-3.5" />}
+        <span className="absolute inset-x-4 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-green-500 transition-transform duration-300 group-hover:scale-x-100" />
+      </Link>
+
+      {/* Mega menu */}
+      {item.mega && (
+        <AnimatePresence>
+          {megaOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              style={{ left: megaLeft, width: "min(90vw, 640px)" }}
+              className="absolute top-full pt-3"
+            >
+              <div className="grid grid-cols-2 gap-1 rounded-[1.5rem] bg-cream/95 p-3 shadow-soft-lg ring-ink backdrop-blur-xl sm:grid-cols-3">
+                {categories.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/category/${c.slug}`}
+                    className="flex items-center gap-2.5 rounded-[1rem] px-3 py-2.5 transition-colors hover:bg-purple-100/60"
+                  >
+                    <span className="text-xl">{c.emoji}</span>
+                    <span className="flex flex-col">
+                      <span className="text-sm font-medium text-purple-900">{c.name}</span>
+                      <span className="text-[0.7rem] text-purple-900/50">{c.tagline}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+    </div>
+  );
+
   return (
     <motion.header
       initial={{ y: -80, opacity: 0 }}
@@ -79,13 +135,13 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
       className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-cream/85 backdrop-blur-xl shadow-[0_8px_30px_rgba(43,14,71,0.08)]"
+          ? "bg-cream/85 backdrop-blur-xl shadow-soft-sm"
           : "bg-transparent",
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="group flex items-center" aria-label="Eco Global Foods home">
+      <div className="relative mx-auto flex max-w-7xl items-center px-5 py-4 lg:px-8">
+        {/* Logo (absolutely centered on the midline, Alpino-style) */}
+        <Link href="/" className="group absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center" aria-label="Eco Global Foods home">
           <Image
             src="/brand/logo-full.png"
             alt="Eco Global Foods"
@@ -100,67 +156,19 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
           />
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop nav — left of the logo */}
         <nav className="hidden items-center gap-1 lg:flex">
-          {nav.map((item) => (
-            <div
-              key={item.href}
-              ref={item.mega ? megaWrapRef : undefined}
-              className="relative"
-              onMouseEnter={() => item.mega && setMegaOpen(true)}
-              onMouseLeave={() => item.mega && setMegaOpen(false)}
-            >
-              <Link
-                href={item.href}
-                className="group relative flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-purple-900/80 transition-colors hover:text-purple-900"
-              >
-                {item.label}
-                {item.mega && <ChevronDown className="h-3.5 w-3.5" />}
-                <span className="absolute inset-x-4 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-green-500 transition-transform duration-300 group-hover:scale-x-100" />
-              </Link>
-
-              {/* Mega menu */}
-              {item.mega && (
-                <AnimatePresence>
-                  {megaOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ left: megaLeft, width: "min(90vw, 640px)" }}
-                      className="absolute top-full pt-3"
-                    >
-                      <div className="grid grid-cols-2 gap-1 rounded-2xl border border-purple-100 bg-cream/95 p-3 shadow-xl backdrop-blur-xl sm:grid-cols-3">
-                        {categories.map((c) => (
-                          <Link
-                            key={c.id}
-                            href={`/category/${c.slug}`}
-                            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-purple-100/60"
-                          >
-                            <span className="text-xl">{c.emoji}</span>
-                            <span className="flex flex-col">
-                              <span className="text-sm font-medium text-purple-900">
-                                {c.name}
-                              </span>
-                              <span className="text-[0.7rem] text-purple-900/50">
-                                {c.tagline}
-                              </span>
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              )}
-            </div>
-          ))}
+          {leftNav.map(renderNavItem)}
         </nav>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5">
-          <HeaderSearch />
+        {/* Right nav + actions */}
+        <div className="ml-auto flex items-center gap-3">
+          {/* Desktop nav — right of the logo (Our Story / Blog / Contact) */}
+          <nav className="hidden items-center gap-1 lg:flex">
+            {rightNav.map(renderNavItem)}
+          </nav>
+          <div className="flex items-center gap-1.5">
+            <HeaderSearch />
           <Link
             href="/wishlist"
             aria-label="Wishlist"
@@ -208,6 +216,7 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
+          </div>
         </div>
       </div>
 

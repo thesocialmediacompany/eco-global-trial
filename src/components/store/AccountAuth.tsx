@@ -15,7 +15,7 @@ export function AccountAuth() {
   const [regState, regAction] = useActionState<AuthState, FormData>(registerCustomer, {});
 
   return (
-    <div className="mx-auto max-w-md rounded-2xl border border-purple-100 bg-white p-6 shadow-sm sm:p-8">
+    <div className="mx-auto max-w-md rounded-[1.4rem] bg-white p-6 shadow-soft sm:p-8">
       <div className="mb-6 flex rounded-full bg-cream p-1">
         <button
           onClick={() => setMode("login")}
@@ -68,7 +68,7 @@ function Field({ label, name, type = "text" }: { label: string; name: string; ty
         name={name}
         type={type}
         required
-        className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+        className="w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
       />
     </label>
   );

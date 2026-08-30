@@ -10,7 +10,7 @@ import {
 } from "@/app/(store)/account/actions";
 
 const input =
-  "w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100";
+  "w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";
 
 function Submit({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -42,7 +42,7 @@ export function ForgotForm() {
   }
 
   return (
-    <form action={action} className="space-y-4 rounded-2xl border border-purple-100 bg-white p-6 sm:p-8">
+    <form action={action} className="space-y-4 rounded-[1.4rem] bg-white p-6 shadow-soft sm:p-8">
       <p className="text-sm text-purple-900/60">
         Enter your email and we&apos;ll send you a link to reset your password.
       </p>
@@ -55,7 +55,7 @@ export function ForgotForm() {
 export function ResetForm({ token }: { token: string }) {
   const [state, action] = useActionState<AuthState, FormData>(resetPassword, {});
   return (
-    <form action={action} className="space-y-4 rounded-2xl border border-purple-100 bg-white p-6 sm:p-8">
+    <form action={action} className="space-y-4 rounded-[1.4rem] bg-white p-6 shadow-soft sm:p-8">
       <input type="hidden" name="token" value={token} />
       <label className="block">
         <span className="mb-1.5 block text-xs font-medium text-purple-900/70">New password</span>

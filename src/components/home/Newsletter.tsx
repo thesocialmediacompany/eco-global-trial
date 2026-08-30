@@ -25,7 +25,7 @@ export function Newsletter({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden rounded-[2.5rem] gradient-purple-green px-6 py-14 text-center text-cream shadow-2xl shadow-purple-900/30 sm:px-12"
+          className="relative overflow-hidden rounded-[2.75rem] gradient-purple-green px-6 py-14 text-center text-cream shadow-soft-lg ring-ink sm:px-12"
         >
           <motion.div
             aria-hidden
@@ -34,7 +34,7 @@ export function Newsletter({
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <span className="text-4xl">🌿</span>
-          <h2 className="mx-auto mt-4 max-w-xl font-display text-3xl font-semibold sm:text-4xl">
+          <h2 className="mx-auto mt-4 max-w-xl font-display text-3xl font-bold uppercase sm:text-4xl">
             {shownHeading}
           </h2>
           <p className="mx-auto mt-3 max-w-md text-cream/80">{shownSubtext}</p>

@@ -33,7 +33,7 @@ export default async function BlogPage() {
           {featured && (
             <Link
               href={`/blog/${featured.slug}`}
-              className="group mb-12 grid overflow-hidden rounded-[2rem] border border-purple-100 bg-white shadow-sm lg:grid-cols-2"
+              className="group mb-12 grid overflow-hidden rounded-[2rem] bg-white shadow-soft-lg lg:grid-cols-2"
             >
               <div
                 className={`grid aspect-[16/10] place-items-center text-[7rem] ${featured.gradient}`}
@@ -70,7 +70,7 @@ export default async function BlogPage() {
               <RevealItem key={post.id}>
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-3xl border border-purple-100 bg-white shadow-sm transition hover:shadow-xl hover:shadow-purple-900/10"
+                  className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-soft transition-all hover:-translate-y-1 hover:shadow-soft-lg"
                 >
                   <div
                     className={`grid aspect-[16/10] place-items-center text-6xl ${post.gradient}`}

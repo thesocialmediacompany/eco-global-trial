@@ -26,7 +26,7 @@ export function SubscribeSave({
   );
 
   return (
-    <div className="mt-4 rounded-2xl border border-green-200 bg-green-50/50 p-4">
+    <div className="mt-4 rounded-[1.4rem] border border-green-200 bg-green-50/50 p-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -50,12 +50,12 @@ export function SubscribeSave({
               name="email"
               required
               placeholder="you@example.com"
-              className="flex-1 rounded-lg border border-green-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-green-400"
+              className="flex-1 rounded-xl bg-white px-3 py-2 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
             />
             <select
               name="frequencyWeeks"
               defaultValue="4"
-              className="rounded-lg border border-green-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-green-400"
+              className="rounded-xl bg-white px-3 py-2 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
             >
               <option value="2">Every 2 weeks</option>
               <option value="4">Every month</option>

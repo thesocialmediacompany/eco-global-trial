@@ -9,7 +9,7 @@ export async function StockedAt() {
   if (items.length === 0) return null;
 
   return (
-    <section className="relative border-y border-purple-100/60 bg-cream/40 py-10 sm:py-14">
+    <section className="relative py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <SectionHeading
           eyebrow="Where to buy"
@@ -41,7 +41,7 @@ export async function StockedAt() {
             return (
               <RevealItem
                 key={r.id}
-                className="flex h-24 items-center justify-center rounded-2xl border border-purple-100 bg-white px-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-md"
+                className="flex h-24 items-center justify-center rounded-[1.5rem] bg-white px-4 shadow-soft-sm ring-ink transition-all duration-300 hover:-translate-y-1 hover:shadow-soft"
               >
                 {r.url ? (
                   <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex h-full w-full items-center justify-center">

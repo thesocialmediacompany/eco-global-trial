@@ -43,10 +43,10 @@ export function ShopControls({
   }
 
   const inputCls =
-    "rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm text-purple-900 outline-none focus:border-purple-400";
+    "rounded-xl bg-white px-3 py-2 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft";
 
   return (
-    <div className="mb-8 rounded-2xl border border-purple-100 bg-white/70 p-4">
+    <div className="mb-8 rounded-[1.4rem] bg-white/80 p-4 shadow-soft-sm">
       <div className="flex flex-wrap items-center gap-3">
         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-900">
           <SlidersHorizontal className="h-4 w-4" /> {total} product{total === 1 ? "" : "s"}
@@ -82,7 +82,7 @@ export function ShopControls({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-purple-100 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-purple-900/5 pt-3">
         <div className="flex items-center gap-2 text-sm text-purple-900/70">
           <span>Price</span>
           <input

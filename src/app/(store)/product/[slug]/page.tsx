@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Star, Check, ChevronRight, BadgeCheck, ChefHat, ArrowRight } from "lucide-react";
+import { Star, Check, ChevronRight, BadgeCheck, ChefHat, ArrowRight, Leaf, ShieldCheck, Award } from "lucide-react";
 import { formatPKR } from "@/lib/utils";
+import { WaveDivider } from "@/components/home/WaveDivider";
+
+// Alpino-style brand-benefit band shown on every product page (products carry
+// no per-item badges, so these are the always-true Eco Global Foods promises).
+const BRAND_BENEFITS = [
+  { icon: Leaf, label: "100% Natural" },
+  { icon: ShieldCheck, label: "No Additives" },
+  { icon: BadgeCheck, label: "Halal Certified" },
+  { icon: Award, label: "Made in Pakistan" },
+];
 
 // ISR: cache the rendered page at the CDN and re-query Neon at most once every
 // 30 min. Around-the-clock bot crawls then hit the edge instead of waking the
@@ -17,7 +27,6 @@ import { getRecipePosts } from "@/lib/posts";
 import { getSettings, settingNumber } from "@/lib/settings";
 import { submitReview } from "@/app/(store)/product/actions";
 import { ReviewForm } from "@/components/store/ReviewForm";
-import { ReviewsSummary } from "@/components/store/ReviewsSummary";
 import { AddToCart } from "@/components/store/AddToCart";
 import { ProductGallery } from "@/components/store/ProductGallery";
 import { ProductDetailsTabs } from "@/components/store/ProductDetailsTabs";
@@ -219,21 +228,31 @@ export default async function ProductPage({
 
       {/* main */}
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-2 lg:gap-16 lg:px-8">
-        {/* gallery */}
-        <Reveal direction="right">
-          <ProductGallery
-            name={product.name}
-            emoji={product.emoji}
-            gradient={product.gradient}
-            imageUrl={product.imageUrl}
-            images={product.images}
-            isNew={product.isNew}
-            isBestseller={product.isBestseller}
-          />
-        </Reveal>
+        {/* gallery + frequently bought together (fills the space under the images) */}
+        <div className="flex flex-col gap-8">
+          <Reveal direction="right">
+            <ProductGallery
+              name={product.name}
+              emoji={product.emoji}
+              gradient={product.gradient}
+              imageUrl={product.imageUrl}
+              images={product.images}
+              isNew={product.isNew}
+              isBestseller={product.isBestseller}
+            />
+          </Reveal>
+          {fbt.length > 1 && (
+            <div>
+              <h2 className="mb-4 font-display text-2xl font-bold uppercase text-purple-900">
+                Frequently bought together
+              </h2>
+              <FrequentlyBoughtTogether items={fbt} />
+            </div>
+          )}
+        </div>
 
         {/* info */}
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col">
           {stats.average && (
             <a href="#reviews" className="mb-3 flex items-center gap-1.5 text-sm">
               <div className="flex">
@@ -254,17 +273,17 @@ export default async function ProductPage({
             </a>
           )}
 
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-purple-900 sm:text-5xl">
+          <h1 className="font-display text-4xl font-bold uppercase leading-[1.02] tracking-tight text-purple-900 sm:text-5xl">
             {product.name}
           </h1>
           <p className="mt-3 text-lg text-purple-900/70">{product.tagline}</p>
 
           {product.badges && product.badges.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2.5">
               {product.badges.map((b) => (
                 <span
                   key={b}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white shadow-soft-sm"
                 >
                   <Check className="h-3.5 w-3.5" /> {b}
                 </span>
@@ -272,7 +291,7 @@ export default async function ProductPage({
             </div>
           )}
 
-          <div className="my-7 h-px bg-purple-100" />
+          <div className="my-7 h-px bg-purple-900/10" />
 
           <AddToCart
             productId={product.id}
@@ -314,35 +333,45 @@ export default async function ProductPage({
         </div>
       </div>
 
-      {/* product details + frequently bought together */}
-      <div className="mx-auto max-w-7xl px-5 pb-4 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">
-          <div>
-            <h2 className="mb-4 font-display text-2xl font-semibold text-purple-900">
-              Product details
-            </h2>
-            <ProductDetailsTabs
-              description={product.description}
-              ingredients={product.ingredients}
-              allergens={product.allergens}
-              nutrition={product.nutrition}
-              delivery={`We deliver across Pakistan in 2-5 working days. Free delivery on orders over ${formatPKR(freeShippingThreshold)}, with Cash on Delivery available. Not happy with your order? Our 30-day satisfaction promise has you covered.`}
-            />
+      {/* Alpino-style brand benefit band */}
+      <section className="relative my-4 overflow-hidden bg-[linear-gradient(180deg,#dcefc6_0%,#eef3d2_50%,#fbedca_100%)] py-14 sm:py-16">
+        <WaveDivider edge="top" fillClass="text-cream" />
+        <div className="mx-auto max-w-5xl px-5 lg:px-8">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+            {BRAND_BENEFITS.map(({ icon: Icon, label }, i) => (
+              <Reveal key={label} delay={i * 0.06}>
+                <div className="flex flex-col items-center text-center">
+                  <span className="grid h-16 w-16 place-items-center rounded-full bg-white text-green-600 shadow-soft transition-transform hover:-translate-y-1 sm:h-20 sm:w-20">
+                    <Icon className="h-8 w-8 sm:h-9 sm:w-9" />
+                  </span>
+                  <h3 className="mt-3.5 font-display text-sm font-bold uppercase leading-tight text-purple-900 sm:text-base">
+                    {label}
+                  </h3>
+                </div>
+              </Reveal>
+            ))}
           </div>
-          {fbt.length > 1 && (
-            <div>
-              <h2 className="mb-4 font-display text-2xl font-semibold text-purple-900">
-                Frequently bought together
-              </h2>
-              <FrequentlyBoughtTogether items={fbt} />
-            </div>
-          )}
         </div>
+        <WaveDivider edge="bottom" fillClass="text-cream" />
+      </section>
+
+      {/* product details (full width) */}
+      <div className="mx-auto max-w-7xl px-5 pb-4 lg:px-8">
+        <h2 className="mb-4 font-display text-2xl font-bold uppercase text-purple-900">
+          Product details
+        </h2>
+        <ProductDetailsTabs
+          description={product.description}
+          ingredients={product.ingredients}
+          allergens={product.allergens}
+          nutrition={product.nutrition}
+          delivery={`We deliver across Pakistan in 2-5 working days. Free delivery on orders over ${formatPKR(freeShippingThreshold)}, with Cash on Delivery available. Not happy with your order? Our 30-day satisfaction promise has you covered.`}
+        />
 
         {/* Per-product FAQs */}
         {product.faqs && product.faqs.length > 0 && (
-          <div className="mt-12 max-w-3xl">
-            <h2 className="mb-4 font-display text-2xl font-semibold text-purple-900">
+          <div className="mt-12">
+            <h2 className="mb-4 font-display text-2xl font-bold uppercase text-purple-900">
               Frequently asked questions
             </h2>
             <FaqAccordion items={product.faqs} />
@@ -352,7 +381,7 @@ export default async function ProductPage({
 
       {/* bundle contents */}
       {product.bundleContents && product.bundleContents.length > 0 && (
-        <section className="border-t border-purple-100 bg-cream-dark/40 py-16">
+        <section className="border-t border-purple-900/5 bg-cream-dark/40 py-16">
           <div className="mx-auto max-w-5xl px-5 lg:px-8">
             <SectionHeading
               eyebrow="🎁 Bundle"
@@ -364,10 +393,10 @@ export default async function ProductPage({
                 <Link
                   key={item.slug}
                   href={`/product/${item.slug}`}
-                  className="group flex items-center gap-4 rounded-2xl border border-purple-100 bg-white p-4 transition hover:border-purple-300 hover:shadow-sm"
+                  className="group flex items-center gap-4 rounded-[1.4rem] bg-white p-4 shadow-soft-sm ring-ink transition-all hover:-translate-y-0.5 hover:shadow-soft"
                 >
                   <span
-                    className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl ${
+                    className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[1.1rem] text-2xl ${
                       item.imageUrl ? "bg-white" : item.gradient
                     }`}
                   >
@@ -414,62 +443,76 @@ export default async function ProductPage({
         </section>
       )}
 
-      {/* reviews */}
-      <section id="reviews" className="border-t border-purple-100 py-16">
-        <div className="mx-auto max-w-3xl px-5 lg:px-8">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="font-display text-3xl font-semibold text-purple-900">
-              Customer reviews
+      {/* reviews — Alpino-style wall */}
+      <section id="reviews" className="relative overflow-hidden bg-[linear-gradient(180deg,#eef7e6_0%,#f6f2df_100%)] py-16">
+        <WaveDivider edge="top" fillClass="text-cream" />
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
+          <div className="text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.28em] text-green-600">
+              Real people, real reviews
+            </span>
+            <h2 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-purple-900 sm:text-5xl">
+              Loved by our customers
             </h2>
             {stats.average && (
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 fill-gold-400 text-gold-400" />
-                <span className="font-display text-xl font-semibold text-purple-900">
-                  {stats.average}
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft-sm ring-ink">
+                <span className="flex">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${i < Math.round(stats.average!) ? "fill-gold-400 text-gold-400" : "text-purple-900/15"}`}
+                    />
+                  ))}
                 </span>
-                <span className="text-sm text-purple-900/50">/ 5 · {stats.count}</span>
+                <span className="font-display text-lg font-bold text-purple-900">{stats.average}</span>
+                <span className="text-sm text-purple-900/55">
+                  / 5 · {stats.count} review{stats.count === 1 ? "" : "s"}
+                </span>
               </div>
             )}
           </div>
 
           {reviews.length > 0 ? (
-            <div className="space-y-5">
-              {stats.average && (
-                <ReviewsSummary
-                  average={stats.average}
-                  count={stats.count}
-                  ratings={reviews.map((r) => r.rating)}
-                />
-              )}
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-purple-100 bg-white p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2 font-medium text-purple-900">
-                      {r.customerName}
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[0.65rem] font-semibold text-green-800">
-                        <BadgeCheck className="h-3 w-3" /> Verified Buyer
-                      </span>
-                    </span>
-                    <div className="flex shrink-0">
+            <div className="mt-10 columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-5 [&>*]:break-inside-avoid">
+              {reviews.map((r) => {
+                const initials = r.customerName
+                  .trim()
+                  .split(/\s+/)
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase();
+                return (
+                  <div key={r.id} className="rounded-[1.4rem] bg-white p-5 shadow-soft-sm ring-ink">
+                    <div className="flex">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-4 w-4 ${
-                            i < r.rating ? "fill-gold-400 text-gold-400" : "text-purple-200"
-                          }`}
+                          className={`h-4 w-4 ${i < r.rating ? "fill-gold-400 text-gold-400" : "text-purple-900/15"}`}
                         />
                       ))}
                     </div>
+                    {r.title && (
+                      <p className="mt-2.5 font-display font-bold text-purple-900">{r.title}</p>
+                    )}
+                    <p className="mt-1.5 text-sm leading-relaxed text-purple-900/75">
+                      &ldquo;{r.body}&rdquo;
+                    </p>
+                    <div className="mt-4 flex items-center gap-2.5">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
+                        {initials}
+                      </span>
+                      <span className="text-sm font-bold text-purple-900">{r.customerName}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-green-800">
+                        <BadgeCheck className="h-3 w-3" /> Verified
+                      </span>
+                    </div>
                   </div>
-                  {r.title && (
-                    <p className="mt-2 font-semibold text-purple-900">{r.title}</p>
-                  )}
-                  <p className="mt-1 text-sm leading-relaxed text-purple-900/70">{r.body}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <div className="mb-8 rounded-2xl border border-dashed border-purple-200 bg-cream/40 px-6 py-8 text-center">
+            <div className="mx-auto mt-10 max-w-md rounded-[1.4rem] border border-dashed border-purple-900/15 bg-white/60 px-6 py-8 text-center">
               <div className="flex justify-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="h-5 w-5 text-purple-200" />
@@ -484,15 +527,16 @@ export default async function ProductPage({
             </div>
           )}
 
-          <div className="mt-8">
+          <div className="mx-auto mt-12 max-w-2xl">
             <ReviewForm action={submitForProduct} />
           </div>
         </div>
+        <WaveDivider edge="bottom" fillClass="text-cream" />
       </section>
 
       {/* recipe ideas */}
       {!product.bundleContents && recipes.length > 0 && (
-        <section className="border-t border-purple-100 py-16">
+        <section className="border-t border-purple-900/5 py-16">
           <div className="mx-auto max-w-5xl px-5 lg:px-8">
             <SectionHeading eyebrow="From our kitchen" title="Recipe ideas" />
             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -500,7 +544,7 @@ export default async function ProductPage({
                 <Link
                   key={post.id}
                   href={`/blog/${post.slug}`}
-                  className="group rounded-2xl border border-purple-100 bg-white p-5 transition hover:shadow-sm"
+                  className="group rounded-[1.4rem] bg-white p-5 shadow-soft-sm ring-ink transition-all hover:-translate-y-1 hover:shadow-soft"
                 >
                   <div className="text-3xl">{post.coverEmoji}</div>
                   <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-green-800">

@@ -21,7 +21,7 @@ interface Props {
 
 export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
   const router = useRouter();
-  const { items, subtotal, totalWeight, shipping, clear } = useCart();
+  const { items, subtotal, multiBuySavings, totalWeight, shipping, clear } = useCart();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [method, setMethod] = useState<PaymentMethodId>(methods[0]?.id ?? "cod");
@@ -36,7 +36,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
     note: "",
   });
 
-  const total = subtotal + shipping;
+  const total = subtotal - multiBuySavings + shipping;
 
   /*
    * Capture the in-progress checkout so we can follow up if it's never placed.
@@ -123,7 +123,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
           </h1>
           <Link
             href="/shop"
-            className="mt-6 inline-flex items-center gap-2 rounded-full gradient-purple-green px-7 py-3.5 text-sm font-semibold text-cream"
+            className="mt-6 inline-flex items-center gap-2 rounded-full gradient-purple-green px-7 py-3.5 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg"
           >
             <ShoppingBag className="h-4 w-4" /> Start shopping
           </Link>
@@ -185,7 +185,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
               value={form.note}
               onChange={(e) => set("note", e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+              className="w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
             />
           </div>
         </section>
@@ -199,10 +199,10 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
             {methods.map((m) => (
               <label
                 key={m.id}
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
+                className={`flex cursor-pointer items-start gap-3 rounded-[1.1rem] p-4 transition-all ${
                   method === m.id
-                    ? "border-purple-500 bg-purple-50/60 ring-1 ring-purple-200"
-                    : "border-purple-200 bg-white hover:border-purple-300"
+                    ? "bg-purple-50/60 shadow-soft"
+                    : "bg-white shadow-soft-sm hover:-translate-y-0.5 hover:shadow-soft"
                 }`}
               >
                 <input
@@ -232,7 +232,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
       </div>
 
       {/* right: summary */}
-      <div className="h-fit rounded-2xl border border-purple-100 bg-white p-6 lg:sticky lg:top-24">
+      <div className="h-fit rounded-[1.4rem] bg-white p-6 shadow-soft lg:sticky lg:top-24">
         <h2 className="font-display text-lg font-semibold text-purple-900">Your order</h2>
         <div className="mt-4 space-y-3">
           {items.map((it) => (
@@ -271,16 +271,22 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value)}
               placeholder="Discount code"
-              className="flex-1 rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm uppercase text-purple-900 outline-none focus:border-purple-400"
+              className="flex-1 rounded-xl bg-white px-3 py-2 text-sm uppercase text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
             />
           </div>
         )}
 
-        <div className="mt-5 space-y-2 border-t border-purple-100 pt-4 text-sm">
+        <div className="mt-5 space-y-2 border-t border-purple-900/5 pt-4 text-sm">
           <div className="flex justify-between text-purple-900/70">
             <span>Subtotal</span>
             <span className="text-purple-900">{formatPKR(subtotal)}</span>
           </div>
+          {multiBuySavings > 0 && (
+            <div className="flex justify-between font-medium text-green-700">
+              <span>Multi-buy savings</span>
+              <span>− {formatPKR(multiBuySavings)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-purple-900/70">
             <span>
               Shipping
@@ -294,7 +300,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
               {shipping === 0 ? "Free" : formatPKR(shipping)}
             </span>
           </div>
-          <div className="flex justify-between border-t border-purple-100 pt-2 font-display text-lg font-semibold text-purple-900">
+          <div className="flex justify-between border-t border-purple-900/5 pt-2 font-display text-lg font-semibold text-purple-900">
             <span>Total</span>
             <span>{formatPKR(total)}</span>
           </div>
@@ -310,7 +316,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-purple-green py-3.5 text-sm font-semibold text-cream transition hover:opacity-95 disabled:opacity-60"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-purple-green py-3.5 text-sm font-semibold text-cream shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg disabled:opacity-60"
         >
           <Lock className="h-4 w-4" />
           {pending ? "Placing order…" : `Place order · ${formatPKR(total)}`}
@@ -319,7 +325,7 @@ export function CheckoutForm({ methods, couponsEnabled = false }: Props) {
           Secure checkout · Your details are protected
         </p>
 
-        <div className="mt-4 border-t border-purple-100 pt-4">
+        <div className="mt-4 border-t border-purple-900/5 pt-4">
           <TrustBadges variant="compact" />
         </div>
       </div>
@@ -357,7 +363,7 @@ function Input({
         placeholder={placeholder}
         autoComplete={list ? "off" : undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm text-purple-900 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+        className="w-full rounded-xl bg-white px-4 py-2.5 text-sm text-purple-900 shadow-soft-sm outline-none transition focus:shadow-soft"
       />
     </label>
   );

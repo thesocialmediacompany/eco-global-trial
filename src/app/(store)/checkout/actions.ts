@@ -14,6 +14,7 @@ import { createFirstOrderCoupon } from "@/lib/first-order-coupon";
 import { sendPushToAll } from "@/lib/push";
 import { formatPKR, LOOKS_LIKE_EMAIL } from "@/lib/utils";
 import { isDeliveryCity, canonicalCity, isValidPakPhone } from "@/lib/cities";
+import { qtyDiscountAmount } from "@/lib/quantity-discount";
 
 export interface PlaceOrderInput {
   items: { productId: string; variantTitle: string; quantity: number }[];
@@ -128,10 +129,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
 
   const subtotal = validItems.reduce((s, l) => s + l.total, 0);
-  const { discount, freeShipping, code } = await resolveDiscount(
-    input.discountCode,
-    subtotal,
+  // Automatic multi-buy discount: buying 2+ of the same variant. Computed
+  // server-side so the browser can never inflate it.
+  const quantityDiscount = validItems.reduce(
+    (s, l) => s + qtyDiscountAmount(l.price, l.quantity),
+    0,
   );
+  // Coupon codes STACK on top: apply the coupon to the already-discounted
+  // subtotal so the two never discount the same rupees twice.
+  const { discount: couponDiscount, freeShipping, code } = await resolveDiscount(
+    input.discountCode,
+    subtotal - quantityDiscount,
+  );
+  // Stored `discount` combines both; `discountCode` still records the coupon.
+  const discount = quantityDiscount + couponDiscount;
 
   // Authoritative weight-based shipping from the configured rate bands.
   const totalGrams = validItems.reduce(
@@ -230,6 +241,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     "placed",
     `${customer.name} placed this order on Online Store.`,
   );
+  if (quantityDiscount > 0) {
+    await recordSystemOrderEvent(
+      createdOrder.id,
+      "comment",
+      `Automatic multi-buy discount applied: ${formatPKR(quantityDiscount)}.`,
+    );
+  }
   if (createdOrder.paymentStatus !== "paid") {
     await recordSystemOrderEvent(
       createdOrder.id,

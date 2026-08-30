@@ -24,8 +24,8 @@ export function CatalogDownloads({ items }: { items: CatalogItem[] }) {
               {...(disabled
                 ? {}
                 : { href: c.fileUrl, target: "_blank", rel: "noopener noreferrer", download: true })}
-              className={`flex h-full items-start gap-4 rounded-2xl border border-purple-100 bg-white p-5 shadow-sm transition ${
-                disabled ? "opacity-70" : "hover:-translate-y-1 hover:border-purple-200 hover:shadow-md"
+              className={`flex h-full items-start gap-4 rounded-[1.4rem] bg-white p-5 shadow-soft transition-all ${
+                disabled ? "opacity-70" : "hover:-translate-y-1 hover:shadow-soft-lg"
               }`}
             >
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600">

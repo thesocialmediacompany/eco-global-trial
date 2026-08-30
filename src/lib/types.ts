@@ -21,6 +21,9 @@ export interface Category {
   /** decorative gradient utility class used for the card background */
   gradient: "gradient-purple" | "gradient-green" | "gradient-purple-green";
   emoji: string;
+  /** optional real food photo shown on the category "plate" (e.g. /categories/oats.jpg);
+   *  falls back to a representative product image, then the emoji. */
+  image?: string;
   /** whether this is part of the newly launched premium range */
   isNew?: boolean;
   seo: SeoMeta;

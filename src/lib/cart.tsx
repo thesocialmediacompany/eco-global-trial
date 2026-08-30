@@ -12,6 +12,7 @@ import {
   computeShipping,
   type ShippingConfig,
 } from "@/lib/shipping-rates";
+import { qtyDiscountAmount } from "@/lib/quantity-discount";
 import { trackAddToCart } from "@/lib/analytics";
 
 export interface CartItem {
@@ -32,6 +33,8 @@ interface CartContextValue {
   items: CartItem[];
   count: number;
   subtotal: number;
+  /** total saved by the automatic multi-buy (quantity) discount */
+  multiBuySavings: number;
   /** total weight of the cart in grams */
   totalWeight: number;
   /** estimated delivery fee for the current cart (0 when free) */
@@ -129,6 +132,13 @@ export function CartProvider({
   const value = useMemo<CartContextValue>(() => {
     const count = items.reduce((s, i) => s + i.quantity, 0);
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    // Automatic multi-buy discount (buy more of the same variant, save more).
+    const multiBuySavings = items.reduce(
+      (s, i) => s + qtyDiscountAmount(i.price, i.quantity),
+      0,
+    );
+    // Shipping and the free-delivery threshold both use the discounted total.
+    const discountedSubtotal = subtotal - multiBuySavings;
     const totalWeight = items.reduce(
       (s, i) => s + (i.weightGrams ?? 0) * i.quantity,
       0,
@@ -136,14 +146,17 @@ export function CartProvider({
     const shipping =
       items.length === 0
         ? 0
-        : computeShipping(totalWeight, subtotal, shippingConfig);
+        : computeShipping(totalWeight, discountedSubtotal, shippingConfig);
     const threshold = shippingConfig.freeShippingThreshold;
     const freeShippingRemaining =
-      threshold > 0 && subtotal < threshold ? threshold - subtotal : 0;
+      threshold > 0 && discountedSubtotal < threshold
+        ? threshold - discountedSubtotal
+        : 0;
     return {
       items,
       count,
       subtotal,
+      multiBuySavings,
       totalWeight,
       shipping,
       freeShippingRemaining,

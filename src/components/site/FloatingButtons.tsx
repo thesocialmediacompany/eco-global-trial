@@ -43,7 +43,7 @@ export function FloatingButtons({ whatsappNumber }: { whatsappNumber: string }) 
             transition={{ duration: 0.2 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             aria-label="Scroll to top"
-            className="grid h-11 w-11 place-items-center rounded-full bg-purple-800 text-cream shadow-lg shadow-purple-900/30 transition hover:bg-purple-700"
+            className="grid h-11 w-11 place-items-center rounded-full bg-purple-800 text-cream shadow-soft-lg transition hover:bg-purple-700"
           >
             <ArrowUp className="h-5 w-5" />
           </motion.button>
@@ -60,7 +60,7 @@ export function FloatingButtons({ whatsappNumber }: { whatsappNumber: string }) 
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 260, damping: 18 }}
           whileHover={{ scale: 1.08 }}
-          className="grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-xl shadow-green-900/30"
+          className="grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-soft-lg"
         >
           <WhatsAppIcon className="h-8 w-8" />
         </motion.a>

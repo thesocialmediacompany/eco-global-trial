@@ -4,6 +4,10 @@ import type { Category } from "@/lib/types";
  * Storefront categories - slugs MUST match the imported Collection slugs in the
  * database (captured from the live store) so navigation resolves correctly.
  * Used for nav menus, the home category grid, shop chips and the footer.
+ *
+ * `image` points at a real food photo in /public/categories, shown on the round
+ * "plate" in the homepage category grid (falls back to a product photo, then
+ * the emoji).
  */
 export const categories: Category[] = [
   {
@@ -13,6 +17,7 @@ export const categories: Category[] = [
     tagline: "Crunchy, wholesome mornings",
     gradient: "gradient-purple",
     emoji: "🥣",
+    image: "/categories/granola.jpg",
     isNew: true,
     seo: {
       title: "Granola & Cereal",
@@ -27,6 +32,7 @@ export const categories: Category[] = [
     tagline: "Ready in minutes",
     gradient: "gradient-green",
     emoji: "🌾",
+    image: "/categories/oats.jpg",
     isNew: true,
     seo: {
       title: "Oats Family",
@@ -41,6 +47,7 @@ export const categories: Category[] = [
     tagline: "Start the day right",
     gradient: "gradient-purple-green",
     emoji: "☀️",
+    image: "/categories/morning.jpg",
     seo: {
       title: "Morning Essentials",
       description: "Wholesome breakfast essentials for an energising, balanced start to the day.",
@@ -54,6 +61,7 @@ export const categories: Category[] = [
     tagline: "From farm to flour",
     gradient: "gradient-green",
     emoji: "🌾",
+    image: "/categories/flours.jpg",
     seo: {
       title: "Flours",
       description: "Naturally milled flours for wholesome home cooking and baking.",
@@ -67,6 +75,7 @@ export const categories: Category[] = [
     tagline: "Bake with goodness",
     gradient: "gradient-purple",
     emoji: "🧁",
+    image: "/categories/baking.jpg",
     seo: {
       title: "Baking Products",
       description: "Natural baking essentials for delicious, wholesome treats.",
@@ -80,6 +89,7 @@ export const categories: Category[] = [
     tagline: "Authentic, pure blends",
     gradient: "gradient-purple-green",
     emoji: "🌶️",
+    image: "/categories/spices.jpg",
     seo: {
       title: "Spices",
       description: "Pure spices and masalas with no artificial colours or fillers.",
@@ -93,6 +103,7 @@ export const categories: Category[] = [
     tagline: "Wellness from the earth",
     gradient: "gradient-green",
     emoji: "🌿",
+    image: "/categories/herbs.jpg",
     seo: {
       title: "Herbs",
       description: "Carefully sourced natural herbs for cooking and wellness.",
@@ -106,6 +117,7 @@ export const categories: Category[] = [
     tagline: "Nature's tiny powerhouses",
     gradient: "gradient-green",
     emoji: "🌱",
+    image: "/categories/seeds.jpg",
     seo: {
       title: "Seeds & Grains",
       description: "Nutrient-dense seeds and whole grains for a balanced lifestyle.",
@@ -119,6 +131,7 @@ export const categories: Category[] = [
     tagline: "Premium, hand-picked",
     gradient: "gradient-purple",
     emoji: "🥜",
+    image: "/categories/dry-fruits.jpg",
     seo: {
       title: "Dry Fruits",
       description: "Hand-picked premium dry fruits and nuts, sealed for freshness.",
@@ -132,6 +145,7 @@ export const categories: Category[] = [
     tagline: "Pure & worry-free",
     gradient: "gradient-purple-green",
     emoji: "🌾",
+    image: "/categories/gluten-free.jpg",
     seo: {
       title: "Gluten-Free Foods",
       description: "A dedicated gluten-free range for sensitive diets without compromising on taste.",
@@ -145,6 +159,7 @@ export const categories: Category[] = [
     tagline: "Restaurant taste at home",
     gradient: "gradient-purple",
     emoji: "🍗",
+    image: "/categories/batter.jpg",
     seo: {
       title: "Batter & Marination",
       description: "Ready batter and marination mixes for crispy, flavourful meals in minutes.",
@@ -158,6 +173,7 @@ export const categories: Category[] = [
     tagline: "Flavour, locked in",
     gradient: "gradient-green",
     emoji: "🧅",
+    image: "/categories/dehydrated.jpg",
     seo: {
       title: "Dehydrated Foods",
       description: "Dehydrated vegetables and foods that lock in nutrition and flavour.",

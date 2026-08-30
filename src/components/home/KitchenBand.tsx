@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getFeaturedGalleryImages } from "@/lib/media";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { WaveDivider } from "@/components/home/WaveDivider";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 /**
@@ -13,7 +14,9 @@ export async function KitchenBand() {
   if (items.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-purple-950 py-14 text-cream sm:py-20">
+    <section className="relative overflow-hidden bg-purple-950 pt-20 pb-14 text-cream sm:pt-24 sm:pb-20">
+      {/* cream story section curves down into this dark band */}
+      <WaveDivider edge="top" fillClass="text-cream" />
       <div
         aria-hidden
         className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-green-500/20 blur-3xl"
@@ -33,7 +36,7 @@ export async function KitchenBand() {
           {items.map((g) => (
             <RevealItem
               key={g.id}
-              className="group relative aspect-square overflow-hidden rounded-2xl border border-white/10"
+              className="group relative aspect-square overflow-hidden rounded-[1.5rem] border border-white/10 shadow-soft-sm"
             >
               {g.url ? (
                 <Image
