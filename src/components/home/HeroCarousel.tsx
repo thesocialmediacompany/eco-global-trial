@@ -182,8 +182,16 @@ function HeroPoster({ p }: { p: Poster }) {
             {p.title}
           </h1>
           <p
-            className="mx-auto mt-6 max-w-md text-balance text-sm font-bold text-purple-900 underline decoration-gold-500 decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0"
-            style={{ textShadow: "0 1px 3px rgba(255,247,236,0.95), 0 0 10px rgba(255,247,236,0.85)" }}
+            className={`mx-auto mt-6 max-w-md text-balance text-sm font-bold underline decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0 ${
+              p.template === "image"
+                ? "text-cream decoration-gold-300"
+                : "text-purple-900 decoration-gold-500"
+            }`}
+            style={
+              p.template === "image"
+                ? { textShadow: "0 1px 2px rgba(18,28,12,.95), 0 2px 8px rgba(18,28,12,.85), 0 0 3px rgba(18,28,12,.9)" }
+                : { textShadow: "0 1px 3px rgba(255,247,236,0.95), 0 0 10px rgba(255,247,236,0.85)" }
+            }
           >
             {p.subtitle}
           </p>
