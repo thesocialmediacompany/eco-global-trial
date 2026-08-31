@@ -62,11 +62,6 @@ function PosterBg({ p }: { p: Poster }) {
         {p.image && (
           <Image src={p.image} alt="" fill sizes="100vw" className={`object-cover ${p.imageMobile ? "hidden sm:block" : ""}`} />
         )}
-        {/* cream scrim so the copy stays readable over the photo */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-cream/20 sm:via-cream/70 sm:to-transparent"
-        />
       </>
     );
   }
@@ -186,7 +181,10 @@ function HeroPoster({ p }: { p: Poster }) {
           >
             {p.title}
           </h1>
-          <p className="mx-auto mt-6 max-w-md text-balance text-sm font-bold text-purple-900 underline decoration-gold-500 decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0">
+          <p
+            className="mx-auto mt-6 max-w-md text-balance text-sm font-bold text-purple-900 underline decoration-gold-500 decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0"
+            style={{ textShadow: "0 1px 3px rgba(255,247,236,0.95), 0 0 10px rgba(255,247,236,0.85)" }}
+          >
             {p.subtitle}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-5 lg:justify-start">
