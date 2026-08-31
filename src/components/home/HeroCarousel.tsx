@@ -19,8 +19,10 @@ export interface Poster {
   template: "rays" | "dots" | "blobs" | "image" | "banner";
   base: string; // base background (solid colour or gradient)
   accent: string; // ray / dot / blob accent colour
-  /** full-bleed background photo (used when template === "image") */
+  /** full-bleed background photo (used when template === "image" | "banner") */
   image?: string;
+  /** optional portrait image shown instead of `image` on small screens */
+  imageMobile?: string;
   badge: string;
   title: string;
   subtitle: string;
@@ -34,15 +36,31 @@ export interface Poster {
 function PosterBg({ p }: { p: Poster }) {
   if (p.template === "banner") {
     // a complete designed banner — just the image, no scrim or overlay
-    return p.image ? (
-      <Image src={p.image} alt={p.title} fill priority sizes="100vw" className="object-cover object-center" />
-    ) : null;
+    if (!p.image) return null;
+    return (
+      <>
+        {p.imageMobile && (
+          <Image src={p.imageMobile} alt={p.title} fill priority sizes="100vw" className="object-cover object-center sm:hidden" />
+        )}
+        <Image
+          src={p.image}
+          alt={p.title}
+          fill
+          priority
+          sizes="100vw"
+          className={`object-cover object-center ${p.imageMobile ? "hidden sm:block" : ""}`}
+        />
+      </>
+    );
   }
   if (p.template === "image") {
     return (
       <>
+        {p.imageMobile && (
+          <Image src={p.imageMobile} alt="" fill sizes="100vw" className="object-cover sm:hidden" />
+        )}
         {p.image && (
-          <Image src={p.image} alt="" fill sizes="100vw" className="object-cover" />
+          <Image src={p.image} alt="" fill sizes="100vw" className={`object-cover ${p.imageMobile ? "hidden sm:block" : ""}`} />
         )}
         {/* cream scrim so the copy stays readable over the photo */}
         <div
