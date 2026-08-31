@@ -25,3 +25,17 @@ function available(): Set<string> {
 export function cutoutFor(slug: string): string | undefined {
   return available().has(slug) ? `/cutouts/${slug}.png` : undefined;
 }
+
+/**
+ * Returns `/covers/<filename>` only if that file exists in public/covers, else
+ * undefined — so a hero poster can opt into a mobile-specific banner image
+ * without breaking before the file has been added.
+ */
+export function coverImage(filename: string): string | undefined {
+  try {
+    const p = path.join(process.cwd(), "public", "covers", filename);
+    return fs.existsSync(p) ? `/covers/${filename}` : undefined;
+  } catch {
+    return undefined;
+  }
+}

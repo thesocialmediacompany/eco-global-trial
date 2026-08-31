@@ -141,7 +141,7 @@ export function Header({ navLinks }: { navLinks?: HeaderNavItem[] }) {
     >
       <div className="relative mx-auto flex max-w-7xl items-center px-5 py-4 lg:px-8">
         {/* Logo (absolutely centered on the midline, Alpino-style) */}
-        <Link href="/" className="group absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center" aria-label="Eco Global Foods home">
+        <Link href="/" className="group z-10 flex items-center lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2" aria-label="Eco Global Foods home">
           <Image
             src="/brand/logo-full.png"
             alt="Eco Global Foods"

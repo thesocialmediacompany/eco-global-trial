@@ -12,6 +12,7 @@ import { WhyOrderOnline } from "@/components/home/WhyOrderOnline";
 import { Newsletter } from "@/components/home/Newsletter";
 import { getSettings } from "@/lib/settings";
 import { getFeaturedProducts, getCategoryThumbs } from "@/lib/products";
+import { coverImage } from "@/lib/cutouts";
 import { getPageHero } from "@/lib/page-hero";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -105,9 +106,11 @@ export default async function Home() {
       subtitle: s.heroSubtitle,
       shopHref: "#new-range",
       starburst: ["100%", "Natural"],
-      template: "rays",
-      base: "#ffe28a",
+      template: "banner",
+      base: "#f3e8d0",
       accent: "#ffce4a",
+      image: "/covers/taste-goodness.jpg",
+      imageMobile: coverImage("taste-goodness-mobile.jpg"),
       packs: [
         { src: "/hero/oats.png", name: "Steel-Cut Oats", href: "/product/rolled-oats" },
         { src: "/hero/beetroot.png", name: "Beetroot Powder", href: "/product/eco-beetroot-powder" },
@@ -124,9 +127,11 @@ export default async function Home() {
       subtitle: "Wholegrain oats, granola & cereals — fibre-rich fuel for a busy day.",
       shopHref: "/category/oats-family",
       starburst: ["Hi", "Fibre"],
-      template: "dots",
-      base: "#ffd9c0",
+      template: "image",
+      base: "#efe6d6",
       accent: "rgba(198,86,59,0.26)",
+      image: "/covers/breakfast.jpg",
+      imageMobile: coverImage("breakfast-mobile.jpg"),
       packs: [
         { src: "/cutouts/granola-chocolate-cereals.png", name: "Chocolate Granola", href: "/product/granola-chocolate-cereals" },
         { src: "/cutouts/eco-steel-cut-oats.png", name: "Steel-Cut Oats", href: "/product/eco-steel-cut-oats" },
@@ -143,9 +148,11 @@ export default async function Home() {
       subtitle: "Pure spices & masalas — no artificial colours, no fillers, just flavour.",
       shopHref: "/category/spices-spices",
       starburst: ["100%", "Pure"],
-      template: "blobs",
-      base: "linear-gradient(160deg,#cdeacb 0%,#f9edcb 100%)",
+      template: "image",
+      base: "#efe6d6",
       accent: "#9bd36a",
+      image: "/covers/spices.jpg",
+      imageMobile: coverImage("spices-mobile.jpg"),
       packs: [
         { src: "/cutouts/eco-red-chilli-powder.png", name: "Red Chilli Powder", href: "/product/eco-red-chilli-powder" },
         { src: "/cutouts/eco-turmeric-powder.png", name: "Turmeric Powder", href: "/product/eco-turmeric-powder" },

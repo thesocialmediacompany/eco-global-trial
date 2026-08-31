@@ -16,9 +16,13 @@ interface Annotation {
 }
 export interface Poster {
   /** background design template — each poster looks visibly different */
-  template: "rays" | "dots" | "blobs";
+  template: "rays" | "dots" | "blobs" | "image" | "banner";
   base: string; // base background (solid colour or gradient)
   accent: string; // ray / dot / blob accent colour
+  /** full-bleed background photo (used when template === "image" | "banner") */
+  image?: string;
+  /** optional portrait image shown instead of `image` on small screens */
+  imageMobile?: string;
   badge: string;
   title: string;
   subtitle: string;
@@ -30,6 +34,37 @@ export interface Poster {
 
 /** Per-template decorative background. */
 function PosterBg({ p }: { p: Poster }) {
+  if (p.template === "banner") {
+    // a complete designed banner — just the image, no scrim or overlay
+    if (!p.image) return null;
+    return (
+      <>
+        {p.imageMobile && (
+          <Image src={p.imageMobile} alt={p.title} fill priority sizes="100vw" className="object-cover object-center sm:hidden" />
+        )}
+        <Image
+          src={p.image}
+          alt={p.title}
+          fill
+          priority
+          sizes="100vw"
+          className={`object-cover object-center ${p.imageMobile ? "hidden sm:block" : ""}`}
+        />
+      </>
+    );
+  }
+  if (p.template === "image") {
+    return (
+      <>
+        {p.imageMobile && (
+          <Image src={p.imageMobile} alt="" fill sizes="100vw" className="object-cover sm:hidden" />
+        )}
+        {p.image && (
+          <Image src={p.image} alt="" fill sizes="100vw" className={`object-cover ${p.imageMobile ? "hidden sm:block" : ""}`} />
+        )}
+      </>
+    );
+  }
   if (p.template === "rays") {
     return (
       <div
@@ -123,9 +158,10 @@ const FAN = [
 /** One full-width hero poster (no wave — the carousel owns that). */
 function HeroPoster({ p }: { p: Poster }) {
   return (
-    <div className="relative w-full shrink-0 overflow-hidden" style={{ background: p.base }}>
+    <div className="relative h-[470px] w-full shrink-0 overflow-hidden sm:h-[540px] lg:h-[600px]" style={{ background: p.base }}>
       <PosterBg p={p} />
-      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:px-8 lg:py-20">
+      {p.template !== "banner" && (
+      <div className="relative mx-auto grid h-full max-w-7xl items-center gap-6 px-5 py-6 sm:gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:px-8">
         {/* copy */}
         <div className="relative z-10 text-center lg:text-left">
           {p.badge && (
@@ -145,7 +181,18 @@ function HeroPoster({ p }: { p: Poster }) {
           >
             {p.title}
           </h1>
-          <p className="mx-auto mt-6 max-w-md text-balance text-sm font-bold text-purple-900 underline decoration-gold-500 decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0">
+          <p
+            className={`mx-auto mt-6 max-w-md text-balance text-sm font-bold underline decoration-dotted decoration-2 underline-offset-4 sm:text-base lg:mx-0 ${
+              p.template === "image"
+                ? "text-cream decoration-gold-300"
+                : "text-purple-900 decoration-gold-500"
+            }`}
+            style={
+              p.template === "image"
+                ? { textShadow: "0 1px 2px rgba(18,28,12,.95), 0 2px 8px rgba(18,28,12,.85), 0 0 3px rgba(18,28,12,.9)" }
+                : { textShadow: "0 1px 3px rgba(255,247,236,0.95), 0 0 10px rgba(255,247,236,0.85)" }
+            }
+          >
             {p.subtitle}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-5 lg:justify-start">
@@ -162,7 +209,8 @@ function HeroPoster({ p }: { p: Poster }) {
           </div>
         </div>
 
-        {/* packs */}
+        {/* packs (hidden on photo posters — the image is the visual) */}
+        {p.template !== "image" && (
         <div className="relative h-64 sm:h-80 lg:h-[22rem]">
           {p.annotations.map((a) => (
             <Note
@@ -192,7 +240,9 @@ function HeroPoster({ p }: { p: Poster }) {
             );
           })}
         </div>
+        )}
       </div>
+      )}
     </div>
   );
 }

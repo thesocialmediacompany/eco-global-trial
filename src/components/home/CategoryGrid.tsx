@@ -62,14 +62,12 @@ export function CategoryGrid({ thumbs = {} }: { thumbs?: Record<string, string> 
                     className="pointer-events-none absolute -inset-[6px] scale-90 rounded-full border-[3px] opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
                     style={{ borderColor: ring }}
                   />
-                  {/* little accent dot (skip when the New badge already sits here) */}
-                  {!cat.isNew && (
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute right-[6%] top-[2%] z-20 h-3.5 w-3.5 scale-0 rounded-full opacity-0 shadow-soft-sm transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
-                      style={{ backgroundColor: ring }}
-                    />
-                  )}
+                  {/* little accent dot — same bubble on every plate */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute right-[6%] top-[2%] z-20 h-3.5 w-3.5 scale-0 rounded-full opacity-0 shadow-soft-sm transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
+                    style={{ backgroundColor: ring }}
+                  />
 
                   {/* the plate */}
                   <div className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-white shadow-soft transition-shadow duration-300 group-hover:shadow-soft-lg">
@@ -92,11 +90,6 @@ export function CategoryGrid({ thumbs = {} }: { thumbs?: Record<string, string> 
                       </span>
                     )}
 
-                    {cat.isNew && (
-                      <span className="absolute right-1 top-1 z-20 rounded-full bg-purple-600 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-cream shadow-soft-sm">
-                        New
-                      </span>
-                    )}
                   </div>
                 </div>
 
