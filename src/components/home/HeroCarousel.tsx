@@ -16,9 +16,11 @@ interface Annotation {
 }
 export interface Poster {
   /** background design template — each poster looks visibly different */
-  template: "rays" | "dots" | "blobs";
+  template: "rays" | "dots" | "blobs" | "image" | "banner";
   base: string; // base background (solid colour or gradient)
   accent: string; // ray / dot / blob accent colour
+  /** full-bleed background photo (used when template === "image") */
+  image?: string;
   badge: string;
   title: string;
   subtitle: string;
@@ -30,6 +32,26 @@ export interface Poster {
 
 /** Per-template decorative background. */
 function PosterBg({ p }: { p: Poster }) {
+  if (p.template === "banner") {
+    // a complete designed banner — just the image, no scrim or overlay
+    return p.image ? (
+      <Image src={p.image} alt={p.title} fill priority sizes="100vw" className="object-cover object-center" />
+    ) : null;
+  }
+  if (p.template === "image") {
+    return (
+      <>
+        {p.image && (
+          <Image src={p.image} alt="" fill sizes="100vw" className="object-cover" />
+        )}
+        {/* cream scrim so the copy stays readable over the photo */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-cream/20 sm:via-cream/70 sm:to-transparent"
+        />
+      </>
+    );
+  }
   if (p.template === "rays") {
     return (
       <div
@@ -123,9 +145,10 @@ const FAN = [
 /** One full-width hero poster (no wave — the carousel owns that). */
 function HeroPoster({ p }: { p: Poster }) {
   return (
-    <div className="relative w-full shrink-0 overflow-hidden" style={{ background: p.base }}>
+    <div className="relative h-[470px] w-full shrink-0 overflow-hidden sm:h-[540px] lg:h-[600px]" style={{ background: p.base }}>
       <PosterBg p={p} />
-      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:px-8 lg:py-20">
+      {p.template !== "banner" && (
+      <div className="relative mx-auto grid h-full max-w-7xl items-center gap-6 px-5 py-6 sm:gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:px-8">
         {/* copy */}
         <div className="relative z-10 text-center lg:text-left">
           {p.badge && (
@@ -162,7 +185,8 @@ function HeroPoster({ p }: { p: Poster }) {
           </div>
         </div>
 
-        {/* packs */}
+        {/* packs (hidden on photo posters — the image is the visual) */}
+        {p.template !== "image" && (
         <div className="relative h-64 sm:h-80 lg:h-[22rem]">
           {p.annotations.map((a) => (
             <Note
@@ -192,7 +216,9 @@ function HeroPoster({ p }: { p: Poster }) {
             );
           })}
         </div>
+        )}
       </div>
+      )}
     </div>
   );
 }
