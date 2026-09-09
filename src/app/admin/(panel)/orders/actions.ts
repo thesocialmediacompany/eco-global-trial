@@ -528,6 +528,12 @@ export async function bookZoomCOD(orderId: string) {
     )
     .join(", ");
 
+  // COD collection amount = money still owed at the door. An order that's
+  // already been paid (gateway callback, or a bank transfer the admin marked
+  // "paid") must be booked with 0 to collect — otherwise ZoomCOD charges the
+  // customer the full total a SECOND time in cash on delivery.
+  const codAmount = order.paymentStatus === "paid" ? 0 : order.total;
+
   const provider = getShippingProvider("zoomcod");
   const result = await provider.bookShipment({
     orderNumber: order.orderNumber,
@@ -536,7 +542,7 @@ export async function bookZoomCOD(orderId: string) {
     email: order.email,
     address: order.address,
     city: order.city,
-    amount: order.total,
+    amount: codAmount,
     weightKg,
     description,
   });
@@ -552,12 +558,15 @@ export async function bookZoomCOD(orderId: string) {
         shipmentLabelUrl: result.labelUrl ?? "",
         courierStatus: "Order is Booked",
         fulfillmentStatus: "fulfilled",
+        codBooked: codAmount,
       },
     });
     await recordOrderEvent(
       orderId,
       "courier",
-      `${result.courier} booked this order for delivery (${weightKg} kg, ${product}). Tracking ${result.trackingNumber}.`,
+      `${result.courier} booked this order for delivery (${weightKg} kg, ${product}). ` +
+        `${codAmount > 0 ? `COD to collect: Rs ${codAmount.toLocaleString()}.` : "Prepaid — Rs 0 to collect."} ` +
+        `Tracking ${result.trackingNumber}.`,
     );
     await sendShippingNotification(orderId).catch((e) =>
       console.error("shipping email failed:", e),
