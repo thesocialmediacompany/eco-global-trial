@@ -321,6 +321,10 @@ model Order {
   shipmentLabelUrl String @default("") // ZoomCOD printable invoice/label link
   courierStatus    String @default("") // last fetched ZoomCOD status
   shippingMethod   String @default("") // rate name shown at checkout, e.g. "3kg and above"
+  // Cash the courier was told to collect on delivery when booked (PKR). 0 for a
+  // prepaid order, `total` for COD. Null = booked before we tracked this, so a
+  // paid order with a booking can't be assumed correct — see the COD audit view.
+  codBooked        Int?
 
   deliveredAt DateTime? // rider confirmed handover
   archivedAt  DateTime? // cleared from the working list, like Shopify's archive
