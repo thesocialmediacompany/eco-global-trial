@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/import.ts",
     "db:seed-demo": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:clean-horeca-bundles": "tsx scripts/clean-horeca-bundles.ts"
   },
   "prisma": {
     "seed": "tsx prisma/import.ts"
