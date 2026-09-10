@@ -3,6 +3,24 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { inHiddenCollection } from "@/lib/products";
+
+/**
+ * Bundles must never contain HORECA (B2B/bulk) products. The admin picker
+ * already hides them, but enforce it here too so a stale/edited payload — or an
+ * older bundle that still holds one — can't slip a HORECA item through. Any
+ * such item is dropped, and re-saving an old bundle quietly cleans it.
+ */
+async function dropHorecaItems<T extends { productId: string }>(items: T[]): Promise<T[]> {
+  if (items.length === 0) return items;
+  const hidden = await prisma.product.findMany({
+    where: { id: { in: items.map((i) => i.productId) }, ...inHiddenCollection() },
+    select: { id: true },
+  });
+  if (hidden.length === 0) return items;
+  const blocked = new Set(hidden.map((p) => p.id));
+  return items.filter((i) => !blocked.has(i.productId));
+}
 
 export interface BundleInput {
   title: string;
@@ -58,7 +76,7 @@ function validate(input: BundleInput): string | null {
 export async function createBundle(input: BundleInput): Promise<BundleResult> {
   const error = validate(input);
   if (error) return { ok: false, error };
-  const items = input.items.filter((i) => i.quantity > 0);
+  const items = await dropHorecaItems(input.items.filter((i) => i.quantity > 0));
 
   const value = await contentsValue(items);
   const slugBase = slugify(input.title) || `bundle-${Date.now()}`;
@@ -102,7 +120,7 @@ export async function createBundle(input: BundleInput): Promise<BundleResult> {
 export async function updateBundle(id: string, input: BundleInput): Promise<BundleResult> {
   const error = validate(input);
   if (error) return { ok: false, error };
-  const items = input.items.filter((i) => i.quantity > 0);
+  const items = await dropHorecaItems(input.items.filter((i) => i.quantity > 0));
   const value = await contentsValue(items);
 
   await prisma.$transaction([

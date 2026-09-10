@@ -113,18 +113,21 @@ function inCollection(slug: string): Prisma.ProductWhereInput {
  * only appear on their own category page (e.g. /category/horeca). HORECA holds
  * bulk / B2B packs that would otherwise clutter the retail range.
  */
-const HIDDEN_COLLECTION_SLUGS = ["horeca"];
+export const HIDDEN_COLLECTION_SLUGS = ["horeca"];
+
+/** WHERE fragment matching products that ARE in a hidden collection (HORECA). */
+export function inHiddenCollection(): Prisma.ProductWhereInput {
+  return {
+    OR: HIDDEN_COLLECTION_SLUGS.flatMap((slug) => [
+      { collection: { slug } },
+      { collectionLinks: { some: { collection: { slug } } } },
+    ]),
+  };
+}
 
 /** WHERE fragment that excludes any product in a hidden collection. */
-function excludeHidden(): Prisma.ProductWhereInput {
-  return {
-    NOT: {
-      OR: HIDDEN_COLLECTION_SLUGS.flatMap((slug) => [
-        { collection: { slug } },
-        { collectionLinks: { some: { collection: { slug } } } },
-      ]),
-    },
-  };
+export function excludeHidden(): Prisma.ProductWhereInput {
+  return { NOT: inHiddenCollection() };
 }
 
 export async function getActiveProducts() {

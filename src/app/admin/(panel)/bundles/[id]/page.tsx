@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { excludeHidden } from "@/lib/products";
 import { BundleForm } from "@/components/admin/BundleForm";
 import { updateBundle, deleteBundle } from "../actions";
 
@@ -16,8 +17,9 @@ export default async function EditBundlePage({
       where: { id },
       include: { bundleItems: { orderBy: { sortOrder: "asc" } } },
     }),
+    // Exclude HORECA (B2B/bulk) products — they must not go into retail bundles.
     prisma.product.findMany({
-      where: { isBundle: false, status: "active" },
+      where: { isBundle: false, status: "active", ...excludeHidden() },
       orderBy: { title: "asc" },
       select: { id: true, title: true, price: true, emoji: true, gradient: true, imageUrl: true },
     }),
