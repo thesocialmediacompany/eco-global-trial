@@ -209,6 +209,11 @@ model Review {
   body         String   @default("")
   status       String   @default("pending") // pending | approved
   createdAt    DateTime @default(now())
+  // SHA-256 hash (truncated) of the submitter's IP — used only to rate-limit
+  // submissions. Never the raw IP, so no PII is stored.
+  ipHash       String   @default("")
+
+  @@index([ipHash, createdAt])
 }
 
 /// An abandoned checkout — captured when a shopper starts but doesn't finish.

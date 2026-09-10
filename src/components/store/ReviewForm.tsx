@@ -9,7 +9,9 @@ type Action = (prev: ReviewState, formData: FormData) => Promise<ReviewState>;
 
 export function ReviewForm({ action }: { action: Action }) {
   const [state, formAction] = useActionState<ReviewState, FormData>(action, {});
-  const [rating, setRating] = useState(5);
+  // Start unselected (0), not 5 — a pre-filled 5 meant shoppers who didn't
+  // touch the stars submitted 5/5 by default, even alongside a negative review.
+  const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
 
   if (state.ok) {
@@ -31,26 +33,40 @@ export function ReviewForm({ action }: { action: Action }) {
       <h3 className="font-display text-lg font-semibold text-purple-900">Write a review</h3>
       <input type="hidden" name="rating" value={rating} />
 
-      <div className="mt-3 flex items-center gap-1">
-        {Array.from({ length: 5 }).map((_, i) => {
-          const n = i + 1;
-          return (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setRating(n)}
-              onMouseEnter={() => setHover(n)}
-              onMouseLeave={() => setHover(0)}
-              aria-label={`${n} stars`}
-            >
-              <Star
-                className={`h-6 w-6 transition ${
-                  n <= (hover || rating) ? "fill-gold-400 text-gold-400" : "text-purple-200"
-                }`}
-              />
-            </button>
-          );
-        })}
+      {/* Honeypot: hidden from humans; bots that fill it are silently dropped. */}
+      <div aria-hidden className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden" style={{ position: "absolute", left: "-9999px" }}>
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+
+      <div className="mt-3 flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }).map((_, i) => {
+            const n = i + 1;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                onMouseEnter={() => setHover(n)}
+                onMouseLeave={() => setHover(0)}
+                aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                aria-pressed={rating === n}
+              >
+                <Star
+                  className={`h-6 w-6 transition ${
+                    n <= (hover || rating) ? "fill-gold-400 text-gold-400" : "text-purple-200"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-sm text-purple-900/55">
+          {rating > 0 ? `${rating} / 5` : "Tap to rate *"}
+        </span>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
