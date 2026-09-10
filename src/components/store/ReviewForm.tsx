@@ -33,6 +33,14 @@ export function ReviewForm({ action }: { action: Action }) {
       <h3 className="font-display text-lg font-semibold text-purple-900">Write a review</h3>
       <input type="hidden" name="rating" value={rating} />
 
+      {/* Honeypot: hidden from humans; bots that fill it are silently dropped. */}
+      <div aria-hidden className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden" style={{ position: "absolute", left: "-9999px" }}>
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+
       <div className="mt-3 flex items-center gap-2">
         <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
