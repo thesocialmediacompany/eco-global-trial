@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Star, Check, Undo2, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { approveReview, unapproveReview, deleteReview } from "./actions";
+import { approveReview, unapproveReview, deleteReview, setReviewRating } from "./actions";
 
 
 export default async function ReviewsPage() {
@@ -37,14 +37,25 @@ export default async function ReviewsPage() {
                   <StatusBadge status={r.status === "approved" ? "active" : "pending"} />
                 </div>
                 <div className="mt-1 flex items-center gap-2">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < r.rating ? "fill-gold-400 text-gold-400" : "text-purple-200"}`}
-                      />
-                    ))}
-                  </div>
+                  {/* Editable rating: each star submits a new value. */}
+                  <form className="flex" title="Click a star to change this rating">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const n = i + 1;
+                      return (
+                        <button
+                          key={n}
+                          type="submit"
+                          formAction={setReviewRating.bind(null, r.id, n)}
+                          aria-label={`Set to ${n} star${n === 1 ? "" : "s"}`}
+                          className="rounded p-0.5 hover:bg-purple-50"
+                        >
+                          <Star
+                            className={`h-4 w-4 transition ${n <= r.rating ? "fill-gold-400 text-gold-400" : "text-purple-200 hover:text-gold-300"}`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </form>
                   <span className="text-xs text-purple-900/50">
                     on{" "}
                     <Link href={`/product/${r.product.slug}`} className="text-green-700 hover:underline">

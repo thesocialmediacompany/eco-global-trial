@@ -34,6 +34,19 @@ export async function unapproveReview(id: string) {
   await syncAndRevalidate(id, r.productId);
 }
 
+export async function setReviewRating(id: string, rating: number) {
+  const r = Math.round(rating);
+  if (r < 1 || r > 5) return; // ignore out-of-range values
+  const rev = await prisma.review.update({
+    where: { id },
+    data: { rating: r },
+    select: { productId: true },
+  });
+  // Recompute the product's average only matters for approved reviews, but
+  // syncAndRevalidate handles both and always refreshes the two pages.
+  await syncAndRevalidate(id, rev.productId);
+}
+
 export async function deleteReview(id: string) {
   const r = await prisma.review.findUnique({ where: { id }, select: { productId: true } });
   await prisma.review.delete({ where: { id } });
