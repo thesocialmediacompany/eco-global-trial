@@ -90,7 +90,9 @@ export async function getSalesReport(opts: {
 
   for (const it of items) {
     const category = it.product?.collection?.name ?? "Uncategorized";
-    const variant = it.variantTitle && it.variantTitle !== "Default" ? it.variantTitle : "";
+    // Treat the placeholder variant names ("Default" / "Default Title") as no
+    // variant, so single-variant products read as "—" and don't split into rows.
+    const variant = it.variantTitle && !/^default(\s+title)?$/i.test(it.variantTitle.trim()) ? it.variantTitle : "";
     const key = `${it.title}\u0000${variant}`;
 
     const row = byKey.get(key) ?? { product: it.title, variant, category, units: 0, revenue: 0 };
