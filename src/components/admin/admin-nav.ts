@@ -25,6 +25,7 @@ import {
   BookText,
   Camera,
   ShieldAlert,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 import { isOwnerRole } from "@/lib/roles";
@@ -63,6 +64,7 @@ export const adminNav: AdminNavItem[] = [
   { label: "Shipping", href: "/admin/shipping", icon: Truck },
   { label: "COD audit", href: "/admin/cod-audit", icon: ShieldAlert, ownerOnly: true },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3, ownerOnly: true },
+  { label: "Sales record", href: "/admin/sales-record", icon: Receipt, ownerOnly: true },
   { label: "Migrate images", href: "/admin/tools/migrate-images", icon: UploadCloud, ownerOnly: true },
   { label: "Settings", href: "/admin/settings", icon: Settings, ownerOnly: true },
 ];
